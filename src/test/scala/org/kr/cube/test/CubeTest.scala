@@ -1,0 +1,22 @@
+package org.kr.cube.test
+
+import org.kr.cube.Cube2x2
+import org.scalatest.GivenWhenThen
+import org.scalatest.featurespec.AnyFeatureSpec
+
+class CubeTest extends AnyFeatureSpec with GivenWhenThen:
+  Feature("Create cube"):
+    Scenario("Create cube with solved state"):
+      Given("No initial state")
+      When("Cube is created")
+      val cube = Cube2x2.solved
+      Then("It is is solved state")
+      assert(cube.isSolved)
+
+    Scenario("Create cube with given state"):
+      Given("Initial state")
+      val initialState = "FFLLFFLLRRBBRRBBUUDDDDUU"
+      When("Cube is created")
+      val cube = Cube2x2(initialState)
+      Then("It is in a given state")
+      assert(cube.state == initialState)
