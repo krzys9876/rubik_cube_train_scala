@@ -11,12 +11,6 @@ case class Cube2x2(state: String):
 
 object Cube2x2:
   private val SOLVED_STATE: String = "FFFFLLLLBBBBRRRRUUUUDDDD"
-  private val START_F: Int = 0
-  private val START_L: Int = 4
-  private val START_B: Int = 8
-  private val START_R: Int = 12
-  private val START_U: Int = 16
-  private val START_D: Int = 20
 
   def apply(state: String): Cube2x2 = new Cube2x2(state)
   def solved: Cube2x2 = Cube2x2(SOLVED_STATE)
