@@ -1,6 +1,6 @@
 package org.kr.cube.test
 
-import org.kr.cube.Cube2x2
+import org.kr.cube.{Cube2x2, Moves2x2}
 import org.scalatest.GivenWhenThen
 import org.scalatest.featurespec.AnyFeatureSpec
 
@@ -20,3 +20,9 @@ class CubeTest extends AnyFeatureSpec with GivenWhenThen:
       val cube = Cube2x2(initialState)
       Then("It is in a given state")
       assert(cube.state == initialState)
+
+  Feature("Apply moves to solved cube"):
+    Scenario("F"):
+      assert(Cube2x2.solved.move(Moves2x2.F).state === "FFFFLDLDBBBBURURUULLRRDD")
+    Scenario("F1"):
+      assert(Cube2x2.solved.move(Moves2x2.F1).state === "FFFFLULUBBBBDRDRUURRLLDD")
