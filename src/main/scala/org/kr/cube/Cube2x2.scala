@@ -12,6 +12,11 @@ case class Cube2x2(faces: Map[Face2x2, Face]):
 
   def withFace(face: Face): Cube2x2 = Cube2x2(faces + (face.nominalFace -> face))
 
+  def slice(axis: Axis, i: Int): Slice =
+    val edges = Face2x2.faceOrder(axis).map(face => faces(face).edge(axis, i))
+    Slice(edges)
+
+
 object Cube2x2:
   private val SOLVED_STATE: String = "FFFFLLLLBBBBRRRRUUUUDDDD"
 
@@ -97,13 +102,23 @@ object Face2x2:
       case "U" => U
       case "D" => D
 
-abstract class Axis(val symbol: String, val reversed: Boolean) {}
+  private val faceOrderX: Vector[Face2x2] = Vector(Face2x2.F, Face2x2.U, Face2x2.B, Face2x2.D)
+  private val faceOrderY: Vector[Face2x2] = Vector(Face2x2.F, Face2x2.L, Face2x2.B, Face2x2.R)
+  private val faceOrderZ: Vector[Face2x2] = Vector(Face2x2.L, Face2x2.U, Face2x2.R, Face2x2.D)
+
+  val faceOrder: Map[Axis, Vector[Face2x2]] =
+    Map(Axis.X -> faceOrderX, Axis.Y -> faceOrderY, Axis.Z -> faceOrderZ,
+      Axis.Xr -> faceOrderX.reverse, Axis.Yr -> faceOrderY.reverse, Axis.Zr -> faceOrderZ.reverse)
+
+
+abstract class Axis(val symbol: String, val reversed: Boolean)
 
 object Axis:
   case object X extends Axis("X", false)
   case object Y extends Axis("Y", false)
   case object Z extends Axis("Z", false)
   case object Xr extends Axis("X", true)
+  case object Yr extends Axis("Y", true)
   case object Zr extends Axis("Z", true)
 
 case class TileCoords(r: Int, c: Int)
@@ -111,8 +126,8 @@ case class TileCoords(r: Int, c: Int)
 case class Tile(face: Face2x2, coords: TileCoords)
 
 case class Face(size: Int, axisH: Axis, axisV: Axis, nominalFace: Face2x2, tiles: Vector[Tile]):
-  def row(r: Int): Vector[Tile] = tiles.filter(_.coords.r == r)
-  def col(c: Int): Vector[Tile] = tiles.filter(_.coords.c == c)
+  private def row(r: Int): Vector[Tile] = tiles.filter(_.coords.r == r)
+  private def col(c: Int): Vector[Tile] = tiles.filter(_.coords.c == c)
   lazy val state: String = tiles.map(_.face.symbol).mkString
   def rotatedC: Face =
     // flip coordinates clockwise
@@ -122,6 +137,13 @@ case class Face(size: Int, axisH: Axis, axisV: Axis, nominalFace: Face2x2, tiles
     // flip coordinates counterclockwise
     val newTiles = tiles.map(t => tiles.find(_.coords == TileCoords(size -1 - t.coords.c, t.coords.r)).get)
     new Face(size, axisV, axisH, nominalFace, newTiles)
+  def edge(axis: Axis, i: Int): Edge =
+    axis.symbol match
+      case axisH.symbol => Edge(nominalFace, row(i))
+      case axisV.symbol => Edge(nominalFace, col(i))
+  def withEdge(currentEdge: Edge, newEdge: Edge): Face =
+    val newTiles = (0 to currentEdge.tiles.length).foldLeft(tiles)((t, i) => t.updated(i, Tile(newEdge.tiles(i).face, currentEdge.tiles(i).coords)))
+    copy(tiles = newTiles)
 
 object Face:
   def apply(size: Int, axisH: Axis, axisV: Axis, nominalFace: Face2x2): Face =
@@ -135,3 +157,7 @@ object Face:
       Tile(Face2x2(state.substring(i, i + 1)), TileCoords(r, c))).toVector
     new Face(size, axisH, axisV, nominalFace, tiles)
 
+case class Edge(nominalFace: Face2x2, tiles: Vector[Tile])
+
+case class Slice(edges: Vector[Edge]):
+  val edgePairs: Vector[(Edge, Edge)] = edges.zip(edges.drop(1).appended(edges.head))

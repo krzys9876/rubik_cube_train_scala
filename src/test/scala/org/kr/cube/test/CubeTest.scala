@@ -1,6 +1,5 @@
 package org.kr.cube.test
 
-import org.kr.cube.Face2x2.F
 import org.kr.cube.{Axis, Cube2x2, Face, Face2x2, Moves2x2}
 import org.scalatest.GivenWhenThen
 import org.scalatest.featurespec.AnyFeatureSpec
@@ -38,3 +37,33 @@ class CubeTest extends AnyFeatureSpec with GivenWhenThen:
       println(face)
       val faceRotated = face.rotatedC
       println(faceRotated)
+
+    Scenario("slices"):
+      val cube = Cube2x2.solved
+      val sliceY0 = cube.slice(Axis.Y,0)
+      println("Y0")
+      println(sliceY0.edges.mkString("\n"))
+      val sliceY1 = cube.slice(Axis.Y, 1)
+      println("Y1")
+      println(sliceY1.edges.mkString("\n"))
+      val sliceX0 = cube.slice(Axis.X, 0)
+      println("X0")
+      println(sliceX0.edges.mkString("\n"))
+      val sliceX1 = cube.slice(Axis.X, 1)
+      println("X1")
+      println(sliceX1.edges.mkString("\n"))
+      val sliceZ0 = cube.slice(Axis.Z, 0)
+      println("Z0")
+      println(sliceZ0.edges.mkString("\n"))
+      val sliceZ1 = cube.slice(Axis.Z, 1)
+      println("Z1")
+      println(sliceZ1.edges.mkString("\n"))
+      val sliceZ1r = cube.slice(Axis.Zr, 1)
+      println("Z1r")
+      println(sliceZ1r.edges.mkString("\n"))
+      println(sliceZ1r.edgePairs.mkString("\n"))
+
+/*    Scenario("rotate slice"):
+      val cube = Cube2x2.solved
+      val sliceZ0 = cube.slice(Axis.Z, 0)
+      sliceZ0.edges.foldLeft(cube)((c,e) => Moves2x2.R.applyToCube(c))*/
