@@ -116,6 +116,12 @@ case class Face(size: Int, axisH: Axis, axisV: Axis, nominalFace: Face2x2, tiles
   def row(r: Int): Vector[Tile] = tiles.filter(_.coords.r == r)
   def col(c: Int): Vector[Tile] = tiles.filter(_.coords.c == c)
   lazy val state: String = tiles.map(_.face.symbol).mkString
+  def rotatedC: Face =
+    val newTiles = tiles.map(t =>
+      // flip coordinates clockwise
+      tiles.find(_.coords == TileCoords(t.coords.c, size -1 - t.coords.r)).get
+    )
+    new Face(size, axisV, axisH, nominalFace, newTiles)
 
 object Face:
   def apply(size: Int, axisH: Axis, axisV: Axis, nominalFace: Face2x2): Face =

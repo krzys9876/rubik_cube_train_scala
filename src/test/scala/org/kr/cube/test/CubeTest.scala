@@ -1,6 +1,7 @@
 package org.kr.cube.test
 
-import org.kr.cube.{Cube2x2, Moves2x2}
+import org.kr.cube.Face2x2.F
+import org.kr.cube.{Axis, Cube2x2, Face, Face2x2, Moves2x2}
 import org.scalatest.GivenWhenThen
 import org.scalatest.featurespec.AnyFeatureSpec
 
@@ -31,3 +32,9 @@ class CubeTest extends AnyFeatureSpec with GivenWhenThen:
     Scenario("tiles"):
       val cube = Cube2x2("FFFFLDLDBBBBURURUULLRRDD")
       cube.faces.keys.toVector.sortBy(_.index).foreach(k => println(cube.faces(k)))
+
+    Scenario("rotate face"):
+      val face = Face(2, Axis.X, Axis.Y, Face2x2.F, "FLBR")
+      println(face)
+      val faceRotated = face.rotatedC
+      println(faceRotated)
