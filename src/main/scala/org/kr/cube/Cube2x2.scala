@@ -1,7 +1,5 @@
 package org.kr.cube
 
-import org.kr.cube.Cube2x2.s
-
 case class Cube2x2(state: String):
   //assert(state.length == 2*2*6)
   lazy val isSolved: Boolean = state == Cube2x2.SOLVED_STATE
@@ -46,22 +44,16 @@ object Moves2x2:
       val stage5 = edgeToEdge(state, stage4, Face2x2.U, 2, 3, Face2x2.R, 0, 2)
       val stage6 = edgeToEdge(state, stage5, Face2x2.R, 2, 0, Face2x2.D, 0, 1)
       stage6
-
-  /*Cube2x2.s(state, Face2x2.F, 2) + Cube2x2.s(state, Face2x2.F, 0) + Cube2x2.s(state, Face2x2.F, 3) + Cube2x2.s(state, Face2x2.F, 1) +
-    Cube2x2.s(state, Face2x2.L, 0) + Cube2x2.s(state, Face2x2.D, 0) + Cube2x2.s(state, Face2x2.L, 2) + Cube2x2.s(state, Face2x2.D, 1) +
-    Cube2x2.f(state, Face2x2.B) +
-    Cube2x2.s(state, Face2x2.U, 2) + Cube2x2.s(state, Face2x2.R, 1) + Cube2x2.s(state, Face2x2.U, 3) + Cube2x2.s(state, Face2x2.R, 3) +
-    Cube2x2.s(state, Face2x2.U, 0) + Cube2x2.s(state, Face2x2.U, 1) + Cube2x2.s(state, Face2x2.L, 3) + Cube2x2.s(state, Face2x2.L, 1) +
-    Cube2x2.s(state, Face2x2.R, 2) + Cube2x2.s(state, Face2x2.R, 0) + Cube2x2.s(state, Face2x2.D, 2) + Cube2x2.s(state, Face2x2.D, 3)*/
-
+  
   case object F1 extends Move2x2("F'"):
     override def applyToState(state: String): String =
-      Cube2x2.s(state, Face2x2.F, 1) + Cube2x2.s(state, Face2x2.F, 3) + Cube2x2.s(state, Face2x2.F, 0) + Cube2x2.s(state, Face2x2.F, 2) +
-      Cube2x2.s(state, Face2x2.L, 0) + Cube2x2.s(state, Face2x2.U, 3) + Cube2x2.s(state, Face2x2.L, 2) + Cube2x2.s(state, Face2x2.U, 2) +
-      Cube2x2.f(state, Face2x2.B) +
-      Cube2x2.s(state, Face2x2.D, 1) + Cube2x2.s(state, Face2x2.R, 1) + Cube2x2.s(state, Face2x2.D, 0) + Cube2x2.s(state, Face2x2.R, 3) +
-      Cube2x2.s(state, Face2x2.U, 0) + Cube2x2.s(state, Face2x2.U, 1) + Cube2x2.s(state, Face2x2.R, 0) + Cube2x2.s(state, Face2x2.R, 2) +
-      Cube2x2.s(state, Face2x2.L, 1) + Cube2x2.s(state, Face2x2.L, 3) + Cube2x2.s(state, Face2x2.D, 2) + Cube2x2.s(state, Face2x2.D, 3)
+      val stage1 = edgeToEdge(state, state, Face2x2.F, 1, 3, Face2x2.F, 0, 1)
+      val stage2 = edgeToEdge(state, stage1, Face2x2.F, 0, 2, Face2x2.F, 2, 3)
+      val stage3 = edgeToEdge(state, stage2, Face2x2.U, 2, 3, Face2x2.L, 1, 3)
+      val stage4 = edgeToEdge(state, stage3, Face2x2.L, 1, 3, Face2x2.D, 0, 1)
+      val stage5 = edgeToEdge(state, stage4, Face2x2.D, 0, 1, Face2x2.R, 0, 2)
+      val stage6 = edgeToEdge(state, stage5, Face2x2.R, 2, 0, Face2x2.U, 2, 3)
+      stage6
 
   case object L extends Move2x2("L")
   case object L1 extends Move2x2("L'")
