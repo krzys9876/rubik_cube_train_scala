@@ -2,7 +2,6 @@ package org.kr.cube
 
 case class Cube2x2(faces: Map[Face2x2, Face]):
   lazy val isSolved: Boolean = state == Cube2x2.SOLVED_STATE
-  def move(move: Move2x2): Cube2x2 = Cube2x2(move.applyToState(state))
 
   private def f(face: Face2x2): String = faces(face).state
   private def s(face: Face2x2, index: Int): String = f(face).substring(index, index + 1)
@@ -11,6 +10,7 @@ case class Cube2x2(faces: Map[Face2x2, Face]):
     faces(Face2x2.F).state + faces(Face2x2.L).state + faces(Face2x2.B).state + faces(Face2x2.R).state +
       faces(Face2x2.U).state + faces(Face2x2.D).state
 
+  def withFace(face: Face): Cube2x2 = Cube2x2(faces + (face.nominalFace -> face))
 
 object Cube2x2:
   private val SOLVED_STATE: String = "FFFFLLLLBBBBRRRRUUUUDDDD"
@@ -32,7 +32,7 @@ object Cube2x2:
 
 
 sealed abstract class Move2x2(val symbol: String):
-  def applyToState(state: String): String = ???
+  def applyToCube(cube: Cube2x2): Cube2x2 = ???
 
   def edgeToEdge(origState: String, state: String,
                  faceFrom: Face2x2, indexFrom1: Int, indexFrom2: Int,
@@ -49,24 +49,24 @@ sealed abstract class Move2x2(val symbol: String):
 
 object Moves2x2:
   case object F extends Move2x2("F"):
-    override def applyToState(state: String): String =
-      val stage1 = edgeToEdge(state, state, Face2x2.F, 2, 0, Face2x2.F, 0, 1)
-      val stage2 = edgeToEdge(state, stage1, Face2x2.F, 3, 1, Face2x2.F, 2, 3)
-      val stage3 = edgeToEdge(state, stage2, Face2x2.D, 0, 1, Face2x2.L, 1, 3)
-      val stage4 = edgeToEdge(state, stage3, Face2x2.L, 1, 3, Face2x2.U, 2, 3)
-      val stage5 = edgeToEdge(state, stage4, Face2x2.U, 2, 3, Face2x2.R, 0, 2)
-      val stage6 = edgeToEdge(state, stage5, Face2x2.R, 2, 0, Face2x2.D, 0, 1)
-      stage6
+    override def applyToCube(cube: Cube2x2): Cube2x2 =
+      val faceRotated = cube.faces(Face2x2.F).rotatedC
+      val state = cube.withFace(faceRotated).state
+      val stage1 = edgeToEdge(state, state, Face2x2.D, 0, 1, Face2x2.L, 1, 3)
+      val stage2 = edgeToEdge(state, stage1, Face2x2.L, 1, 3, Face2x2.U, 2, 3)
+      val stage3 = edgeToEdge(state, stage2, Face2x2.U, 2, 3, Face2x2.R, 0, 2)
+      val stage4 = edgeToEdge(state, stage3, Face2x2.R, 2, 0, Face2x2.D, 0, 1)
+      Cube2x2(stage4)
 
   case object F1 extends Move2x2("F'"):
-    override def applyToState(state: String): String =
-      val stage1 = edgeToEdge(state, state, Face2x2.F, 1, 3, Face2x2.F, 0, 1)
-      val stage2 = edgeToEdge(state, stage1, Face2x2.F, 0, 2, Face2x2.F, 2, 3)
-      val stage3 = edgeToEdge(state, stage2, Face2x2.U, 2, 3, Face2x2.L, 1, 3)
-      val stage4 = edgeToEdge(state, stage3, Face2x2.L, 1, 3, Face2x2.D, 0, 1)
-      val stage5 = edgeToEdge(state, stage4, Face2x2.D, 0, 1, Face2x2.R, 0, 2)
-      val stage6 = edgeToEdge(state, stage5, Face2x2.R, 2, 0, Face2x2.U, 2, 3)
-      stage6
+    override def applyToCube(cube: Cube2x2): Cube2x2 =
+      val faceRotated = cube.faces(Face2x2.F).rotatedCC
+      val state = cube.withFace(faceRotated).state
+      val stage1 = edgeToEdge(state, state, Face2x2.U, 2, 3, Face2x2.L, 1, 3)
+      val stage2 = edgeToEdge(state, stage1, Face2x2.L, 1, 3, Face2x2.D, 0, 1)
+      val stage3 = edgeToEdge(state, stage2, Face2x2.D, 0, 1, Face2x2.R, 0, 2)
+      val stage4 = edgeToEdge(state, stage3, Face2x2.R, 2, 0, Face2x2.U, 2, 3)
+      Cube2x2(stage4)
 
   case object L extends Move2x2("L")
   case object L1 extends Move2x2("L'")
@@ -115,10 +115,12 @@ case class Face(size: Int, axisH: Axis, axisV: Axis, nominalFace: Face2x2, tiles
   def col(c: Int): Vector[Tile] = tiles.filter(_.coords.c == c)
   lazy val state: String = tiles.map(_.face.symbol).mkString
   def rotatedC: Face =
-    val newTiles = tiles.map(t =>
-      // flip coordinates clockwise
-      tiles.find(_.coords == TileCoords(t.coords.c, size -1 - t.coords.r)).get
-    )
+    // flip coordinates clockwise
+    val newTiles = tiles.map(t => tiles.find(_.coords == TileCoords(t.coords.c, size - 1 - t.coords.r)).get)
+    new Face(size, axisV, axisH, nominalFace, newTiles)
+  def rotatedCC: Face =
+    // flip coordinates counterclockwise
+    val newTiles = tiles.map(t => tiles.find(_.coords == TileCoords(size -1 - t.coords.c, t.coords.r)).get)
     new Face(size, axisV, axisH, nominalFace, newTiles)
 
 object Face:

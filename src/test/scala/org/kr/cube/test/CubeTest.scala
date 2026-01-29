@@ -24,9 +24,9 @@ class CubeTest extends AnyFeatureSpec with GivenWhenThen:
 
   Feature("Apply moves to solved cube"):
     Scenario("F"):
-      assert(Cube2x2.solved.move(Moves2x2.F).state === "FFFFLDLDBBBBURURUULLRRDD")
+      assert(Moves2x2.F.applyToCube(Cube2x2.solved).state === "FFFFLDLDBBBBURURUULLRRDD")
     Scenario("F1"):
-      assert(Cube2x2.solved.move(Moves2x2.F1).state === "FFFFLULUBBBBDRDRUURRLLDD")
+      assert(Moves2x2.F1.applyToCube(Cube2x2.solved).state === "FFFFLULUBBBBDRDRUURRLLDD")
 
   Feature("internals"):
     Scenario("tiles"):
