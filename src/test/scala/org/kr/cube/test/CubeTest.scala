@@ -26,3 +26,8 @@ class CubeTest extends AnyFeatureSpec with GivenWhenThen:
       assert(Cube2x2.solved.move(Moves2x2.F).state === "FFFFLDLDBBBBURURUULLRRDD")
     Scenario("F1"):
       assert(Cube2x2.solved.move(Moves2x2.F1).state === "FFFFLULUBBBBDRDRUURRLLDD")
+
+  Feature("internals"):
+    Scenario("tiles"):
+      val cube = Cube2x2("FFFFLDLDBBBBURURUULLRRDD")
+      cube.faces.keys.toVector.sortBy(_.index).foreach(k => println(cube.faces(k)))

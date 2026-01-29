@@ -8,7 +8,7 @@ case class Cube2x2(state: String):
   private def s(face: Face2x2, index: Int) = state.substring(face.index + index, face.index + index + 1)
   private def f(face: Face2x2) = state.substring(face.index, face.index + 2*2)
 
-  private val faces: Map[Face2x2, Face] = Map(
+  val faces: Map[Face2x2, Face] = Map(
     Face2x2.F -> Face(2, Axis.X, Axis.Y, Face2x2.F, state.substring(Face2x2.F.index, Face2x2.F.index + 2*2)),
     Face2x2.L -> Face(2, Axis.Zr, Axis.Y, Face2x2.L, state.substring(Face2x2.L.index, Face2x2.L.index + 2*2)),
     Face2x2.B -> Face(2, Axis.Xr, Axis.Y, Face2x2.B, state.substring(Face2x2.B.index, Face2x2.B.index + 2*2)),
@@ -99,7 +99,7 @@ object Face2x2:
       case "U" => U
       case "D" => D
 
-abstract class Axis(val symbol: String, reversed: Boolean) {}
+abstract class Axis(val symbol: String, val reversed: Boolean) {}
 
 object Axis:
   case object X extends Axis("X", false)
@@ -123,6 +123,9 @@ object Face:
     new Face(size, axisH, axisV, nominalFace, tiles)
 
   def apply(size: Int, axisH: Axis, axisV: Axis, nominalFace: Face2x2, state: String): Face =
-    val tiles = 0.until(state.length).map(i => Tile(Face2x2(state.substring(i, i + 1)), TileCoords(0, 0))).toVector
+    val tiles = 0.until(state.length).map(i =>
+      val r = if(axisH.reversed) size - (i % size) -1 else i % size
+      val c = if(axisV.reversed) size - (i / size) -1 else i / size
+      Tile(Face2x2(state.substring(i, i + 1)), TileCoords(r, c))).toVector
     new Face(size, axisH, axisV, nominalFace, tiles)
 
