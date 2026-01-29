@@ -1,37 +1,35 @@
 package org.kr.cube
 
-case class Cube2x2(state: String):
-  //assert(state.length == 2*2*6)
-  lazy val isSolved: Boolean = stateF == Cube2x2.SOLVED_STATE
-  def move(move: Move2x2): Cube2x2 = this.copy(state = move.applyToState(state))
+case class Cube2x2(faces: Map[Face2x2, Face]):
+  lazy val isSolved: Boolean = state == Cube2x2.SOLVED_STATE
+  def move(move: Move2x2): Cube2x2 = Cube2x2(move.applyToState(state))
 
-  private def s(face: Face2x2, index: Int) = state.substring(face.index + index, face.index + index + 1)
-  private def f(face: Face2x2) = state.substring(face.index, face.index + 2*2)
+  private def f(face: Face2x2): String = faces(face).state
+  private def s(face: Face2x2, index: Int): String = f(face).substring(index, index + 1)
 
-  val faces: Map[Face2x2, Face] = Map(
-    Face2x2.F -> Face(2, Axis.X, Axis.Y, Face2x2.F, state.substring(Face2x2.F.index, Face2x2.F.index + 2*2)),
-    Face2x2.L -> Face(2, Axis.Zr, Axis.Y, Face2x2.L, state.substring(Face2x2.L.index, Face2x2.L.index + 2*2)),
-    Face2x2.B -> Face(2, Axis.Xr, Axis.Y, Face2x2.B, state.substring(Face2x2.B.index, Face2x2.B.index + 2*2)),
-    Face2x2.R -> Face(2, Axis.Z, Axis.Y, Face2x2.R, state.substring(Face2x2.R.index, Face2x2.R.index + 2*2)),
-    Face2x2.U -> Face(2, Axis.X, Axis.Zr, Face2x2.U, state.substring(Face2x2.U.index, Face2x2.U.index + 2*2)),
-    Face2x2.D -> Face(2, Axis.X, Axis.Z, Face2x2.D, state.substring(Face2x2.D.index, Face2x2.D.index + 2*2)))
-
-  lazy val stateF: String =
+  lazy val state: String =
     faces(Face2x2.F).state + faces(Face2x2.L).state + faces(Face2x2.B).state + faces(Face2x2.R).state +
       faces(Face2x2.U).state + faces(Face2x2.D).state
-
-  def moveF(move: Move2x2): Cube2x2 =
-    this
 
 
 object Cube2x2:
   private val SOLVED_STATE: String = "FFFFLLLLBBBBRRRRUUUUDDDD"
 
-  def apply(state: String): Cube2x2 = new Cube2x2(state)
   def solved: Cube2x2 = Cube2x2(SOLVED_STATE)
 
   def s(state: String, face: Face2x2, index: Int): String = state.substring(face.index + index, face.index + index + 1)
   def f(state: String, face: Face2x2): String = state.substring(face.index, face.index + 2*2)
+
+  def apply(state: String): Cube2x2 =
+    val faces: Map[Face2x2, Face] = Map(
+      Face2x2.F -> Face(2, Axis.X, Axis.Y, Face2x2.F, state.substring(Face2x2.F.index, Face2x2.F.index + 2 * 2)),
+      Face2x2.L -> Face(2, Axis.Zr, Axis.Y, Face2x2.L, state.substring(Face2x2.L.index, Face2x2.L.index + 2 * 2)),
+      Face2x2.B -> Face(2, Axis.Xr, Axis.Y, Face2x2.B, state.substring(Face2x2.B.index, Face2x2.B.index + 2 * 2)),
+      Face2x2.R -> Face(2, Axis.Z, Axis.Y, Face2x2.R, state.substring(Face2x2.R.index, Face2x2.R.index + 2 * 2)),
+      Face2x2.U -> Face(2, Axis.X, Axis.Zr, Face2x2.U, state.substring(Face2x2.U.index, Face2x2.U.index + 2 * 2)),
+      Face2x2.D -> Face(2, Axis.X, Axis.Z, Face2x2.D, state.substring(Face2x2.D.index, Face2x2.D.index + 2 * 2)))
+    Cube2x2(faces)
+
 
 sealed abstract class Move2x2(val symbol: String):
   def applyToState(state: String): String = ???

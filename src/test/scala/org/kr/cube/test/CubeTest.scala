@@ -20,7 +20,7 @@ class CubeTest extends AnyFeatureSpec with GivenWhenThen:
       When("Cube is created")
       val cube = Cube2x2(initialState)
       Then("It is in a given state")
-      assert(cube.stateF == initialState)
+      assert(cube.state == initialState)
 
   Feature("Apply moves to solved cube"):
     Scenario("F"):
