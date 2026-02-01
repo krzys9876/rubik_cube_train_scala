@@ -1,5 +1,7 @@
 package org.kr.cube
 
+import java.io.PrintWriter
+
 case class Environment(cube: Cube2x2, scrambleMoves: Int, history: Vector[EnvironmentLogEntry], expectedState: String):
 
   val state: String = cube.maskedState
@@ -22,3 +24,30 @@ object Environment:
 
 
 case class EnvironmentLogEntry(stateBefore: String, action: String, stateAfter: String)
+
+case class Agent(qState: Map[String, Map[String, Double]]):
+  val alpha: Double = 0.1
+  val gamma: Double = 0.95
+  val epsilon: Double = 0.2
+  val epsilonDecay: Double = 0.999
+  val epsilonMin: Double = 0.05
+  val epsilonDecayEpisodes: Double = 200
+  def updateEpisode(environment: Environment): Agent =
+    if(!environment.isSolved || environment.history.isEmpty) this
+    else doUpdateEpisode(environment)
+
+  private def doUpdateEpisode(environment: Environment): Agent =
+    val reward = 1.0
+    val res = environment.history.reverse.foldLeft((qState, reward))({ case ((qs, g), h) =>
+      val oldQStates = qs.getOrElse(h.stateBefore, Map())
+      val oldActionWeight = oldQStates.getOrElse(h.action, 0.0)
+      val newActionWeight = oldActionWeight + alpha * (g - oldActionWeight)
+      val updatedQState = oldQStates.updated(h.action, newActionWeight)
+      (qs.updated(h.stateBefore, updatedQState), g * gamma)
+    })
+    copy(qState = res._1)
+
+  def saveQState(filePath: String): Unit =
+    val pw = new PrintWriter(filePath)
+    pw.println(qState.map({case(k, v) => s"$k|${v.mkString("[","|","]")}"}).mkString("\n"))
+    pw.close()
