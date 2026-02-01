@@ -36,7 +36,7 @@ def trySolve(cube: Cube2x2, state: String, mask: String, maxMoves: Int): (String
   (randomCube.state, scrambleSymbols, res._1.state, res._2, res._3)
 
 def rl(): Unit =
-  val max = 1000000
+  val max = 100000
   val agent = Agent(Map())
   val res = (0 until max).foldLeft((Vector[Environment](), agent))({case ((r, a), i) =>
     val env = rlEpisode()
@@ -46,7 +46,9 @@ def rl(): Unit =
     else (r, a)
   })
   println(f"solved in ${res._1.length} / $max attempts (${res._1.length.toDouble / max * 100.0}%.2f%%)")
-  //println(f"q-values: ${res._2.qState.toVector.mkString("\n")}")
+  println(f"q-values: ${res._2.qState.keys.size} keys")
+  val agg = res._2.qState.groupBy(_._2.size).map(v => v._1 -> v._2.size).toVector.sortBy(_._1).reverse
+  println(f"q-values stats: \n${agg.mkString("\n")}")
   res._2.saveQState("q-values.txt")
 
 def rlEpisode(): Environment =
