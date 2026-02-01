@@ -1,6 +1,6 @@
 package org.kr.cube.test
 
-import org.kr.cube.{Axis, Cube2x2, Face, Face2x2, Moves2x2}
+import org.kr.cube.{Axis, Cube2x2, Face, Face2x2, MoveDirection, Moves2x2}
 import org.scalatest.GivenWhenThen
 import org.scalatest.featurespec.AnyFeatureSpec
 
@@ -47,6 +47,62 @@ class CubeTest extends AnyFeatureSpec with GivenWhenThen:
     Scenario("D'"):
       assert(Moves2x2.D1.applyToCube(Cube2x2.solved).state === "FFRRLLFFBBLLRRBBUUUUDDDD")
 
+  Feature("Rotate face"):
+    Scenario("F F'"):
+      val cube = Cube2x2("FLBRFLBRFLBRFLBRFLBRFLBR")
+      val face = cube.faces(Face2x2.F)
+      assert(face.state === "FLBR")
+      val faceRotatedC = face.rotated(Moves2x2.F.direction)
+      assert(faceRotatedC.state === "BFRL")
+      val faceRotatedCC = face.rotated(Moves2x2.F1.direction)
+      assert(faceRotatedCC.state === "LRFB")
+
+    Scenario("L L'"):
+      val cube = Cube2x2("FLBRFLBRFLBRFLBRFLBRFLBR")
+      val face = cube.faces(Face2x2.L)
+      assert(face.state === "FLBR")
+      val faceRotatedC = face.rotated(Moves2x2.L.direction)
+      assert(faceRotatedC.state === "BFRL")
+      val faceRotatedCC = face.rotated(Moves2x2.L1.direction)
+      assert(faceRotatedCC.state === "LRFB")
+
+    Scenario("B B'"):
+      val cube = Cube2x2("FLBRFLBRFLBRFLBRFLBRFLBR")
+      val face = cube.faces(Face2x2.B)
+      assert(face.state === "FLBR")
+      val faceRotatedC = face.rotated(Moves2x2.B.direction)
+      assert(faceRotatedC.state === "BFRL")
+      val faceRotatedCC = face.rotated(Moves2x2.B1.direction)
+      assert(faceRotatedCC.state === "LRFB")
+
+    Scenario("R R'"):
+      val cube = Cube2x2("FLBRFLBRFLBRFLBRFLBRFLBR")
+      val face = cube.faces(Face2x2.R)
+      assert(face.state === "FLBR")
+      val faceRotatedC = face.rotated(Moves2x2.R.direction)
+      assert(faceRotatedC.state === "BFRL")
+      val faceRotatedCC = face.rotated(Moves2x2.R1.direction)
+      assert(faceRotatedCC.state === "LRFB")
+
+    Scenario("U U'"):
+      val cube = Cube2x2("FLBRFLBRFLBRFLBRFLBRFLBR")
+      val face = cube.faces(Face2x2.U)
+      assert(face.state === "FLBR")
+      val faceRotatedC = face.rotated(Moves2x2.U.direction)
+      assert(faceRotatedC.state === "BFRL")
+      val faceRotatedCC = face.rotated(Moves2x2.U1.direction)
+      assert(faceRotatedCC.state === "LRFB")
+
+    Scenario("D D'"):
+      val cube = Cube2x2("FLBRFLBRFLBRFLBRFLBRFLBR")
+      val face = cube.faces(Face2x2.D)
+      assert(face.state === "FLBR")
+      val faceRotatedC = face.rotated(Moves2x2.D.direction)
+      assert(faceRotatedC.state === "BFRL")
+      val faceRotatedCC = face.rotated(Moves2x2.D1.direction)
+      assert(faceRotatedCC.state === "LRFB")
+
+
   Feature("Apply sequence of moves to solved cube"):
     Scenario("F F' L L' B B' R R' U U' D D'"):
       val moves = Vector(
@@ -67,17 +123,20 @@ class CubeTest extends AnyFeatureSpec with GivenWhenThen:
       val cube = moves.foldLeft(Cube2x2.solved)((c, m) => m.applyToCube(c))
       assert(cube.isSolved)
 
+    Scenario("F L B R U D"):
+      val moves = Vector(Moves2x2.F, Moves2x2.L/*, Moves2x2.B, Moves2x2.R, Moves2x2.U, Moves2x2.D*/)
+      val cube = moves.foldLeft(Cube2x2.solved)((c, m) =>
+        println(f"before: ${c.state}")
+        val c1 = m.applyToCube(c)
+        println(f"after: ${c1.state}")
+        c1)
+      assert(cube.state === "UFLFLLDDBDBRURURBUBLFRFD")
+
 
   Feature("internals"):
     Scenario("tiles"):
       val cube = Cube2x2("FFFFLDLDBBBBURURUULLRRDD")
       cube.faces.keys.toVector.sortBy(_.index).foreach(k => println(cube.faces(k)))
-
-    Scenario("rotate face"):
-      val face = Face(2, Axis.X, Axis.Y, Face2x2.F, "FLBR")
-      println(face)
-      val faceRotated = face.rotatedC
-      println(faceRotated)
 
     Scenario("slices"):
       val cube = Cube2x2.solved
