@@ -81,14 +81,14 @@ object Moves2x2:
   case object U1 extends Move2x2("U'", Axis.Yr, 0, Face2x2.U, MoveDirection.Natural)
   case object D extends Move2x2("D", Axis.Yr, 1, Face2x2.D, MoveDirection.Natural)
   case object D1 extends Move2x2("D'", Axis.Y, 1, Face2x2.D, MoveDirection.Reversed)
-  
-  val all: Vector[Move2x2] = Vector(F, F1, L, L1, B, B1, R, R1, U, U1, D, D1)
+
+  private val all: Vector[Move2x2] = Vector(F, F1, L, L1, B, B1, R, R1, U, U1, D, D1)
   def random: Move2x2 = all(scala.util.Random.nextInt(all.length))
   def randomList(n: Int): Vector[Move2x2] =
     (0 until n).foldLeft(Vector[Move2x2]())((l, _) => l.appended(randomExceptOpposite(if(l.isEmpty) "_" else l.last.symbol)))
-    
+
   def randomExceptOpposite(prevSymbol: String): Move2x2 =
-    val available = all.filterNot(_.symbol.substring(0,1) == prevSymbol.substring(0,1))
+    val available = all.filterNot(s => s.symbol.substring(0,1) == prevSymbol.substring(0,1) && s.symbol.length != prevSymbol.length)
     available(scala.util.Random.nextInt(available.length))
 
 

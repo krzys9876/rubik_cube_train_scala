@@ -7,7 +7,7 @@ def main(): Unit =
   whiteLayer()
 
 def whiteLayer(): Unit =
-  val max = 100000
+  val max = 1000000
   val res = (0 until max).foldLeft(Vector[(String, String, Boolean, Vector[String])]())((l, i) =>
     val (initState, initLog, state, res, log) = trySolve(Cube2x2.solved, Cube2x2.solved.state, "001100110011001100001111", 200)
     if (res)
@@ -18,7 +18,7 @@ def whiteLayer(): Unit =
 
 def trySolve(cube: Cube2x2, state: String, mask: String, maxMoves: Int): (String, Vector[String], String, Boolean, Vector[String]) =
   val cube = Cube2x2.solved
-  val scramble = Moves2x2.randomList(10)
+  val scramble = Moves2x2.randomList(20)
   val randomCube = scramble.foldLeft(cube)((c, m) => m.applyToCube(c))
 
   @tailrec
