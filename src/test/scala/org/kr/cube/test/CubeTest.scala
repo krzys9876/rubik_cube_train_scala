@@ -47,6 +47,27 @@ class CubeTest extends AnyFeatureSpec with GivenWhenThen:
     Scenario("D'"):
       assert(Moves2x2.D1.applyToCube(Cube2x2.solved).state === "FFRRLLFFBBLLRRBBUUUUDDDD")
 
+  Feature("Apply sequence of moves to solved cube"):
+    Scenario("F F' L L' B B' R R' U U' D D'"):
+      val moves = Vector(
+        Moves2x2.F, Moves2x2.F1, Moves2x2.L, Moves2x2.L1, Moves2x2.B, Moves2x2.B1,
+        Moves2x2.R, Moves2x2.R1, Moves2x2.U, Moves2x2.U1, Moves2x2.D, Moves2x2.D1)
+      val cube = moves.foldLeft(Cube2x2.solved)((c, m) => m.applyToCube(c))
+      assert(cube.isSolved)
+
+    Scenario("4xF 4xL 4xB 4xR 4xU 4xD"):
+      val moves = Vector.fill(4)(Moves2x2.F) ++ Vector.fill(4)(Moves2x2.L) ++ Vector.fill(4)(Moves2x2.B) ++
+        Vector.fill(4)(Moves2x2.R) ++ Vector.fill(4)(Moves2x2.U) ++ Vector.fill(4)(Moves2x2.D)
+      val cube = moves.foldLeft(Cube2x2.solved)((c, m) => m.applyToCube(c))
+      assert(cube.isSolved)
+
+    Scenario("4xF' 4xL' 4xB' 4xR' 4xU' 4xD'"):
+      val moves = Vector.fill(4)(Moves2x2.F1) ++ Vector.fill(4)(Moves2x2.L1) ++ Vector.fill(4)(Moves2x2.B1) ++
+        Vector.fill(4)(Moves2x2.R1) ++ Vector.fill(4)(Moves2x2.U1) ++ Vector.fill(4)(Moves2x2.D1)
+      val cube = moves.foldLeft(Cube2x2.solved)((c, m) => m.applyToCube(c))
+      assert(cube.isSolved)
+
+
   Feature("internals"):
     Scenario("tiles"):
       val cube = Cube2x2("FFFFLDLDBBBBURURUULLRRDD")
@@ -84,17 +105,3 @@ class CubeTest extends AnyFeatureSpec with GivenWhenThen:
       println(sliceZ1r.edgePairs.mkString("\n"))
       println("----------------")
       println(sliceZ0.edgePairs.mkString("\n"))
-      val rotatedCube=sliceZ0.edgePairs.foldLeft(cube)({case(c,(eFrom, eTo)) =>
-          val faceFrom = cube.faces(eFrom.nominalFace)
-          val faceTo = cube.faces(eTo.nominalFace)
-          println(faceFrom)
-          println(faceTo)
-          val faceReplaced = faceTo.withEdge(eTo, eFrom)
-          c.withFace(faceReplaced)
-      })
-      println(rotatedCube.state)
-
-/*    Scenario("rotate slice"):
-      val cube = Cube2x2.solved
-      val sliceZ0 = cube.slice(Axis.Z, 0)
-      sliceZ0.edges.foldLeft(cube)((c,e) => Moves2x2.R.applyToCube(c))*/
