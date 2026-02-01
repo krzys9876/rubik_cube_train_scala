@@ -43,6 +43,10 @@ object Cube2x2:
       Face2x2.D -> Face(2, Axis.X, Axis.Z, Face2x2.D, state.substring(Face2x2.D.index, Face2x2.D.index + 2 * 2)))
     Cube2x2(faces)
 
+  def maskedEquals(state1: String, state2: String, mask: String): Boolean =
+    mask zip (state1 zip state2) forall { case(m, (s1, s2)) => m == '0' || s1 == s2 }
+
+
 
 sealed abstract class Move2x2(val symbol: String, val sliceAxis: Axis, val sliceCoords: Int, val face: Face2x2,
                               val direction: MoveDirection):

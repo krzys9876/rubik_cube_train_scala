@@ -165,3 +165,10 @@ class CubeTest extends AnyFeatureSpec with GivenWhenThen:
       println(sliceZ1r.edgePairs.mkString("\n"))
       println("----------------")
       println(sliceZ0.edgePairs.mkString("\n"))
+
+  Feature("Compare masked state"):
+    Scenario("Compare single face"):
+      val cube1 = Cube2x2.solved
+      val cube2 = Cube2x2("FFFFLDLDBBBBURURUULLRRDD")
+      val mask = "111100000000000000000000"
+      assert(Cube2x2.maskedEquals(cube1.state, cube2.state, mask))
