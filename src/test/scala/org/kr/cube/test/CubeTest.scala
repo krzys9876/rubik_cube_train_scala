@@ -1,8 +1,10 @@
 package org.kr.cube.test
 
-import org.kr.cube.{Axis, Cube2x2, Face, Face2x2, MoveDirection, Moves2x2}
+import org.kr.cube.{Axis, Cube2x2, Face2x2, Move2x2, Moves2x2}
 import org.scalatest.GivenWhenThen
 import org.scalatest.featurespec.AnyFeatureSpec
+
+import scala.annotation.tailrec
 
 class CubeTest extends AnyFeatureSpec with GivenWhenThen:
   Feature("Create cube"):
@@ -166,6 +168,12 @@ class CubeTest extends AnyFeatureSpec with GivenWhenThen:
       println("----------------")
       println(sliceZ0.edgePairs.mkString("\n"))
 
+/*    Scenario("random moves (white face"):
+      (0 until 10000).foreach(i =>
+        val(cube, res, log) = trySolve(Cube2x2.solved, Cube2x2.solved.state, "000000000000000000001111", 100)
+        if(res) println(f"$i ${cube.state} ${log.length} ${log.mkString(" ")}")
+      )*/
+  
   Feature("Compare masked state"):
     Scenario("Compare single face"):
       val cube1 = Cube2x2.solved
