@@ -85,11 +85,14 @@ object Moves2x2:
   private val all: Vector[Move2x2] = Vector(F, F1, L, L1, B, B1, R, R1, U, U1, D, D1)
   def random: Move2x2 = all(scala.util.Random.nextInt(all.length))
   def randomList(n: Int): Vector[Move2x2] =
-    (0 until n).foldLeft(Vector[Move2x2]())((l, _) => l.appended(randomExceptOpposite(if(l.isEmpty) "_" else l.last.symbol)))
+    (0 until n).foldLeft(Vector[Move2x2]())((l, _) => l.appended(randomExceptOpposite(l.lastOption.map(_.symbol))))
 
-  def randomExceptOpposite(prevSymbol: String): Move2x2 =
-    val available = all.filterNot(s => s.symbol.substring(0,1) == prevSymbol.substring(0,1) && s.symbol.length != prevSymbol.length)
+  def randomExceptOpposite(prevSymbol: Option[String]): Move2x2 =
+    val available = all.filterNot(s => prevSymbol.isDefined &&
+      (s.symbol.substring(0,1) == prevSymbol.get.substring(0,1) && s.symbol.length != prevSymbol.get.length))
     available(scala.util.Random.nextInt(available.length))
+
+  def from(symbol: String): Move2x2 = all.find(_.symbol == symbol).get
 
 
 sealed abstract class Face2x2(val symbol: String, val index: Int)
