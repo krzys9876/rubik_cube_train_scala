@@ -8,6 +8,9 @@ case class Cube2x2(faces: Map[Face2x2, Face]):
   val state: String =
     faces(Face2x2.F).state + faces(Face2x2.L).state + faces(Face2x2.B).state + faces(Face2x2.R).state +
       faces(Face2x2.U).state + faces(Face2x2.D).state
+  val maskedState: String =
+    faces(Face2x2.F).maskedState + faces(Face2x2.L).maskedState + faces(Face2x2.B).maskedState + faces(Face2x2.R).maskedState +
+      faces(Face2x2.U).maskedState + faces(Face2x2.D).maskedState
   val isSolved: Boolean = state == Cube2x2.SOLVED_STATE
 
   def withFace(face: Face): Cube2x2 = Cube2x2(faces + (face.nominalFace -> face))
@@ -29,6 +32,11 @@ object Cube2x2:
   private val SOLVED_STATE: String = "FFFFLLLLBBBBRRRRUUUUDDDD"
 
   def solved: Cube2x2 = Cube2x2(SOLVED_STATE)
+
+  def solvedWithMask(mask: (Face, Tile) => Boolean): Cube2x2 =
+    val initCube = solved
+    initCube.faces.values.foldLeft(initCube)((c, f) =>
+      c.withFace(f.copy(tiles = f.tiles.map(t => t.copy(masked = mask(f, t))))))
 
   def s(state: String, face: Face2x2, index: Int): String = state.substring(face.index + index, face.index + index + 1)
   def f(state: String, face: Face2x2): String = state.substring(face.index, face.index + 2*2)
@@ -139,9 +147,9 @@ object Axis:
   case object Yr extends Axis("Y", true)
   case object Zr extends Axis("Z", true)
 
-case class TileCoords(r: Int, c: Int)
+case class TileCoords(c: Int, r: Int)
 
-case class Tile(face: Face2x2, coords: TileCoords)
+case class Tile(face: Face2x2, coords: TileCoords, masked: Boolean = false)
 
 sealed abstract class MoveDirection(val symbol: String)
 
@@ -156,19 +164,20 @@ object CoordsSort:
   case object Descending extends CoordsSort("D")
 
 case class Face(size: Int, axisH: Axis, axisV: Axis, nominalFace: Face2x2, tiles: Vector[Tile]):
-  private def row(r: Int, sort: CoordsSort): Vector[Tile] =
-    val rowTiles = tiles.filter(_.coords.r == r)
-    sort match
-      case CoordsSort.Ascending => rowTiles.sortBy(_.coords.c)
-      case CoordsSort.Descending => rowTiles.sortBy(_.coords.c).reverse
-
   private def col(c: Int, sort: CoordsSort): Vector[Tile] =
-    val colTiles = tiles.filter(_.coords.c == c)
+    val rowTiles = tiles.filter(_.coords.c == c)
     sort match
-      case CoordsSort.Ascending => colTiles.sortBy(_.coords.r)
-      case CoordsSort.Descending => colTiles.sortBy(_.coords.r).reverse
+      case CoordsSort.Ascending => rowTiles.sortBy(_.coords.r)
+      case CoordsSort.Descending => rowTiles.sortBy(_.coords.r).reverse
+
+  private def row(r: Int, sort: CoordsSort): Vector[Tile] =
+    val colTiles = tiles.filter(_.coords.r == r)
+    sort match
+      case CoordsSort.Ascending => colTiles.sortBy(_.coords.c)
+      case CoordsSort.Descending => colTiles.sortBy(_.coords.c).reverse
 
   val state: String = tiles.map(_.face.symbol).mkString
+  val maskedState: String = tiles.map(t => if(t.masked) "." else t.face.symbol).mkString
 
   def rotated(direction: MoveDirection): Face = direction match
     case MoveDirection.Natural => rotatedC
@@ -177,7 +186,7 @@ case class Face(size: Int, axisH: Axis, axisV: Axis, nominalFace: Face2x2, tiles
   private def rotatedC: Face =
     // flip coordinates clockwise
     val newTiles = tiles.map(t =>
-      val target = tiles.find(_.coords == TileCoords(t.coords.c, size - 1 - t.coords.r)).get
+      val target = tiles.find(_.coords == TileCoords(t.coords.r, size - 1 - t.coords.c)).get
       t.copy(face = target.face)
     )
     copy(tiles = newTiles)
@@ -185,18 +194,19 @@ case class Face(size: Int, axisH: Axis, axisV: Axis, nominalFace: Face2x2, tiles
   private def rotatedCC: Face =
     // flip coordinates counterclockwise
     val newTiles = tiles.map(t =>
-      val target = tiles.find(_.coords == TileCoords(size -1 - t.coords.c, t.coords.r)).get
+      val target = tiles.find(_.coords == TileCoords(size -1 - t.coords.r, t.coords.c)).get
       t.copy(face = target.face)
     )
     copy(tiles = newTiles)
   def edge(axis: Axis, i: Int, sort: CoordsSort): Edge =
     axis.symbol match
-      case axisH.symbol => Edge(nominalFace, row(i, sort))
-      case axisV.symbol => Edge(nominalFace, col(i, sort))
+      case axisH.symbol => Edge(nominalFace, col(i, sort))
+      case axisV.symbol => Edge(nominalFace, row(i, sort))
   def withEdge(currentEdge: Edge, newEdge: Edge): Face =
     val newTiles = currentEdge.tiles.indices.foldLeft(tiles)((t, i) =>
       val tileIndex = t.indexWhere(_.coords == currentEdge.tiles(i).coords)
-      t.updated(tileIndex, Tile(newEdge.tiles(i).face, currentEdge.tiles(i).coords)))
+      val newTile = newEdge.tiles(i)
+      t.updated(tileIndex, currentEdge.tiles(i).copy(face = newTile.face, masked = newTile.masked)))
     copy(tiles = newTiles)
 
 object Face:

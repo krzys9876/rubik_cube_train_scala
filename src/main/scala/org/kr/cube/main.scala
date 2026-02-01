@@ -4,8 +4,8 @@ import scala.annotation.tailrec
 
 @main
 def main(): Unit =
-  //whiteLayer()
-  rl()
+  whiteLayer()
+  //rl()
 
 def whiteLayer(): Unit =
   val max = 1000000
@@ -38,12 +38,13 @@ def trySolve(cube: Cube2x2, state: String, mask: String, maxMoves: Int): (String
 def rl(): Unit =
   (0 until 10000).foreach(i =>
     val env = rlEpisode()
-    if(env.isSolved) println(f"$i ${env.history.length} ${env.history.mkString(" ")}")
+    if(env.isSolved) println(f"$i ${env.state} ${env.history.length} ${env.history.mkString(" ")}")
   )
 
 def rlEpisode(): Environment =
-  val env = Environment.init(30, Cube2x2.solved.state, "001100110011001100001111")
-  (0 until 300).foldLeft(env)((e, i) =>
+  val env = Environment.init(10, "..FF..LL..BB..RR....DDDD",
+    (f: Face, t: Tile) => f.nominalFace == Face2x2.U || (f.axisV.symbol == "Y" && t.coords.r == 0))
+  (0 until 200).foldLeft(env)((e, i) =>
     val action = Moves2x2.randomExceptOpposite(e.history.lastOption).symbol
-    if(!e.isSolved) e.step(Moves2x2.randomExceptOpposite(e.history.lastOption).symbol) else e)
+    if(!e.isSolved) e.step(action) else e)
 
