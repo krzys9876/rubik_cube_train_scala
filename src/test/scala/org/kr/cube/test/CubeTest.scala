@@ -1,6 +1,6 @@
 package org.kr.cube.test
 
-import org.kr.cube.{Axis, Cube2x2, Face2x2, Move2x2, Moves2x2}
+import org.kr.cube.{Axis, Cube2x2, Face, Face2x2, Moves2x2, Tile}
 import org.scalatest.GivenWhenThen
 import org.scalatest.featurespec.AnyFeatureSpec
 
@@ -135,6 +135,13 @@ class CubeTest extends AnyFeatureSpec with GivenWhenThen:
       val cube = moves.foldLeft(Cube2x2.solved)((c, m) => m.applyToCube(c))
       assert(cube.state === "BUDDRUDRFUDLLULBBRLFFFBR")
 
+  Feature("Mask tiles"):
+    Scenario("F"):
+      val cube = Cube2x2.solvedWithMask((f: Face, t: Tile) => f.nominalFace == Face2x2.U || (f.axisV.symbol == "Y" && t.coords.r == 0))
+      assert(cube.maskedState === "..FF..LL..BB..RR....DDDD")
+      val after = Moves2x2.F.applyToCube(cube)
+      assert(after.state === "FFFFLDLDBBBBURURUULLRRDD")
+      assert(after.maskedState === "F.F..DLD..BB...R..L.R.DD")
 
   Feature("internals"):
     Scenario("tiles"):

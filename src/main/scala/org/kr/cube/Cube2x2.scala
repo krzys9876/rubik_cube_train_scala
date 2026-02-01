@@ -187,7 +187,7 @@ case class Face(size: Int, axisH: Axis, axisV: Axis, nominalFace: Face2x2, tiles
     // flip coordinates clockwise
     val newTiles = tiles.map(t =>
       val target = tiles.find(_.coords == TileCoords(t.coords.r, size - 1 - t.coords.c)).get
-      t.copy(face = target.face)
+      t.copy(face = target.face, masked = target.masked)
     )
     copy(tiles = newTiles)
 
@@ -195,7 +195,7 @@ case class Face(size: Int, axisH: Axis, axisV: Axis, nominalFace: Face2x2, tiles
     // flip coordinates counterclockwise
     val newTiles = tiles.map(t =>
       val target = tiles.find(_.coords == TileCoords(size -1 - t.coords.r, t.coords.c)).get
-      t.copy(face = target.face)
+      t.copy(face = target.face, masked = target.masked)
     )
     copy(tiles = newTiles)
   def edge(axis: Axis, i: Int, sort: CoordsSort): Edge =

@@ -1,12 +1,15 @@
 package org.kr.cube
 
-case class Environment(cube: Cube2x2, scrambleMoves: Int, history: Vector[String], expectedState: String):
+case class Environment(cube: Cube2x2, scrambleMoves: Int, history: Vector[EnvironmentLogEntry], expectedState: String):
 
   val state: String = cube.maskedState
 
   def step(action: String): Environment =
     val nextMove = Moves2x2.from(action)
-    copy(cube = nextMove.applyToCube(cube), history = history.appended(action))
+    val stateBefore = state
+    val cubeAfter = nextMove.applyToCube(cube)
+    val stateAfter = cubeAfter.maskedState
+    copy(cube = nextMove.applyToCube(cube), history = history.appended(EnvironmentLogEntry(stateBefore, action, stateAfter)))
 
   def isSolved: Boolean = state == expectedState
 
@@ -16,3 +19,6 @@ object Environment:
     val initCube = Cube2x2.solvedWithMask(expectedMask)
     val randomCube = scramble.foldLeft(initCube)((c, m) => m.applyToCube(c))
     Environment(randomCube, scrambleMoves, Vector(), expectedState)
+
+
+case class EnvironmentLogEntry(stateBefore: String, action: String, stateAfter: String)
