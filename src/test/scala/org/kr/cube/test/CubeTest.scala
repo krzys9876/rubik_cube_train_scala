@@ -24,8 +24,28 @@ class CubeTest extends AnyFeatureSpec with GivenWhenThen:
   Feature("Apply moves to solved cube"):
     Scenario("F"):
       assert(Moves2x2.F.applyToCube(Cube2x2.solved).state === "FFFFLDLDBBBBURURUULLRRDD")
-    Scenario("F1"):
+    Scenario("F'"):
       assert(Moves2x2.F1.applyToCube(Cube2x2.solved).state === "FFFFLULUBBBBDRDRUURRLLDD")
+    Scenario("L"):
+      assert(Moves2x2.L.applyToCube(Cube2x2.solved).state === "UFUFLLLLBDBDRRRRBUBUFDFD")
+    Scenario("L'"):
+      assert(Moves2x2.L1.applyToCube(Cube2x2.solved).state === "DFDFLLLLBUBURRRRFUFUBDBD")
+    Scenario("B"):
+      assert(Moves2x2.B.applyToCube(Cube2x2.solved).state === "FFFFULULBBBBRDRDRRUUDDLL")
+    Scenario("B'"):
+      assert(Moves2x2.B1.applyToCube(Cube2x2.solved).state === "FFFFDLDLBBBBRURULLUUDDRR")
+    Scenario("R"):
+      assert(Moves2x2.R.applyToCube(Cube2x2.solved).state === "FDFDLLLLUBUBRRRRUFUFDBDB")
+    Scenario("R'"):
+      assert(Moves2x2.R1.applyToCube(Cube2x2.solved).state === "FUFULLLLDBDBRRRRUBUBDFDF")
+    Scenario("U"):
+      assert(Moves2x2.U.applyToCube(Cube2x2.solved).state === "RRFFFFLLLLBBBBRRUUUUDDDD")
+    Scenario("U'"):
+      assert(Moves2x2.U1.applyToCube(Cube2x2.solved).state === "LLFFBBLLRRBBFFRRUUUUDDDD")
+    Scenario("D"):
+      assert(Moves2x2.D.applyToCube(Cube2x2.solved).state === "FFLLLLBBBBRRRRFFUUUUDDDD")
+    Scenario("D'"):
+      assert(Moves2x2.D1.applyToCube(Cube2x2.solved).state === "FFRRLLFFBBLLRRBBUUUUDDDD")
 
   Feature("internals"):
     Scenario("tiles"):

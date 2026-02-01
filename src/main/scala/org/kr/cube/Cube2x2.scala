@@ -44,8 +44,12 @@ object Cube2x2:
     Cube2x2(faces)
 
 
-sealed abstract class Move2x2(val symbol: String):
-  def applyToCube(cube: Cube2x2): Cube2x2 = ???
+sealed abstract class Move2x2(val symbol: String, val sliceAxis: Axis, val sliceCoords: Int, val face: Face2x2, val direction: MoveDirection):
+  def applyToCube(cube: Cube2x2): Cube2x2 =
+    val faceRotated = cube.faces(face).rotated(direction)
+    val slice = cube.slice(sliceAxis, sliceCoords)
+    cube.withFace(faceRotated).withSliceRotated(slice)
+
 
   def edgeToEdge(origState: String, state: String,
                  faceFrom: Face2x2, indexFrom1: Int, indexFrom2: Int,
@@ -61,30 +65,21 @@ sealed abstract class Move2x2(val symbol: String):
 
 
 object Moves2x2:
-  case object F extends Move2x2("F"):
-    override def applyToCube(cube: Cube2x2): Cube2x2 =
-      val faceRotated = cube.faces(Face2x2.F).rotatedC
-      val slice = cube.slice(Axis.Z, 0)
-      cube.withFace(faceRotated).withSliceRotated(slice)
+  case object F extends Move2x2("F", Axis.Z, 0, Face2x2.F, MoveDirection.Clockwise)
+  case object F1 extends Move2x2("F'", Axis.Zr, 0, Face2x2.F, MoveDirection.Counterclockwise)
+  case object L extends Move2x2("L", Axis.Xr, 0, Face2x2.L, MoveDirection.Clockwise)
+  case object L1 extends Move2x2("L'", Axis.X, 0, Face2x2.L, MoveDirection.Counterclockwise)
+  case object B extends Move2x2("B", Axis.Zr, 1, Face2x2.F, MoveDirection.Clockwise)
+  case object B1 extends Move2x2("B'", Axis.Z, 1, Face2x2.F, MoveDirection.Counterclockwise)
+  case object R extends Move2x2("B", Axis.X, 1, Face2x2.R, MoveDirection.Clockwise)
+  case object R1 extends Move2x2("B'", Axis.Xr, 1, Face2x2.R, MoveDirection.Counterclockwise)
+  case object U extends Move2x2("U", Axis.Y, 0, Face2x2.U, MoveDirection.Clockwise)
+  case object U1 extends Move2x2("U'", Axis.Yr, 0, Face2x2.U, MoveDirection.Counterclockwise)
+  case object D extends Move2x2("D", Axis.Yr, 1, Face2x2.D, MoveDirection.Clockwise)
+  case object D1 extends Move2x2("D'", Axis.Y, 1, Face2x2.D, MoveDirection.Counterclockwise)
 
-  case object F1 extends Move2x2("F'"):
-    override def applyToCube(cube: Cube2x2): Cube2x2 =
-      val faceRotated = cube.faces(Face2x2.F).rotatedCC
-      val slice = cube.slice(Axis.Zr, 0)
-      cube.withFace(faceRotated).withSliceRotated(slice)
 
-  case object L extends Move2x2("L")
-  case object L1 extends Move2x2("L'")
-  case object B extends Move2x2("B")
-  case object B1 extends Move2x2("B'")
-  case object R extends Move2x2("R")
-  case object R1 extends Move2x2("R'")
-  case object U extends Move2x2("U")
-  case object U1 extends Move2x2("U'")
-  case object D extends Move2x2("D")
-  case object D1 extends Move2x2("D'")
-
-sealed abstract class Face2x2(val symbol: String, val index: Int) {}
+sealed abstract class Face2x2(val symbol: String, val index: Int)
 
 object Face2x2:
   case object F extends Face2x2("F", 0)
@@ -126,10 +121,21 @@ case class TileCoords(r: Int, c: Int)
 
 case class Tile(face: Face2x2, coords: TileCoords)
 
+sealed abstract class MoveDirection(val symbol: String)
+
+object MoveDirection:
+  case object Clockwise extends MoveDirection("C")
+  case object Counterclockwise extends MoveDirection("CC")
+
 case class Face(size: Int, axisH: Axis, axisV: Axis, nominalFace: Face2x2, tiles: Vector[Tile]):
   private def row(r: Int): Vector[Tile] = tiles.filter(_.coords.r == r)
   private def col(c: Int): Vector[Tile] = tiles.filter(_.coords.c == c)
   lazy val state: String = tiles.map(_.face.symbol).mkString
+
+  def rotated(direction: MoveDirection): Face = direction match
+    case MoveDirection.Clockwise => rotatedC
+    case MoveDirection.Counterclockwise => rotatedCC
+
   def rotatedC: Face =
     // flip coordinates clockwise
     val newTiles = tiles.map(t => tiles.find(_.coords == TileCoords(t.coords.c, size - 1 - t.coords.r)).get)
