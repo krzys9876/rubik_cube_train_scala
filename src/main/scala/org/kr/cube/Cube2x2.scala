@@ -16,6 +16,14 @@ case class Cube2x2(faces: Map[Face2x2, Face]):
     val edges = Face2x2.faceOrder(axis).map(face => faces(face).edge(axis, i))
     Slice(edges)
 
+  def withSliceRotated(slice: Slice): Cube2x2 =
+    slice.edgePairs.foldLeft(this)({ case (c, (eFrom, eTo)) =>
+      //NOTE: we must take original faces as we replace all faces, and we effectively overwrite the first with the las
+      val faceTo = this.faces(eTo.nominalFace)
+      val faceReplaced = faceTo.withEdge(eTo, eFrom)
+      c.withFace(faceReplaced)
+    })
+
 
 object Cube2x2:
   private val SOLVED_STATE: String = "FFFFLLLLBBBBRRRRUUUUDDDD"
@@ -56,22 +64,14 @@ object Moves2x2:
   case object F extends Move2x2("F"):
     override def applyToCube(cube: Cube2x2): Cube2x2 =
       val faceRotated = cube.faces(Face2x2.F).rotatedC
-      val state = cube.withFace(faceRotated).state
-      val stage1 = edgeToEdge(state, state, Face2x2.D, 0, 1, Face2x2.L, 1, 3)
-      val stage2 = edgeToEdge(state, stage1, Face2x2.L, 1, 3, Face2x2.U, 2, 3)
-      val stage3 = edgeToEdge(state, stage2, Face2x2.U, 2, 3, Face2x2.R, 0, 2)
-      val stage4 = edgeToEdge(state, stage3, Face2x2.R, 2, 0, Face2x2.D, 0, 1)
-      Cube2x2(stage4)
+      val slice = cube.slice(Axis.Z, 0)
+      cube.withFace(faceRotated).withSliceRotated(slice)
 
   case object F1 extends Move2x2("F'"):
     override def applyToCube(cube: Cube2x2): Cube2x2 =
       val faceRotated = cube.faces(Face2x2.F).rotatedCC
-      val state = cube.withFace(faceRotated).state
-      val stage1 = edgeToEdge(state, state, Face2x2.U, 2, 3, Face2x2.L, 1, 3)
-      val stage2 = edgeToEdge(state, stage1, Face2x2.L, 1, 3, Face2x2.D, 0, 1)
-      val stage3 = edgeToEdge(state, stage2, Face2x2.D, 0, 1, Face2x2.R, 0, 2)
-      val stage4 = edgeToEdge(state, stage3, Face2x2.R, 2, 0, Face2x2.U, 2, 3)
-      Cube2x2(stage4)
+      val slice = cube.slice(Axis.Zr, 0)
+      cube.withFace(faceRotated).withSliceRotated(slice)
 
   case object L extends Move2x2("L")
   case object L1 extends Move2x2("L'")
@@ -113,6 +113,7 @@ object Face2x2:
 
 abstract class Axis(val symbol: String, val reversed: Boolean)
 
+// NOTE: Y axis is screen-like: growing down, not up
 object Axis:
   case object X extends Axis("X", false)
   case object Y extends Axis("Y", false)
@@ -142,7 +143,9 @@ case class Face(size: Int, axisH: Axis, axisV: Axis, nominalFace: Face2x2, tiles
       case axisH.symbol => Edge(nominalFace, row(i))
       case axisV.symbol => Edge(nominalFace, col(i))
   def withEdge(currentEdge: Edge, newEdge: Edge): Face =
-    val newTiles = (0 to currentEdge.tiles.length).foldLeft(tiles)((t, i) => t.updated(i, Tile(newEdge.tiles(i).face, currentEdge.tiles(i).coords)))
+    val newTiles = currentEdge.tiles.indices.foldLeft(tiles)((t, i) =>
+      val tileIndex = t.indexWhere(_.coords == currentEdge.tiles(i).coords)
+      t.updated(tileIndex, Tile(newEdge.tiles(i).face, currentEdge.tiles(i).coords)))
     copy(tiles = newTiles)
 
 object Face:
@@ -150,6 +153,10 @@ object Face:
     val tiles: Vector[Tile] = 0.until(size).flatMap(r => 0.until(size).map(c => Tile(nominalFace, TileCoords(r, c)))).toVector
     new Face(size, axisH, axisV, nominalFace, tiles)
 
+  // Faces are always placed in order: ABCD:
+  // AB
+  // CD
+  // But they may have reversed coords. This simplifies textual state
   def apply(size: Int, axisH: Axis, axisV: Axis, nominalFace: Face2x2, state: String): Face =
     val tiles = 0.until(state.length).map(i =>
       val r = if(axisH.reversed) size - (i % size) -1 else i % size

@@ -62,6 +62,17 @@ class CubeTest extends AnyFeatureSpec with GivenWhenThen:
       println("Z1r")
       println(sliceZ1r.edges.mkString("\n"))
       println(sliceZ1r.edgePairs.mkString("\n"))
+      println("----------------")
+      println(sliceZ0.edgePairs.mkString("\n"))
+      val rotatedCube=sliceZ0.edgePairs.foldLeft(cube)({case(c,(eFrom, eTo)) =>
+          val faceFrom = cube.faces(eFrom.nominalFace)
+          val faceTo = cube.faces(eTo.nominalFace)
+          println(faceFrom)
+          println(faceTo)
+          val faceReplaced = faceTo.withEdge(eTo, eFrom)
+          c.withFace(faceReplaced)
+      })
+      println(rotatedCube.state)
 
 /*    Scenario("rotate slice"):
       val cube = Cube2x2.solved
