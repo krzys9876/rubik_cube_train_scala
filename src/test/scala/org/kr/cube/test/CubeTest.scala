@@ -124,13 +124,14 @@ class CubeTest extends AnyFeatureSpec with GivenWhenThen:
       assert(cube.isSolved)
 
     Scenario("F L B R U D"):
-      val moves = Vector(Moves2x2.F, Moves2x2.L/*, Moves2x2.B, Moves2x2.R, Moves2x2.U, Moves2x2.D*/)
-      val cube = moves.foldLeft(Cube2x2.solved)((c, m) =>
-        println(f"before: ${c.state}")
-        val c1 = m.applyToCube(c)
-        println(f"after: ${c1.state}")
-        c1)
-      assert(cube.state === "UFLFLLDDBDBRURURBUBLFRFD")
+      val moves = Vector(Moves2x2.F, Moves2x2.L, Moves2x2.B, Moves2x2.R, Moves2x2.U, Moves2x2.D)
+      val cube = moves.foldLeft(Cube2x2.solved)((c, m) => m.applyToCube(c))
+      assert(cube.state === "UUBDURRDULFDLBLDBRFFLFBR")
+
+    Scenario("F' L' B' R' U' D'"):
+      val moves = Vector(Moves2x2.F1, Moves2x2.L1, Moves2x2.B1, Moves2x2.R1, Moves2x2.U1, Moves2x2.D1)
+      val cube = moves.foldLeft(Cube2x2.solved)((c, m) => m.applyToCube(c))
+      assert(cube.state === "BUDDRUDRFUDLLULBBRLFFFBR")
 
 
   Feature("internals"):
