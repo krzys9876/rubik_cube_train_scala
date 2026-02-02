@@ -8,7 +8,7 @@ import scala.collection.mutable
 
 @main
 def main(): Unit =
-  //trainRL2x2WhiteLayer()
+  trainRL2x2WhiteLayer()
   testRun2x2WhiteLayer("q-values-2x2-write-layer-2000000-20260202_233105.txt")
 
 
@@ -53,32 +53,33 @@ def printAgentStats(agent: Agent, max: Long): Unit =
   println(f"episodes: ${agent.episodeCount}, episodes ratio of $max: ${agent.episodeCount.toDouble / max * 100.0}%.3f%%, epsilon: ${agent.epsilon}%.4f")
 
 // NOTE: having low maximum number of moves (say 25) and high maximum iterations increases model accuracy
-def episode(agent: Agent, env: Environment): Environment =
-  (0 until 30).foldLeft(env)((e, i) =>
+def episode(agent: Agent, env: Environment, maxMoves: Int): Environment =
+  (0 until maxMoves).foldLeft(env)((e, i) =>
     val action = agent.nextBestTrainingAction(e)
     if (!e.isSolved) e.step(action) else e
   )
 
 @tailrec
-def iteration(agent: Agent, toGo: Long, initialMax: Long, epochEpisodes: Long, successThisEpoch: Long): Agent =
+def iteration(agent: Agent, toGo: Long, initialMax: Long, maxMoves: Int, epochEpisodes: Long, successThisEpoch: Long): Agent =
   if (toGo == 0) agent
   else
     val initEnv = Environment.init2x2WhiteLayerTraining(50)
-    val afterEnvironment = episode(agent, initEnv)
+    val afterEnvironment = episode(agent, initEnv, maxMoves)
     var nextSuccessCounter = if(afterEnvironment.isSolved) successThisEpoch + 1 else successThisEpoch
     if(toGo % epochEpisodes == 0)
       printAgentStats(agent, initialMax - toGo)
       println(f"epoch: ${EpochLog(epochEpisodes, nextSuccessCounter).toString}")
       nextSuccessCounter = 0
-    iteration(agent.updateEpisode(afterEnvironment), toGo - 1, initialMax, epochEpisodes, nextSuccessCounter)
+    iteration(agent.updateEpisode(afterEnvironment), toGo - 1, initialMax, maxMoves, epochEpisodes, nextSuccessCounter)
 
 def trainRL2x2WhiteLayer(): Unit =
   val start = LocalDateTime.now()
   println(start)
-  val max = 2000000
+  val max = 1000000
   val epochEpisodes = 50000
+  val episodeMoves = 30
   val agent = Agent()
-  val afterAgent = iteration(agent, max, max, epochEpisodes, 0)
+  val afterAgent = iteration(agent, max, max, episodeMoves, epochEpisodes, 0)
   printAgentStats(afterAgent, max)
   val timestampTxt = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss").format(LocalDateTime.now())
   println("Saving q-values to file")
