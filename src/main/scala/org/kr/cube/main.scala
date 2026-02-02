@@ -15,7 +15,7 @@ def main(): Unit = {
   val end = LocalDateTime.now()
   println(end)
   val diffSec = start.until(end, ChronoUnit.SECONDS)
-  println(s"Time: $diffSec seconds")
+  println(f"Time: $diffSec seconds / ${diffSec/3600}:${(diffSec % 3600)/60}%02d:${diffSec % 60}%02d")
 }
 
 def whiteLayer(): Unit =
@@ -77,7 +77,7 @@ def printAgentStats(agent: Agent, max: Long): Unit =
   val allOther = agg.filter(_._1 > 1).map(_._2).sum
   //println(f"q-values stats (number of visits - number of states): \n${agg.mkString("\n")}")
   println(f"q-values: ${agent.qState.keys.size} keys, stats (number of visits - number of states): single visits: $singleVisited, other: $allOther, ratio ${singleVisited.toDouble / (singleVisited+allOther).toDouble * 100.0}%.3f%%")
-  println(f"episodes: ${agent.episodeCount}, episodes ratio of $max: ${agent.episodeCount.toDouble / max * 100.0}%.3f%%, epsilon: ${agent.epsilon}")
+  println(f"episodes: ${agent.episodeCount}, episodes ratio of $max: ${agent.episodeCount.toDouble / max * 100.0}%.3f%%, epsilon: ${agent.epsilon}%.4f")
 
 def episode(agent: Agent, env: Environment): Environment =
   (0 until 200).foldLeft(env)((e, i) =>
@@ -97,10 +97,10 @@ def iteration(agent: Agent, toGo: Long, initialMax: Long): Agent =
     iteration(agent.updateEpisode(afterEnvironment), toGo - 1, initialMax)
 
 def trainRL(): Unit =
-  val max = 1000000
+  val max = 10000
   val agent = Agent()
   val afterAgent = iteration(agent, max, max)
   printAgentStats(afterAgent, max)
   val timestampTxt = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss").format(LocalDateTime.now())
-  afterAgent.saveQState(f"q-val, maxues-trained-$max-$timestampTxt.txt")
+  afterAgent.saveQState(f"q-values-trained-$max-$timestampTxt.txt")
 
