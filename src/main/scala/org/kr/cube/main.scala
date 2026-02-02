@@ -5,7 +5,8 @@ import scala.annotation.tailrec
 @main
 def main(): Unit =
   //whiteLayer()
-  rl()
+  //rl()
+  trainRL()
 
 def whiteLayer(): Unit =
   val max = 1000000
@@ -63,3 +64,29 @@ def printAgentStats(agent: Agent): Unit =
   println(f"q-values: ${agent.qState.keys.size} keys")
   val agg = agent.qState.groupBy({ case (_, (c, _)) => c }).map((c, entries) => c -> entries.size).toVector.sortBy(_._1).reverse
   println(f"q-values stats (number of visits - number of states): \n${agg.mkString("\n")}")
+
+def episode(agent: Agent, env: Environment): Environment =
+  (0 until 200).foldLeft(env)((e, i) =>
+    val action = agent.nextBestAction(env)
+    if (!e.isSolved) e.step(action) else e
+  )
+
+@tailrec
+def iteration(agent: Agent, toGo: Long): Agent =
+  if (toGo == 0) agent
+  else
+    val initEnv = Environment.init(20, "..FF..LL..BB..RR....DDDD",
+      (f: Face, t: Tile) => f.nominalFace == Face2x2.U || (f.axisV.symbol == "Y" && t.coords.r == 0))
+    val afterEnvironment = episode(agent, initEnv)
+    if(afterEnvironment.isSolved)
+      println(f"$toGo ${afterEnvironment.state} ${afterEnvironment.history.length}")
+    if(toGo % 10000 == 0)  printAgentStats(agent)
+    iteration(agent.updateEpisode(afterEnvironment), toGo - 1)
+
+def trainRL(): Unit =
+  val max = 100000
+  val agent = Agent()
+  val afterAgent = iteration(agent, max)
+  printAgentStats(afterAgent)
+  afterAgent.saveQState(f"q-values-trained-$max.txt")
+

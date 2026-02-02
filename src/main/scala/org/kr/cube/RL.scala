@@ -47,7 +47,23 @@ case class Agent(qState: Map[String, (Int, Map[String, Double])]):
     })
     copy(qState = res._1)
 
+  def nextBestAction(environment: Environment): String =
+    if(Math.random() < epsilon) nextRandomAction(environment)
+    else 
+      val qValues = qState.getOrElse(environment.state, (0, Map()))._2
+      if(qValues.isEmpty) nextRandomAction(environment)
+      else
+        val maxQ = qValues.values.max
+        val bestList = qValues.filter(_._2 == maxQ)
+        bestList.keys.toVector(scala.util.Random.nextInt(bestList.size))
+
+  def nextRandomAction(environment: Environment): String = Moves2x2.randomExceptOpposite(None).symbol
+  
   def saveQState(filePath: String): Unit =
     val pw = new PrintWriter(filePath)
     pw.println(qState.map({case(k, v) => s"$k|${v._1}|${v._2.mkString("[","|","]")}"}).mkString("\n"))
     pw.close()
+
+
+object Agent:
+  def apply(): Agent = Agent(Map())
