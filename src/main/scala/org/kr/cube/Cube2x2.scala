@@ -19,9 +19,8 @@ case class Cube2x2(faces: Map[Face2x2, Face]):
   def withSliceRotated(faceRotated: Face, slice: Slice): Cube2x2 = 
     val newFaces = slice.edgePairs.map({case (eFrom, eTo) =>
       //NOTE: we must take original faces as we replace all faces, and we effectively overwrite the first with the last
-      eTo.nominalFace -> this.faces(eTo.nominalFace).withEdge(eTo, eFrom)
-    })
-    copy(faces = faces ++ (newFaces :+ (faceRotated.nominalFace -> faceRotated)).toMap)
+      eTo.nominalFace -> this.faces(eTo.nominalFace).withEdge(eTo, eFrom)})
+    copy(faces = faces + (faceRotated.nominalFace -> faceRotated) ++ newFaces)
   
 
 
@@ -162,16 +161,14 @@ object CoordsSort:
 
 case class Face(size: Int, axisH: Axis, axisV: Axis, nominalFace: Face2x2, tiles: Vector[Tile]):
   private def col(c: Int, sort: CoordsSort): Vector[Tile] =
-    val rowTiles = tiles.filter(_.coords.c == c)
-    sort match
-      case CoordsSort.Ascending => rowTiles.sortBy(_.coords.r)
-      case CoordsSort.Descending => rowTiles.sortBy(_.coords.r).reverse
+    tiles
+      .filter(_.coords.c == c)
+      .sortBy(t => if(sort == CoordsSort.Ascending) t.coords.r else - t.coords.r)
 
   private def row(r: Int, sort: CoordsSort): Vector[Tile] =
-    val colTiles = tiles.filter(_.coords.r == r)
-    sort match
-      case CoordsSort.Ascending => colTiles.sortBy(_.coords.c)
-      case CoordsSort.Descending => colTiles.sortBy(_.coords.c).reverse
+    tiles
+      .filter(_.coords.r == r)
+      .sortBy(t => if(sort == CoordsSort.Ascending) t.coords.c else - t.coords.c)
 
   lazy val state: String = tiles.map(_.face.symbol).mkString
   lazy val maskedState: String = tiles.map(t => if(t.masked) "." else t.face.symbol).mkString

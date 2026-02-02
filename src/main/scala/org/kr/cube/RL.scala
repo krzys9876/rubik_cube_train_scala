@@ -28,9 +28,9 @@ case class EnvironmentLogEntry(stateBefore: String, action: String, stateAfter: 
 case class Agent(qState: Map[String, (Int, Map[String, Double])], epsilon: Double = 0.2, episodeCount: Long = 0):
   private val alpha: Double = 0.1
   private val gamma: Double = 0.95
-  private val epsilonDecay: Double = 0.999
+  private val epsilonDecay: Double = 0.95
   private val epsilonMin: Double = 0.05
-  private val epsilonDecayEpisodes: Double = 200
+  private val epsilonDecayEpisodes: Double = 100
 
   def updateEpisode(environment: Environment): Agent =
     if(!environment.isSolved || environment.history.isEmpty) this

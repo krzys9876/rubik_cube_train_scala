@@ -80,7 +80,7 @@ def printAgentStats(agent: Agent, max: Long): Unit =
   println(f"episodes: ${agent.episodeCount}, episodes ratio of $max: ${agent.episodeCount.toDouble / max * 100.0}%.3f%%, epsilon: ${agent.epsilon}%.4f")
 
 def episode(agent: Agent, env: Environment): Environment =
-  (0 until 200).foldLeft(env)((e, i) =>
+  (0 until 300).foldLeft(env)((e, i) =>
     val action = agent.nextBestAction(env)
     if (!e.isSolved) e.step(action) else e
   )
@@ -97,7 +97,7 @@ def iteration(agent: Agent, toGo: Long, initialMax: Long): Agent =
     iteration(agent.updateEpisode(afterEnvironment), toGo - 1, initialMax)
 
 def trainRL(): Unit =
-  val max = 10000
+  val max = 10000000
   val agent = Agent()
   val afterAgent = iteration(agent, max, max)
   printAgentStats(afterAgent, max)
