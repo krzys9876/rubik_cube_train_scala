@@ -76,12 +76,22 @@ case class Agent(qState: Map[String, (Int, Map[String, Double])], epsilon: Doubl
 
   def saveQState(filePath: String): Unit =
     val pw = new PrintWriter(filePath)
-    pw.println(qState.map({case(k, v) => s"$k|${v._1}|${v._2.mkString("[","|","]")}"}).mkString("\n"))
+    pw.println(qState.map({case(k, v) => s"$k|${v._1}|${v._2.toVector.map(e => e._1 + ":" + e._2).mkString("#")}"}).mkString("\n"))
     pw.close()
 
 
 object Agent:
   def apply(): Agent = Agent(Map())
+
+  def load(filePath: String): Agent =
+    val lines = scala.io.Source.fromFile(filePath).getLines().toVector
+    // each row contains: key, counter, map of action -> q-value (double)
+    val qState = lines.map(_.split('|'))
+      .map({case Array(k, c, v) =>
+        (k, (c.toInt, v.split('#').map(_.split(':'))
+          .map({case Array(m, q) => (m, q.toDouble)}).toMap))}).toMap
+    Agent(qState)
+
 
 case class EpochLog(episodeCount: Long, successCount: Long):
   override def toString: String = f"episodes: $episodeCount, success: $successCount, ratio: ${successCount.toDouble / episodeCount.toDouble * 100.0}%.3f%%"

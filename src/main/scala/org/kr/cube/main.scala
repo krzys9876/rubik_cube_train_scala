@@ -8,17 +8,11 @@ import scala.collection.mutable
 
 @main
 def main(): Unit =
-  val start = LocalDateTime.now()
-  println(start)
-  //whiteLayer()
-  trainRL2x2WhiteLayer()
-  val end = LocalDateTime.now()
-  println(end)
-  val diffSec = start.until(end, ChronoUnit.SECONDS)
-  println(f"Time: $diffSec seconds / ${diffSec/3600}:${(diffSec % 3600)/60}%02d:${diffSec % 60}%02d")
+  //trainRL2x2WhiteLayer()
+  testRun2x2WhiteLayer("q-values-2x2-write-layer-2000000-20260202_233105.txt")
 
 
-def whiteLayer(): Unit =
+/*def whiteLayer(): Unit =
   val max = 1000000
   val res = (0 until max).foldLeft(Vector[(String, String, Boolean, Vector[String])]())((l, i) =>
     val (initState, initLog, state, res, log) = trySolve(Cube2x2.solved, Cube2x2.solved.state, "001100110011001100001111", 200)
@@ -46,6 +40,9 @@ def trySolve(cube: Cube2x2, state: String, mask: String, maxMoves: Int): (String
   val scrambleSymbols = scramble.map(_.symbol)
   (randomCube.state, scrambleSymbols, res._1.state, res._2, res._3)
 
+*/
+
+
 def printAgentStats(agent: Agent, max: Long): Unit =
   println(LocalDateTime.now())
   val agg = agent.qState.groupBy({ case (_, (c, _)) => c }).map((c, entries) => c -> entries.size).toVector.sortBy(_._1).reverse
@@ -56,7 +53,7 @@ def printAgentStats(agent: Agent, max: Long): Unit =
   println(f"episodes: ${agent.episodeCount}, episodes ratio of $max: ${agent.episodeCount.toDouble / max * 100.0}%.3f%%, epsilon: ${agent.epsilon}%.4f")
 
 def episode(agent: Agent, env: Environment): Environment =
-  (0 until 50).foldLeft(env)((e, i) =>
+  (0 until 30).foldLeft(env)((e, i) =>
     val action = agent.nextBestTrainingAction(e)
     if (!e.isSolved) e.step(action) else e
   )
@@ -75,23 +72,31 @@ def iteration(agent: Agent, toGo: Long, initialMax: Long, epochEpisodes: Long, s
     iteration(agent.updateEpisode(afterEnvironment), toGo - 1, initialMax, epochEpisodes, nextSuccessCounter)
 
 def trainRL2x2WhiteLayer(): Unit =
-  val max = 500000
-  val epochEpisodes = 10000
+  val start = LocalDateTime.now()
+  println(start)
+  val max = 2000000
+  val epochEpisodes = 50000
   val agent = Agent()
   val afterAgent = iteration(agent, max, max, epochEpisodes, 0)
   printAgentStats(afterAgent, max)
   val timestampTxt = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss").format(LocalDateTime.now())
   println("Saving q-values to file")
   afterAgent.saveQState(f"q-values-2x2-write-layer-$max-$timestampTxt.txt")
+  val end = LocalDateTime.now()
+  println(end)
+  val diffSec = start.until(end, ChronoUnit.SECONDS)
+  println(f"Time: $diffSec seconds / ${diffSec / 3600}:${(diffSec % 3600) / 60}%02d:${diffSec % 60}%02d")
 
-  println("-------------")
-  println("Test run")
+def testRun2x2WhiteLayer(filePath: String): Unit =
+  println(f"Test run with: $filePath")
+  val agent = Agent.load(filePath)
+  println(f"Loaded: ${agent.qState.keys.size} records")
   val res = mutable.Map[Int, Int]()
   (0 until 100000).foreach(e =>
     val env = Environment.init2x2WhiteLayerTraining(20)
     (0 until 500).foreach(i =>
       if(!env.isSolved)
-        env.step(afterAgent.nextBestAction(env)))
+        env.step(agent.nextBestAction(env)))
     if(env.isSolved) res.update(env.history.length, res.getOrElse(env.history.length, 0) + 1)
     else res.update(-1, res.getOrElse(-1, 0) + 1)
   )
