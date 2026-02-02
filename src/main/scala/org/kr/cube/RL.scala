@@ -30,6 +30,9 @@ object Environment:
   private val whiteLayer2x2Selector: (Face, Tile) => Boolean =
     (f: Face, t: Tile) => f.nominalFace == Face2x2.U || (f.axisV.symbol == "Y" && t.coords.r == 0)
 
+  def init2x2YellowLayerTraining(scrambleMoves: Int): Environment =
+    init(scrambleMoves, yellowLayer2x2ExpectedState, yellowLayer2x2Selector)
+
   private val yellowLayer2x2ExpectedState: String = "..FF..LL..BB..RRUUUUDDDD"
   private val yellowLayer2x2Selector: (Face, Tile) => Boolean =
     (f: Face, t: Tile) => f.axisV.symbol == "Y" && t.coords.r == 0

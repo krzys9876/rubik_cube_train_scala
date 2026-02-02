@@ -8,8 +8,9 @@ import scala.collection.mutable
 
 @main
 def main(): Unit =
-  trainRL2x2WhiteLayer()
-  testRun2x2WhiteLayer("q-values-2x2-write-layer-2000000-20260202_233105.txt")
+  //trainRL2x2WhiteLayer()
+  testRun2x2WhiteLayer("q-values-2x2-white-layer-2000000-20260202_233105.txt")
+  trainRL2x2YellowLayer("q-values-2x2-white-layer-2000000-20260202_233105.txt")
 
 
 /*def whiteLayer(): Unit =
@@ -60,17 +61,17 @@ def episode(agent: Agent, env: Environment, maxMoves: Int): Environment =
   )
 
 @tailrec
-def iteration(agent: Agent, toGo: Long, initialMax: Long, maxMoves: Int, epochEpisodes: Long, successThisEpoch: Long): Agent =
+def iteration(agent: Agent, envGenerator: () => Environment, toGo: Long, initialMax: Long, maxMoves: Int, epochEpisodes: Long, successThisEpoch: Long): Agent =
   if (toGo == 0) agent
   else
-    val initEnv = Environment.init2x2WhiteLayerTraining(50)
+    val initEnv = envGenerator()
     val afterEnvironment = episode(agent, initEnv, maxMoves)
     var nextSuccessCounter = if(afterEnvironment.isSolved) successThisEpoch + 1 else successThisEpoch
     if(toGo % epochEpisodes == 0)
       printAgentStats(agent, initialMax - toGo)
       println(f"epoch: ${EpochLog(epochEpisodes, nextSuccessCounter).toString}")
       nextSuccessCounter = 0
-    iteration(agent.updateEpisode(afterEnvironment), toGo - 1, initialMax, maxMoves, epochEpisodes, nextSuccessCounter)
+    iteration(agent.updateEpisode(afterEnvironment), envGenerator, toGo - 1, initialMax, maxMoves, epochEpisodes, nextSuccessCounter)
 
 def trainRL2x2WhiteLayer(): Unit =
   val start = LocalDateTime.now()
@@ -79,11 +80,11 @@ def trainRL2x2WhiteLayer(): Unit =
   val epochEpisodes = 50000
   val episodeMoves = 30
   val agent = Agent()
-  val afterAgent = iteration(agent, max, max, episodeMoves, epochEpisodes, 0)
+  val afterAgent = iteration(agent, () => Environment.init2x2WhiteLayerTraining(50), max, max, episodeMoves, epochEpisodes, 0)
   printAgentStats(afterAgent, max)
   val timestampTxt = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss").format(LocalDateTime.now())
   println("Saving q-values to file")
-  afterAgent.saveQState(f"q-values-2x2-write-layer-$max-$timestampTxt.txt")
+  afterAgent.saveQState(f"q-values-2x2-white-layer-$max-$timestampTxt.txt")
   val end = LocalDateTime.now()
   println(end)
   val diffSec = start.until(end, ChronoUnit.SECONDS)
@@ -103,3 +104,20 @@ def testRun2x2WhiteLayer(filePath: String): Unit =
     else res.update(-1, res.getOrElse(-1, 0) + 1)
   )
   println(res.toVector.sortBy(_._1).mkString("\n"))
+
+def trainRL2x2YellowLayer(filePath: String): Unit =
+  val start = LocalDateTime.now()
+  println(start)
+  val max = 1000000
+  val epochEpisodes = 50000
+  val episodeMoves = 100
+  val agent = Agent.load(filePath) // Initialize agent with pretrained q-state
+  val afterAgent = iteration(agent, () => Environment.init2x2YellowLayerTraining(50), max, max, episodeMoves, epochEpisodes, 0)
+  printAgentStats(afterAgent, max)
+  val timestampTxt = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss").format(LocalDateTime.now())
+  println("Saving q-values to file")
+  afterAgent.saveQState(f"q-values-2x2-yellow-layer-$max-$timestampTxt.txt")
+  val end = LocalDateTime.now()
+  println(end)
+  val diffSec = start.until(end, ChronoUnit.SECONDS)
+  println(f"Time: $diffSec seconds / ${diffSec / 3600}:${(diffSec % 3600) / 60}%02d:${diffSec % 60}%02d")
