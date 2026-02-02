@@ -81,7 +81,7 @@ def printAgentStats(agent: Agent, max: Long): Unit =
 
 def episode(agent: Agent, env: Environment): Environment =
   (0 until 100).foldLeft(env)((e, i) =>
-    val action = agent.nextBestAction(env)
+    val action = agent.nextBestAction(e)
     if (!e.isSolved) e.step(action) else e
   )
 

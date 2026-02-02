@@ -4,12 +4,13 @@ import java.io.PrintWriter
 
 case class Environment(cube: Cube2x2, scrambleMoves: Int, history: Vector[EnvironmentLogEntry], expectedState: String):
 
-  val state: String = cube.maskedState
+  def state: String = cube.maskedState
 
   def step(action: String): Environment =
     val nextMove = Moves2x2.from(action)
+    val stateBefore = state
     val cubeAfter = nextMove.applyToCube(cube)
-    copy(cube = cubeAfter, history = history.appended(EnvironmentLogEntry(state, action)))
+    copy(cube = cubeAfter, history = history.appended(EnvironmentLogEntry(stateBefore, action)))
 
   def isSolved: Boolean = state == expectedState
 
