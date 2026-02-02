@@ -3,7 +3,7 @@ package org.kr.cube
 import java.io.PrintWriter
 import scala.collection.mutable
 
-case class Environment(var cube: Cube2x2, scrambleMoves: Int, history: mutable.ArrayBuffer[EnvironmentLogEntry],
+case class Environment(var cube: Cube2x2, history: mutable.ArrayBuffer[EnvironmentLogEntry],
                        expectedState: String, var state: String):
 
   def step(action: String): Environment =
@@ -21,7 +21,7 @@ object Environment:
     val scramble = Moves2x2.randomList(scrambleMoves)
     val initCube = Cube2x2.solvedWithMask(expectedMask)
     val randomCube = scramble.foldLeft(initCube)((c, m) => m.applyToCube(c))
-    Environment(randomCube, scrambleMoves, mutable.ArrayBuffer(), expectedState, randomCube.maskedState)
+    Environment(randomCube, mutable.ArrayBuffer(), expectedState, randomCube.maskedState)
 
   def init2x2WhiteLayerTraining(scrambleMoves: Int): Environment =
     init(scrambleMoves, whiteLayer2x2ExpectedState, whiteLayer2x2Selector)
@@ -84,13 +84,17 @@ object Agent:
   def apply(): Agent = Agent(Map())
 
   def load(filePath: String): Agent =
-    val lines = scala.io.Source.fromFile(filePath).getLines().toVector
-    // each row contains: key, counter, map of action -> q-value (double)
-    val qState = lines.map(_.split('|'))
-      .map({case Array(k, c, v) =>
-        (k, (c.toInt, v.split('#').map(_.split(':'))
-          .map({case Array(m, q) => (m, q.toDouble)}).toMap))}).toMap
-    Agent(qState)
+    val source = scala.io.Source.fromFile(filePath)
+    try
+      // each row contains: key (cube state), counter, map of action -> q-value (double)
+      val qState = source.getLines().toVector
+        .map(_.split('|')) // top level elements
+        .map({case Array(k, c, v) =>
+          (k, (c.toInt, v.split('#') // key, counter, actions (to be extracted from hash-separated string)
+            .map(_.split(':')) // separate action and q-value
+            .map({case Array(m, q) => (m, q.toDouble)}).toMap))}).toMap
+      Agent(qState)
+    finally source.close()
 
 
 case class EpochLog(episodeCount: Long, successCount: Long):
