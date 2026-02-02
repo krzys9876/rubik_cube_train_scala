@@ -11,7 +11,7 @@ def main(): Unit =
   val start = LocalDateTime.now()
   println(start)
   //whiteLayer()
-  trainRL()
+  trainRL2x2WhiteLayer()
   val end = LocalDateTime.now()
   println(end)
   val diffSec = start.until(end, ChronoUnit.SECONDS)
@@ -56,7 +56,7 @@ def printAgentStats(agent: Agent, max: Long): Unit =
   println(f"episodes: ${agent.episodeCount}, episodes ratio of $max: ${agent.episodeCount.toDouble / max * 100.0}%.3f%%, epsilon: ${agent.epsilon}%.4f")
 
 def episode(agent: Agent, env: Environment): Environment =
-  (0 until 100).foldLeft(env)((e, i) =>
+  (0 until 50).foldLeft(env)((e, i) =>
     val action = agent.nextBestTrainingAction(e)
     if (!e.isSolved) e.step(action) else e
   )
@@ -74,17 +74,19 @@ def iteration(agent: Agent, toGo: Long, initialMax: Long, epochEpisodes: Long, s
       nextSuccessCounter = 0
     iteration(agent.updateEpisode(afterEnvironment), toGo - 1, initialMax, epochEpisodes, nextSuccessCounter)
 
-def trainRL(): Unit =
+def trainRL2x2WhiteLayer(): Unit =
   val max = 500000
   val epochEpisodes = 10000
   val agent = Agent()
   val afterAgent = iteration(agent, max, max, epochEpisodes, 0)
   printAgentStats(afterAgent, max)
   val timestampTxt = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss").format(LocalDateTime.now())
-  afterAgent.saveQState(f"q-values-trained-$max-$timestampTxt.txt")
+  println("Saving q-values to file")
+  afterAgent.saveQState(f"q-values-2x2-write-layer-$max-$timestampTxt.txt")
 
+  println("-------------")
+  println("Test run")
   val res = mutable.Map[Int, Int]()
-
   (0 until 100000).foreach(e =>
     val env = Environment.init2x2WhiteLayerTraining(20)
     (0 until 500).foreach(i =>
@@ -94,4 +96,3 @@ def trainRL(): Unit =
     else res.update(-1, res.getOrElse(-1, 0) + 1)
   )
   println(res.toVector.sortBy(_._1).mkString("\n"))
-

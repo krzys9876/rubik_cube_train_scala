@@ -22,10 +22,10 @@ object Environment:
     val initCube = Cube2x2.solvedWithMask(expectedMask)
     val randomCube = scramble.foldLeft(initCube)((c, m) => m.applyToCube(c))
     Environment(randomCube, scrambleMoves, mutable.ArrayBuffer(), expectedState, randomCube.maskedState)
-    
+
   def init2x2WhiteLayerTraining(scrambleMoves: Int): Environment =
     init(scrambleMoves, whiteLayer2x2ExpectedState, whiteLayer2x2Selector)
-    
+
   private val whiteLayer2x2ExpectedState: String = "..FF..LL..BB..RR....DDDD"
   private val whiteLayer2x2Selector: (Face, Tile) => Boolean =
     (f: Face, t: Tile) => f.nominalFace == Face2x2.U || (f.axisV.symbol == "Y" && t.coords.r == 0)
@@ -35,7 +35,7 @@ case class EnvironmentLogEntry(stateBefore: String, action: String)
 
 case class Agent(qState: Map[String, (Int, Map[String, Double])], epsilon: Double = 0.25, episodeCount: Long = 0):
   private val alpha: Double = 0.1
-  private val gamma: Double = 0.99
+  private val gamma: Double = 0.95
   private val epsilonDecay: Double = 0.99
   private val epsilonMin: Double = 0.05
   private val epsilonDecayEpisodes: Double = 1500
