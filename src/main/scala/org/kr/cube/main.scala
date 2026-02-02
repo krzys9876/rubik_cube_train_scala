@@ -35,10 +35,12 @@ def trySolve(cube: Cube2x2, state: String, mask: String, maxMoves: Int): (String
   val scrambleSymbols = scramble.map(_.symbol)
   (randomCube.state, scrambleSymbols, res._1.state, res._2, res._3)
 
+// 1000000 - 25 min, need profiler to optimize
 def rl(): Unit =
-  val max = 100000
+  val max = 1000000
   val agent = Agent(Map())
   val res = (0 until max).foldLeft((Vector[Environment](), agent))({case ((r, a), i) =>
+    if(i % 10000 == 0) printAgentStats(a)
     val env = rlEpisode()
     if(env.isSolved)
       println(f"$i ${env.state} ${env.history.length} ${env.history.mkString(" ")}")
@@ -46,10 +48,9 @@ def rl(): Unit =
     else (r, a)
   })
   println(f"solved in ${res._1.length} / $max attempts (${res._1.length.toDouble / max * 100.0}%.2f%%)")
-  println(f"q-values: ${res._2.qState.keys.size} keys")
-  val agg = res._2.qState.groupBy(_._2.size).map(v => v._1 -> v._2.size).toVector.sortBy(_._1).reverse
-  println(f"q-values stats: \n${agg.mkString("\n")}")
-  res._2.saveQState("q-values.txt")
+  val (resEnv, resAgent) = res
+  printAgentStats(resAgent)
+  resAgent.saveQState("q-values.txt")
 
 def rlEpisode(): Environment =
   val env = Environment.init(20, "..FF..LL..BB..RR....DDDD",
@@ -58,3 +59,7 @@ def rlEpisode(): Environment =
     val action = Moves2x2.randomExceptOpposite(e.history.lastOption.map(_.action)).symbol
     if(!e.isSolved) e.step(action) else e)
 
+def printAgentStats(agent: Agent): Unit =
+  println(f"q-values: ${agent.qState.keys.size} keys")
+  val agg = agent.qState.groupBy({ case (_, (c, _)) => c }).map((c, entries) => c -> entries.size).toVector.sortBy(_._1).reverse
+  println(f"q-values stats (number of visits - number of states): \n${agg.mkString("\n")}")

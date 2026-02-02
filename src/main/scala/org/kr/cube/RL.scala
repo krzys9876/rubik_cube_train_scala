@@ -25,7 +25,7 @@ object Environment:
 
 case class EnvironmentLogEntry(stateBefore: String, action: String, stateAfter: String)
 
-case class Agent(qState: Map[String, Map[String, Double]]):
+case class Agent(qState: Map[String, (Int, Map[String, Double])]):
   val alpha: Double = 0.1
   val gamma: Double = 0.95
   val epsilon: Double = 0.2
@@ -39,15 +39,15 @@ case class Agent(qState: Map[String, Map[String, Double]]):
   private def doUpdateEpisode(environment: Environment): Agent =
     val reward = 1.0
     val res = environment.history.reverse.foldLeft((qState, reward))({ case ((qs, g), h) =>
-      val oldQStates = qs.getOrElse(h.stateBefore, Map())
+      val (oldActionCounter, oldQStates) = qs.getOrElse(h.stateBefore, (0, Map()))
       val oldActionWeight = oldQStates.getOrElse(h.action, 0.0)
       val newActionWeight = oldActionWeight + alpha * (g - oldActionWeight)
       val updatedQState = oldQStates.updated(h.action, newActionWeight)
-      (qs.updated(h.stateBefore, updatedQState), g * gamma)
+      (qs.updated(h.stateBefore, (oldActionCounter + 1, updatedQState)), g * gamma)
     })
     copy(qState = res._1)
 
   def saveQState(filePath: String): Unit =
     val pw = new PrintWriter(filePath)
-    pw.println(qState.map({case(k, v) => s"$k|${v.mkString("[","|","]")}"}).mkString("\n"))
+    pw.println(qState.map({case(k, v) => s"$k|${v._1}|${v._2.mkString("[","|","]")}"}).mkString("\n"))
     pw.close()
