@@ -1,16 +1,18 @@
 package org.kr.cube
 
 import java.io.PrintWriter
+import scala.collection.mutable
 
-case class Environment(cube: Cube2x2, scrambleMoves: Int, history: Vector[EnvironmentLogEntry], expectedState: String):
-
-  def state: String = cube.maskedState
+case class Environment(var cube: Cube2x2, scrambleMoves: Int, history: mutable.ArrayBuffer[EnvironmentLogEntry],
+                       expectedState: String, var state: String):
 
   def step(action: String): Environment =
     val nextMove = Moves2x2.from(action)
     val stateBefore = state
-    val cubeAfter = nextMove.applyToCube(cube)
-    copy(cube = cubeAfter, history = history.appended(EnvironmentLogEntry(stateBefore, action)))
+    cube = nextMove.applyToCube(cube)
+    state = cube.maskedState
+    history.append(EnvironmentLogEntry(stateBefore, action))
+    this
 
   def isSolved: Boolean = state == expectedState
 
@@ -19,17 +21,24 @@ object Environment:
     val scramble = Moves2x2.randomList(scrambleMoves)
     val initCube = Cube2x2.solvedWithMask(expectedMask)
     val randomCube = scramble.foldLeft(initCube)((c, m) => m.applyToCube(c))
-    Environment(randomCube, scrambleMoves, Vector(), expectedState)
+    Environment(randomCube, scrambleMoves, mutable.ArrayBuffer(), expectedState, randomCube.maskedState)
+    
+  def init2x2WhiteLayerTraining(scrambleMoves: Int): Environment =
+    init(scrambleMoves, whiteLayer2x2ExpectedState, whiteLayer2x2Selector)
+    
+  private val whiteLayer2x2ExpectedState: String = "..FF..LL..BB..RR....DDDD"
+  private val whiteLayer2x2Selector: (Face, Tile) => Boolean =
+    (f: Face, t: Tile) => f.nominalFace == Face2x2.U || (f.axisV.symbol == "Y" && t.coords.r == 0)
 
 
 case class EnvironmentLogEntry(stateBefore: String, action: String)
 
-case class Agent(qState: Map[String, (Int, Map[String, Double])], epsilon: Double = 0.2, episodeCount: Long = 0):
+case class Agent(qState: Map[String, (Int, Map[String, Double])], epsilon: Double = 0.25, episodeCount: Long = 0):
   private val alpha: Double = 0.1
   private val gamma: Double = 0.99
   private val epsilonDecay: Double = 0.99
   private val epsilonMin: Double = 0.05
-  private val epsilonDecayEpisodes: Double = 200
+  private val epsilonDecayEpisodes: Double = 1500
 
   def updateEpisode(environment: Environment): Agent =
     if(!environment.isSolved || environment.history.isEmpty) this
@@ -49,11 +58,15 @@ case class Agent(qState: Map[String, (Int, Map[String, Double])], epsilon: Doubl
       else epsilon
     copy(qState = res._1, epsilon = newEpsilon, episodeCount = episodeCount + 1)
 
-  def nextBestAction(environment: Environment): String =
+  def nextBestTrainingAction(environment: Environment): String =
     if(Math.random() < epsilon) nextRandomAction(environment)
+    else nextBestAction(environment)
+
+  def nextBestAction(environment: Environment): String =
+    if (Math.random() < epsilon) nextRandomAction(environment)
     else
       val qValues = qState.getOrElse(environment.state, (0, Map()))._2
-      if(qValues.isEmpty) nextRandomAction(environment)
+      if (qValues.isEmpty) nextRandomAction(environment)
       else
         val maxQ = qValues.values.max
         val bestList = qValues.filter(_._2 == maxQ)
@@ -69,3 +82,6 @@ case class Agent(qState: Map[String, (Int, Map[String, Double])], epsilon: Doubl
 
 object Agent:
   def apply(): Agent = Agent(Map())
+
+case class EpochLog(episodeCount: Long, successCount: Long):
+  override def toString: String = f"episodes: $episodeCount, success: $successCount, ratio: ${successCount.toDouble / episodeCount.toDouble * 100.0}%.3f%%"
