@@ -71,9 +71,12 @@ def rlEpisode(): Environment =
     if(!e.isSolved) e.step(action) else e)
 
 def printAgentStats(agent: Agent, max: Long): Unit =
-  println(f"q-values: ${agent.qState.keys.size} keys")
+  println(LocalDateTime.now())
   val agg = agent.qState.groupBy({ case (_, (c, _)) => c }).map((c, entries) => c -> entries.size).toVector.sortBy(_._1).reverse
-  println(f"q-values stats (number of visits - number of states): \n${agg.mkString("\n")}")
+  val singleVisited = agg.filter(_._1 == 1).map(_._2).sum
+  val allOther = agg.filter(_._1 > 1).map(_._2).sum
+  //println(f"q-values stats (number of visits - number of states): \n${agg.mkString("\n")}")
+  println(f"q-values: ${agent.qState.keys.size} keys, stats (number of visits - number of states): single visits: $singleVisited, other: $allOther, ratio ${singleVisited.toDouble / (singleVisited+allOther).toDouble * 100.0}%.3f%%")
   println(f"episodes: ${agent.episodeCount}, episodes ratio of $max: ${agent.episodeCount.toDouble / max * 100.0}%.3f%%, epsilon: ${agent.epsilon}")
 
 def episode(agent: Agent, env: Environment): Environment =
