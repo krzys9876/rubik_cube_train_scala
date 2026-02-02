@@ -160,18 +160,22 @@ object CoordsSort:
   case object Descending extends CoordsSort("D")
 
 case class Face(size: Int, axisH: Axis, axisV: Axis, nominalFace: Face2x2, tiles: Vector[Tile]):
-  private def col(c: Int, sort: CoordsSort): Vector[Tile] =
-    tiles
-      .filter(_.coords.c == c)
-      .sortBy(t => if(sort == CoordsSort.Ascending) t.coords.r else - t.coords.r)
-
-  private def row(r: Int, sort: CoordsSort): Vector[Tile] =
-    tiles
-      .filter(_.coords.r == r)
-      .sortBy(t => if(sort == CoordsSort.Ascending) t.coords.c else - t.coords.c)
-
   lazy val state: String = tiles.foldLeft("")((s, t) => s + t.face.symbol)
   lazy val maskedState: String = tiles.foldLeft("")((s, t) => s + (if(t.masked) "." else t.face.symbol))
+
+  private def col(c: Int, sort: CoordsSort): Vector[Tile] =
+    val colTiles = tiles.filter(_.coords.c == c)
+    sortTiles(colTiles, sort, axisV)
+
+  private def row(r: Int, sort: CoordsSort): Vector[Tile] =
+    val rowTiles = tiles.filter(_.coords.r == r)
+    sortTiles(rowTiles, sort, axisH)
+
+  // Assume, that tiles are sorted in natural order
+  private def sortTiles(sortTiles: Vector[Tile], sort: CoordsSort, axis: Axis): Vector[Tile] =
+    if ((!axis.reversed && sort == CoordsSort.Descending) || (axis.reversed && sort == CoordsSort.Ascending))
+      sortTiles.reverse
+    else sortTiles
 
   def rotated(direction: MoveDirection): Face = direction match
     case MoveDirection.Natural => rotatedC
