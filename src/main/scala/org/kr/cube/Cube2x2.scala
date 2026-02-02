@@ -206,9 +206,10 @@ case class Face(size: Int, axisH: Axis, axisV: Axis, nominalFace: Face2x2, tiles
 
   def withEdge(currentEdge: Edge, newEdge: Edge): Face =
     val newTiles = currentEdge.tiles.indices.foldLeft(tiles)((t, i) =>
-      val tileIndex = t.indexWhere(_.coords == currentEdge.tiles(i).coords)
+      val currentTile = currentEdge.tiles(i)
       val newTile = newEdge.tiles(i)
-      t.updated(tileIndex, currentEdge.tiles(i).copy(face = newTile.face, masked = newTile.masked)))
+      val tileIndex = t.indexWhere(_.coords == currentTile.coords)
+      t.updated(tileIndex, currentTile.copy(face = newTile.face, masked = newTile.masked)))
     copy(tiles = newTiles)
 
 object Face:
