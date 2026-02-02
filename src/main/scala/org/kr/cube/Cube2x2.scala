@@ -13,8 +13,8 @@ case class Cube2x2(faces: Map[Face2x2, Face]):
       faces(Face2x2.U).maskedState + faces(Face2x2.D).maskedState
   val isSolved: Boolean = state == Cube2x2.SOLVED_STATE
 
-  def withFace(face: Face): Cube2x2 = Cube2x2(faces + (face.nominalFace -> face))
-  def withFaces(facesToReplace: Vector[Face]): Cube2x2 = 
+  private def withFace(face: Face): Cube2x2 = Cube2x2(faces + (face.nominalFace -> face))
+  private def withFaces(facesToReplace: Vector[Face]): Cube2x2 = 
     val newFaces = facesToReplace.map(f => f.nominalFace -> f).toMap  
     copy(faces ++ newFaces)
 
@@ -22,12 +22,12 @@ case class Cube2x2(faces: Map[Face2x2, Face]):
     val edges = Face2x2.faceOrder(axis).map({case(face, sort) => faces(face).edge(axis, i, sort)})
     Slice(edges)
 
-  def withSliceRotated(slice: Slice): Cube2x2 = 
+  def withSliceRotated(faceRotated: Face, slice: Slice): Cube2x2 = 
     val newFaces = slice.edgePairs.map({case (eFrom, eTo) =>
       //NOTE: we must take original faces as we replace all faces, and we effectively overwrite the first with the last
       this.faces(eTo.nominalFace).withEdge(eTo, eFrom)
     })
-    withFaces(newFaces)
+    withFaces(newFaces :+ faceRotated)
   
 
 
@@ -64,7 +64,7 @@ sealed abstract class Move2x2(val symbol: String, val sliceAxis: Axis, val slice
   def applyToCube(cube: Cube2x2): Cube2x2 =
     val faceRotated = cube.faces(face).rotated(direction)
     val slice = cube.slice(sliceAxis, sliceCoords)
-    cube.withFace(faceRotated).withSliceRotated(slice)
+    cube.withSliceRotated(faceRotated, slice)
 
   def edgeToEdge(origState: String, state: String,
                  faceFrom: Face2x2, indexFrom1: Int, indexFrom2: Int,
