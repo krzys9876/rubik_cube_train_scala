@@ -1,27 +1,37 @@
 package org.kr.cube
 
-case class Cube2x2(faces: Map[Face2x2, Face]):
+import scala.collection.mutable
 
-  lazy val state: String =
+case class Cube2x2(faces: mutable.Map[Face2x2, Face]):
+
+  def state: String =
     faces(Face2x2.F).state + faces(Face2x2.L).state + faces(Face2x2.B).state + faces(Face2x2.R).state +
       faces(Face2x2.U).state + faces(Face2x2.D).state
-  lazy val maskedState: String =
-    faces(Face2x2.F).maskedState + faces(Face2x2.L).maskedState + faces(Face2x2.B).maskedState + faces(Face2x2.R).maskedState +
-      faces(Face2x2.U).maskedState + faces(Face2x2.D).maskedState
+  def maskedState: String = 
+    new StringBuilder().append(faces(Face2x2.F).maskedState)
+      .append(faces(Face2x2.L).maskedState)
+      .append(faces(Face2x2.B).maskedState)
+      .append(faces(Face2x2.R).maskedState)
+      .append(faces(Face2x2.U).maskedState)
+      .append(faces(Face2x2.D).maskedState).result()
+
   lazy val isSolved: Boolean = state == Cube2x2.SOLVED_STATE
 
-  private def withFace(face: Face): Cube2x2 = Cube2x2(faces + (face.nominalFace -> face))
+  private def withFace(face: Face): Cube2x2 =
+    faces.update(face.nominalFace, face)
+    this
 
   def slice(axis: Axis, i: Int): Slice =
     val edges = Face2x2.faceOrder(axis).map({case(face, sort) => faces(face).edge(axis, i, sort)})
     Slice(edges)
 
-  def withSliceRotated(faceRotated: Face, slice: Slice): Cube2x2 = 
+  def withSliceRotated(faceRotated: Face, slice: Slice): Cube2x2 =
     val newFaces = slice.edgePairs.map({case (eFrom, eTo) =>
       //NOTE: we must take original faces as we replace all faces, and we effectively overwrite the first with the last
       eTo.nominalFace -> this.faces(eTo.nominalFace).withEdge(eTo, eFrom)})
-    copy(faces = faces + (faceRotated.nominalFace -> faceRotated) ++ newFaces)
-  
+    faces += (faceRotated.nominalFace -> faceRotated)
+    faces ++= newFaces
+    this
 
 
 object Cube2x2:
@@ -38,7 +48,7 @@ object Cube2x2:
   def f(state: String, face: Face2x2): String = state.substring(face.index, face.index + 2*2)
 
   def apply(state: String): Cube2x2 =
-    val faces: Map[Face2x2, Face] = Map(
+    val faces: mutable.Map[Face2x2, Face] = mutable.Map(
       Face2x2.F -> Face(2, Axis.X, Axis.Y, Face2x2.F, state.substring(Face2x2.F.index, Face2x2.F.index + 2 * 2)),
       Face2x2.L -> Face(2, Axis.Zr, Axis.Y, Face2x2.L, state.substring(Face2x2.L.index, Face2x2.L.index + 2 * 2)),
       Face2x2.B -> Face(2, Axis.Xr, Axis.Y, Face2x2.B, state.substring(Face2x2.B.index, Face2x2.B.index + 2 * 2)),
@@ -160,8 +170,26 @@ object CoordsSort:
   case object Descending extends CoordsSort("D")
 
 case class Face(size: Int, axisH: Axis, axisV: Axis, nominalFace: Face2x2, tiles: Vector[Tile]):
-  lazy val state: String = tiles.foldLeft("")((s, t) => s + t.face.symbol)
-  lazy val maskedState: String = tiles.foldLeft("")((s, t) => s + (if(t.masked) "." else t.face.symbol))
+  def state: String =
+    // Using primitives for efficiency
+    val len = tiles.length
+    val chars = new Array[Char](len)
+    var i = 0
+    while i < len do
+      chars(i) = tiles(i).face.symbol.charAt(0)
+      i += 1
+    new String(chars)
+
+  def maskedState: String =
+    // Using primitives for efficiency
+    val len = tiles.length
+    val chars = new Array[Char](len)
+    var i = 0
+    while i < len do
+      val t = tiles(i)
+      chars(i) = if t.masked then '.' else t.face.symbol.charAt(0)
+      i += 1
+    new String(chars)
 
   private def col(c: Int, sort: CoordsSort): Vector[Tile] =
     val colTiles = tiles.filter(_.coords.c == c)
