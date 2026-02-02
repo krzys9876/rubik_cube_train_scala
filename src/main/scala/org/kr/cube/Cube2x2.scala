@@ -2,16 +2,13 @@ package org.kr.cube
 
 case class Cube2x2(faces: Map[Face2x2, Face]):
 
-  private def f(face: Face2x2): String = faces(face).state
-  private def s(face: Face2x2, index: Int): String = f(face).substring(index, index + 1)
-
-  val state: String =
+  lazy val state: String =
     faces(Face2x2.F).state + faces(Face2x2.L).state + faces(Face2x2.B).state + faces(Face2x2.R).state +
       faces(Face2x2.U).state + faces(Face2x2.D).state
-  val maskedState: String =
+  lazy val maskedState: String =
     faces(Face2x2.F).maskedState + faces(Face2x2.L).maskedState + faces(Face2x2.B).maskedState + faces(Face2x2.R).maskedState +
       faces(Face2x2.U).maskedState + faces(Face2x2.D).maskedState
-  val isSolved: Boolean = state == Cube2x2.SOLVED_STATE
+  lazy val isSolved: Boolean = state == Cube2x2.SOLVED_STATE
 
   private def withFace(face: Face): Cube2x2 = Cube2x2(faces + (face.nominalFace -> face))
 
@@ -176,8 +173,8 @@ case class Face(size: Int, axisH: Axis, axisV: Axis, nominalFace: Face2x2, tiles
       case CoordsSort.Ascending => colTiles.sortBy(_.coords.c)
       case CoordsSort.Descending => colTiles.sortBy(_.coords.c).reverse
 
-  val state: String = tiles.map(_.face.symbol).mkString
-  val maskedState: String = tiles.map(t => if(t.masked) "." else t.face.symbol).mkString
+  lazy val state: String = tiles.map(_.face.symbol).mkString
+  lazy val maskedState: String = tiles.map(t => if(t.masked) "." else t.face.symbol).mkString
 
   def rotated(direction: MoveDirection): Face = direction match
     case MoveDirection.Natural => rotatedC
