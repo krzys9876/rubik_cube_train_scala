@@ -14,9 +14,6 @@ case class Cube2x2(faces: Map[Face2x2, Face]):
   val isSolved: Boolean = state == Cube2x2.SOLVED_STATE
 
   private def withFace(face: Face): Cube2x2 = Cube2x2(faces + (face.nominalFace -> face))
-  private def withFaces(facesToReplace: Vector[Face]): Cube2x2 = 
-    val newFaces = facesToReplace.map(f => f.nominalFace -> f).toMap  
-    copy(faces ++ newFaces)
 
   def slice(axis: Axis, i: Int): Slice =
     val edges = Face2x2.faceOrder(axis).map({case(face, sort) => faces(face).edge(axis, i, sort)})
@@ -25,9 +22,9 @@ case class Cube2x2(faces: Map[Face2x2, Face]):
   def withSliceRotated(faceRotated: Face, slice: Slice): Cube2x2 = 
     val newFaces = slice.edgePairs.map({case (eFrom, eTo) =>
       //NOTE: we must take original faces as we replace all faces, and we effectively overwrite the first with the last
-      this.faces(eTo.nominalFace).withEdge(eTo, eFrom)
+      eTo.nominalFace -> this.faces(eTo.nominalFace).withEdge(eTo, eFrom)
     })
-    withFaces(newFaces :+ faceRotated)
+    copy(faces = faces ++ (newFaces :+ (faceRotated.nominalFace -> faceRotated)).toMap)
   
 
 
@@ -201,10 +198,12 @@ case class Face(size: Int, axisH: Axis, axisV: Axis, nominalFace: Face2x2, tiles
       t.copy(face = target.face, masked = target.masked)
     )
     copy(tiles = newTiles)
+
   def edge(axis: Axis, i: Int, sort: CoordsSort): Edge =
     axis.symbol match
       case axisH.symbol => Edge(nominalFace, col(i, sort))
       case axisV.symbol => Edge(nominalFace, row(i, sort))
+
   def withEdge(currentEdge: Edge, newEdge: Edge): Face =
     val newTiles = currentEdge.tiles.indices.foldLeft(tiles)((t, i) =>
       val tileIndex = t.indexWhere(_.coords == currentEdge.tiles(i).coords)
@@ -217,7 +216,7 @@ object Face:
     val tiles: Vector[Tile] = 0.until(size).flatMap(r => 0.until(size).map(c => Tile(nominalFace, TileCoords(r, c)))).toVector
     new Face(size, axisH, axisV, nominalFace, tiles)
 
-  // Faces are always placed in order: ABCD:
+  // Tiles are always placed on a face in order: ABCD:
   // AB
   // CD
   // But they may have reversed coords. This simplifies textual state
