@@ -52,6 +52,7 @@ def printAgentStats(agent: Agent, max: Long): Unit =
   println(f"q-values: ${agent.qState.keys.size} keys, single visits: $singleVisited, other: $allOther, ratio ${singleVisited.toDouble / (singleVisited+allOther).toDouble * 100.0}%.3f%%")
   println(f"episodes: ${agent.episodeCount}, episodes ratio of $max: ${agent.episodeCount.toDouble / max * 100.0}%.3f%%, epsilon: ${agent.epsilon}%.4f")
 
+// NOTE: having low maximum number of moves (say 25) and high maximum iterations increases model accuracy
 def episode(agent: Agent, env: Environment): Environment =
   (0 until 30).foldLeft(env)((e, i) =>
     val action = agent.nextBestTrainingAction(e)
