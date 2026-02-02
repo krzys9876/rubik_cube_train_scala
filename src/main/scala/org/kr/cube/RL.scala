@@ -25,13 +25,13 @@ object Environment:
 
 case class EnvironmentLogEntry(stateBefore: String, action: String, stateAfter: String)
 
-case class Agent(qState: Map[String, (Int, Map[String, Double])]):
-  val alpha: Double = 0.1
-  val gamma: Double = 0.95
-  val epsilon: Double = 0.2
-  val epsilonDecay: Double = 0.999
-  val epsilonMin: Double = 0.05
-  val epsilonDecayEpisodes: Double = 200
+case class Agent(qState: Map[String, (Int, Map[String, Double])], epsilon: Double = 0.2, episodeCount: Long = 0):
+  private val alpha: Double = 0.1
+  private val gamma: Double = 0.95
+  private val epsilonDecay: Double = 0.999
+  private val epsilonMin: Double = 0.05
+  private val epsilonDecayEpisodes: Double = 200
+
   def updateEpisode(environment: Environment): Agent =
     if(!environment.isSolved || environment.history.isEmpty) this
     else doUpdateEpisode(environment)
@@ -45,11 +45,14 @@ case class Agent(qState: Map[String, (Int, Map[String, Double])]):
       val updatedQState = oldQStates.updated(h.action, newActionWeight)
       (qs.updated(h.stateBefore, (oldActionCounter + 1, updatedQState)), g * gamma)
     })
-    copy(qState = res._1)
+    val newEpsilon =
+      if(episodeCount > 0 && episodeCount % epsilonDecayEpisodes == 0) Math.max(epsilon * epsilonDecay, epsilonMin)
+      else epsilon
+    copy(qState = res._1, epsilon = newEpsilon, episodeCount = episodeCount + 1)
 
   def nextBestAction(environment: Environment): String =
     if(Math.random() < epsilon) nextRandomAction(environment)
-    else 
+    else
       val qValues = qState.getOrElse(environment.state, (0, Map()))._2
       if(qValues.isEmpty) nextRandomAction(environment)
       else
@@ -58,7 +61,7 @@ case class Agent(qState: Map[String, (Int, Map[String, Double])]):
         bestList.keys.toVector(scala.util.Random.nextInt(bestList.size))
 
   def nextRandomAction(environment: Environment): String = Moves2x2.randomExceptOpposite(None).symbol
-  
+
   def saveQState(filePath: String): Unit =
     val pw = new PrintWriter(filePath)
     pw.println(qState.map({case(k, v) => s"$k|${v._1}|${v._2.mkString("[","|","]")}"}).mkString("\n"))

@@ -1,12 +1,22 @@
 package org.kr.cube
 
+import java.time.{Instant, LocalDateTime, Period}
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 import scala.annotation.tailrec
 
 @main
-def main(): Unit =
+def main(): Unit = {
+  val start = LocalDateTime.now()
+  println(start)
   //whiteLayer()
   //rl()
   trainRL()
+  val end = LocalDateTime.now()
+  println(end)
+  val diffSec = start.until(end, ChronoUnit.SECONDS)
+  println(s"Time: $diffSec seconds")
+}
 
 def whiteLayer(): Unit =
   val max = 1000000
@@ -41,7 +51,7 @@ def rl(): Unit =
   val max = 1000000
   val agent = Agent(Map())
   val res = (0 until max).foldLeft((Vector[Environment](), agent))({case ((r, a), i) =>
-    if(i % 10000 == 0) printAgentStats(a)
+    if(i % 10000 == 0) printAgentStats(a, max)
     val env = rlEpisode()
     if(env.isSolved)
       println(f"$i ${env.state} ${env.history.length} ${env.history.mkString(" ")}")
@@ -50,7 +60,7 @@ def rl(): Unit =
   })
   println(f"solved in ${res._1.length} / $max attempts (${res._1.length.toDouble / max * 100.0}%.2f%%)")
   val (resEnv, resAgent) = res
-  printAgentStats(resAgent)
+  printAgentStats(resAgent, max)
   resAgent.saveQState("q-values.txt")
 
 def rlEpisode(): Environment =
@@ -60,10 +70,11 @@ def rlEpisode(): Environment =
     val action = Moves2x2.randomExceptOpposite(e.history.lastOption.map(_.action)).symbol
     if(!e.isSolved) e.step(action) else e)
 
-def printAgentStats(agent: Agent): Unit =
+def printAgentStats(agent: Agent, max: Long): Unit =
   println(f"q-values: ${agent.qState.keys.size} keys")
   val agg = agent.qState.groupBy({ case (_, (c, _)) => c }).map((c, entries) => c -> entries.size).toVector.sortBy(_._1).reverse
   println(f"q-values stats (number of visits - number of states): \n${agg.mkString("\n")}")
+  println(f"episodes: ${agent.episodeCount}, episodes ratio of $max: ${agent.episodeCount.toDouble / max * 100.0}%.3f%%, epsilon: ${agent.epsilon}")
 
 def episode(agent: Agent, env: Environment): Environment =
   (0 until 200).foldLeft(env)((e, i) =>
@@ -72,7 +83,7 @@ def episode(agent: Agent, env: Environment): Environment =
   )
 
 @tailrec
-def iteration(agent: Agent, toGo: Long): Agent =
+def iteration(agent: Agent, toGo: Long, initialMax: Long): Agent =
   if (toGo == 0) agent
   else
     val initEnv = Environment.init(20, "..FF..LL..BB..RR....DDDD",
@@ -80,13 +91,14 @@ def iteration(agent: Agent, toGo: Long): Agent =
     val afterEnvironment = episode(agent, initEnv)
     if(afterEnvironment.isSolved)
       println(f"$toGo ${afterEnvironment.state} ${afterEnvironment.history.length}")
-    if(toGo % 10000 == 0)  printAgentStats(agent)
-    iteration(agent.updateEpisode(afterEnvironment), toGo - 1)
+    if(toGo % 10000 == 0)  printAgentStats(agent, initialMax - toGo)
+    iteration(agent.updateEpisode(afterEnvironment), toGo - 1, initialMax)
 
 def trainRL(): Unit =
-  val max = 100000
+  val max = 1000000
   val agent = Agent()
-  val afterAgent = iteration(agent, max)
-  printAgentStats(afterAgent)
-  afterAgent.saveQState(f"q-values-trained-$max.txt")
+  val afterAgent = iteration(agent, max, max)
+  printAgentStats(afterAgent, max)
+  val timestampTxt = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss").format(LocalDateTime.now())
+  afterAgent.saveQState(f"q-val, maxues-trained-$max-$timestampTxt.txt")
 
