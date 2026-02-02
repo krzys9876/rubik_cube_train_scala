@@ -170,8 +170,8 @@ case class Face(size: Int, axisH: Axis, axisV: Axis, nominalFace: Face2x2, tiles
       .filter(_.coords.r == r)
       .sortBy(t => if(sort == CoordsSort.Ascending) t.coords.c else - t.coords.c)
 
-  lazy val state: String = tiles.map(_.face.symbol).mkString
-  lazy val maskedState: String = tiles.map(t => if(t.masked) "." else t.face.symbol).mkString
+  lazy val state: String = tiles.foldLeft("")((s, t) => s + t.face.symbol)
+  lazy val maskedState: String = tiles.foldLeft("")((s, t) => s + (if(t.masked) "." else t.face.symbol))
 
   def rotated(direction: MoveDirection): Face = direction match
     case MoveDirection.Natural => rotatedC
