@@ -33,16 +33,16 @@ case class Cube2x2(faces: mutable.Map[Face2x2, Face]):
     faces ++= newFaces
     this
 
+  def applyMask(mask: (Face, Tile) => Boolean): Cube2x2 =
+    faces.values.foldLeft(this)((c, f) =>
+      c.withFace(f.copy(tiles = f.tiles.map(t => t.copy(masked = mask(f, t))))))
 
 object Cube2x2:
   private val SOLVED_STATE: String = "FFFFLLLLBBBBRRRRUUUUDDDD"
 
   def solved: Cube2x2 = Cube2x2(SOLVED_STATE)
 
-  def solvedWithMask(mask: (Face, Tile) => Boolean): Cube2x2 =
-    val initCube = solved
-    initCube.faces.values.foldLeft(initCube)((c, f) =>
-      c.withFace(f.copy(tiles = f.tiles.map(t => t.copy(masked = mask(f, t))))))
+  def solvedWithMask(mask: (Face, Tile) => Boolean): Cube2x2 = solved.applyMask(mask)
 
   def s(state: String, face: Face2x2, index: Int): String = state.substring(face.index + index, face.index + index + 1)
   def f(state: String, face: Face2x2): String = state.substring(face.index, face.index + 2*2)

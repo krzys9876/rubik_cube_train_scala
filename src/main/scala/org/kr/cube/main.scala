@@ -8,9 +8,9 @@ import scala.collection.mutable
 
 @main
 def main(): Unit =
-  //trainRL2x2WhiteLayer()
-  testRun2x2WhiteLayer("q-values-2x2-white-layer-2000000-20260202_233105.txt")
-  trainRL2x2YellowLayer("q-values-2x2-white-layer-2000000-20260202_233105.txt")
+  trainRL2x2WhiteLayer()
+  //testRun2x2WhiteLayer("q-values-2x2-white-layer-2000000-20260202_233105.txt")
+  //trainRL2x2YellowLayer("q-values-2x2-white-layer-2000000-20260202_233105.txt")
 
 
 /*def whiteLayer(): Unit =
@@ -85,6 +85,7 @@ def trainRL2x2WhiteLayer(): Unit =
   val timestampTxt = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss").format(LocalDateTime.now())
   println("Saving q-values to file")
   afterAgent.saveQState(f"q-values-2x2-white-layer-$max-$timestampTxt.txt")
+  afterAgent.saveSolvedStates(f"solved-2x2-white-layer-$max-$timestampTxt.txt")
   val end = LocalDateTime.now()
   println(end)
   val diffSec = start.until(end, ChronoUnit.SECONDS)
@@ -105,14 +106,21 @@ def testRun2x2WhiteLayer(filePath: String): Unit =
   )
   println(res.toVector.sortBy(_._1).mkString("\n"))
 
-def trainRL2x2YellowLayer(filePath: String): Unit =
+def trainRL2x2YellowLayer(whiteLayerFilePath: String): Unit =
   val start = LocalDateTime.now()
   println(start)
   val max = 1000000
   val epochEpisodes = 50000
   val episodeMoves = 100
-  val agent = Agent.load(filePath) // Initialize agent with pretrained q-state
-  val afterAgent = iteration(agent, () => Environment.init2x2YellowLayerTraining(50), max, max, episodeMoves, epochEpisodes, 0)
+  val whiteLayerAgent = Agent.load(whiteLayerFilePath) // Initialize agent with pretrained q-state
+
+  def prepareCube(): Cube2x2 =
+    val whiteLayerEnv = Environment.init2x2WhiteLayerTraining(50)
+    while (!whiteLayerEnv.isSolved) whiteLayerEnv.step(whiteLayerAgent.nextBestAction(whiteLayerEnv))
+    whiteLayerEnv.cube.applyMask(Environment.yellowLayer2x2Selector)
+
+  val agent = Agent()
+  val afterAgent = iteration(agent, () => Environment.init(() => prepareCube(), Environment.yellowLayer2x2ExpectedState), max, max, episodeMoves, epochEpisodes, 0)
   printAgentStats(afterAgent, max)
   val timestampTxt = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss").format(LocalDateTime.now())
   println("Saving q-values to file")

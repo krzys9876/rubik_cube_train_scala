@@ -1,7 +1,7 @@
 package org.kr.cube
 
 import java.io.PrintWriter
-import scala.collection.mutable
+import scala.collection.{immutable, mutable}
 
 case class Environment(var cube: Cube2x2, history: mutable.ArrayBuffer[EnvironmentLogEntry],
                        expectedState: String, var state: String):
@@ -23,6 +23,10 @@ object Environment:
     val randomCube = scramble.foldLeft(initCube)((c, m) => m.applyToCube(c))
     Environment(randomCube, mutable.ArrayBuffer(), expectedState, randomCube.maskedState)
 
+  def init(cubeGenerator: () => Cube2x2, expectedState: String): Environment =
+    val cube = cubeGenerator()
+    Environment(cube, mutable.ArrayBuffer(), expectedState, cube.maskedState)
+
   def init2x2WhiteLayerTraining(scrambleMoves: Int): Environment =
     init(scrambleMoves, whiteLayer2x2ExpectedState, whiteLayer2x2Selector)
 
@@ -33,14 +37,14 @@ object Environment:
   def init2x2YellowLayerTraining(scrambleMoves: Int): Environment =
     init(scrambleMoves, yellowLayer2x2ExpectedState, yellowLayer2x2Selector)
 
-  private val yellowLayer2x2ExpectedState: String = "..FF..LL..BB..RRUUUUDDDD"
-  private val yellowLayer2x2Selector: (Face, Tile) => Boolean =
-    (f: Face, t: Tile) => f.axisV.symbol == "Y" && t.coords.r == 0
+  val yellowLayer2x2ExpectedState: String = "..FF..LL..BB..RRUUUUDDDD"
+  val yellowLayer2x2Selector: (Face, Tile) => Boolean =
+    (f: Face, t: Tile) => t.face != Face2x2.U && !(f.axisV.symbol == "Y" && t.coords.r == 1 || f.nominalFace == Face2x2.D)
 
 
 case class EnvironmentLogEntry(stateBefore: String, action: String)
 
-case class Agent(qState: Map[String, (Int, Map[String, Double])], epsilon: Double = 0.25, episodeCount: Long = 0):
+case class Agent(qState: Map[String, (Int, Map[String, Double])], solvedStates: immutable.Set[String], epsilon: Double = 0.25, episodeCount: Long = 0):
   private val alpha: Double = 0.1
   private val gamma: Double = 0.95
   private val epsilonDecay: Double = 0.99
@@ -63,7 +67,7 @@ case class Agent(qState: Map[String, (Int, Map[String, Double])], epsilon: Doubl
     val newEpsilon =
       if(episodeCount > 0 && episodeCount % epsilonDecayEpisodes == 0) Math.max(epsilon * epsilonDecay, epsilonMin)
       else epsilon
-    copy(qState = res._1, epsilon = newEpsilon, episodeCount = episodeCount + 1)
+    copy(qState = res._1, epsilon = newEpsilon, episodeCount = episodeCount + 1, solvedStates = solvedStates + environment.state)
 
   def nextBestTrainingAction(environment: Environment): String =
     if(Math.random() < epsilon) nextRandomAction(environment)
@@ -86,9 +90,14 @@ case class Agent(qState: Map[String, (Int, Map[String, Double])], epsilon: Doubl
     pw.println(qState.map({case(k, v) => s"$k|${v._1}|${v._2.toVector.map(e => e._1 + ":" + e._2).mkString("#")}"}).mkString("\n"))
     pw.close()
 
+  def saveSolvedStates(filePath: String): Unit =
+    val pw = new PrintWriter(filePath)
+    pw.println(solvedStates.toVector.mkString("\n"))
+    pw.close()
+
 
 object Agent:
-  def apply(): Agent = Agent(Map())
+  def apply(): Agent = Agent(Map(), immutable.Set())
 
   def load(filePath: String): Agent =
     val source = scala.io.Source.fromFile(filePath)
@@ -100,7 +109,7 @@ object Agent:
           (k, (c.toInt, v.split('#') // key, counter, actions (to be extracted from hash-separated string)
             .map(_.split(':')) // separate action and q-value
             .map({case Array(m, q) => (m, q.toDouble)}).toMap))}).toMap
-      Agent(qState)
+      Agent(qState, immutable.Set())
     finally source.close()
 
 
