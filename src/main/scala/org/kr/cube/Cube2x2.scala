@@ -14,18 +14,21 @@ case class Cube2x2(faces: Map[Face2x2, Face]):
   val isSolved: Boolean = state == Cube2x2.SOLVED_STATE
 
   def withFace(face: Face): Cube2x2 = Cube2x2(faces + (face.nominalFace -> face))
+  def withFaces(facesToReplace: Vector[Face]): Cube2x2 = 
+    val newFaces = facesToReplace.map(f => f.nominalFace -> f).toMap  
+    copy(faces ++ newFaces)
 
   def slice(axis: Axis, i: Int): Slice =
     val edges = Face2x2.faceOrder(axis).map({case(face, sort) => faces(face).edge(axis, i, sort)})
     Slice(edges)
 
-  def withSliceRotated(slice: Slice): Cube2x2 =
-    slice.edgePairs.foldLeft(this)({ case (c, (eFrom, eTo)) =>
-      //NOTE: we must take original faces as we replace all faces, and we effectively overwrite the first with the las
-      val faceTo = this.faces(eTo.nominalFace)
-      val faceReplaced = faceTo.withEdge(eTo, eFrom)
-      c.withFace(faceReplaced)
+  def withSliceRotated(slice: Slice): Cube2x2 = 
+    val newFaces = slice.edgePairs.map({case (eFrom, eTo) =>
+      //NOTE: we must take original faces as we replace all faces, and we effectively overwrite the first with the last
+      this.faces(eTo.nominalFace).withEdge(eTo, eFrom)
     })
+    withFaces(newFaces)
+  
 
 
 object Cube2x2:

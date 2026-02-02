@@ -89,8 +89,7 @@ def iteration(agent: Agent, toGo: Long, initialMax: Long): Agent =
     val initEnv = Environment.init(20, "..FF..LL..BB..RR....DDDD",
       (f: Face, t: Tile) => f.nominalFace == Face2x2.U || (f.axisV.symbol == "Y" && t.coords.r == 0))
     val afterEnvironment = episode(agent, initEnv)
-    if(afterEnvironment.isSolved)
-      println(f"$toGo ${afterEnvironment.state} ${afterEnvironment.history.length}")
+    //if(afterEnvironment.isSolved) println(f"$toGo ${afterEnvironment.state} ${afterEnvironment.history.length}")
     if(toGo % 10000 == 0)  printAgentStats(agent, initialMax - toGo)
     iteration(agent.updateEpisode(afterEnvironment), toGo - 1, initialMax)
 
