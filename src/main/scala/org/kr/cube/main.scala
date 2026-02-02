@@ -80,7 +80,7 @@ def printAgentStats(agent: Agent, max: Long): Unit =
   println(f"episodes: ${agent.episodeCount}, episodes ratio of $max: ${agent.episodeCount.toDouble / max * 100.0}%.3f%%, epsilon: ${agent.epsilon}%.4f")
 
 def episode(agent: Agent, env: Environment): Environment =
-  (0 until 300).foldLeft(env)((e, i) =>
+  (0 until 50).foldLeft(env)((e, i) =>
     val action = agent.nextBestAction(env)
     if (!e.isSolved) e.step(action) else e
   )

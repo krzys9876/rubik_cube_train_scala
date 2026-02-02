@@ -8,10 +8,8 @@ case class Environment(cube: Cube2x2, scrambleMoves: Int, history: Vector[Enviro
 
   def step(action: String): Environment =
     val nextMove = Moves2x2.from(action)
-    val stateBefore = state
     val cubeAfter = nextMove.applyToCube(cube)
-    val stateAfter = cubeAfter.maskedState
-    copy(cube = nextMove.applyToCube(cube), history = history.appended(EnvironmentLogEntry(stateBefore, action, stateAfter)))
+    copy(cube = cubeAfter, history = history.appended(EnvironmentLogEntry(state, action)))
 
   def isSolved: Boolean = state == expectedState
 
@@ -23,7 +21,7 @@ object Environment:
     Environment(randomCube, scrambleMoves, Vector(), expectedState)
 
 
-case class EnvironmentLogEntry(stateBefore: String, action: String, stateAfter: String)
+case class EnvironmentLogEntry(stateBefore: String, action: String)
 
 case class Agent(qState: Map[String, (Int, Map[String, Double])], epsilon: Double = 0.2, episodeCount: Long = 0):
   private val alpha: Double = 0.1
