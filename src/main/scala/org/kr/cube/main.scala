@@ -24,19 +24,21 @@ def main(): Unit = {
     "q-values-2x2-upper-layer-10000000-20260203_151354.txt"
   )*/
   //debugUpperLayer("q-values-2x2-upper-layer-10000000-20260203_094831.txt")
-  solveOneFromScramble(
+  /*solveOneFromScramble(
     "q-values-2x2-white-layer-3000000-20260203_141521.txt",
     "q-values-2x2-yellow-layer-1000000-20260203_143242.txt",
     "q-values-2x2-upper-layer-10000000-20260203_151354.txt",
     "B B L' R B R B' U F' R U D R' B' D"
-  )
+  )*/
 
-  /*solveOneFromState(
+  solveOneFromState(
     "q-values-2x2-white-layer-3000000-20260203_141521.txt",
     "q-values-2x2-yellow-layer-1000000-20260203_143242.txt",
     "q-values-2x2-upper-layer-10000000-20260203_151354.txt",
-    "BFULLRFBFUBDLUDRFRUDLBRD"
-  )*/
+    //"BFULLRFBFUBDLUDRFRUDLBRD"
+    //"UDFLULDUDBRBLFFURRBBLDRF"
+    "UFRBLRRFDDBDULRLBFFLDUBU"
+  )
 
   /*solveRandomOne(
     "q-values-2x2-white-layer-3000000-20260203_141521.txt",
@@ -368,8 +370,9 @@ def solveOneFromScramble(filePathWhiteLayer: String, filePathYellowLayer: String
 
 def solveOneFromState(filePathWhiteLayer: String, filePathYellowLayer: String, filePathUpperLayer: String,
                          initialState: String): Unit =
-  val initialCube = Cube2x2(initialState).applyMask(Environment.whiteLayer2x2Selector)
-  println(f"initial state: ${initialCube.state}")
+  val initialCube = Cube2x2.maskUpperCorners(Cube2x2(initialState))
+
+  println(f"initial state: ${initialCube.state} ${initialCube.maskedState}")
   println(f"initial:\n${initialCube.printableState}\n")
   solveOne(filePathWhiteLayer, filePathYellowLayer, filePathUpperLayer, initialCube)
 

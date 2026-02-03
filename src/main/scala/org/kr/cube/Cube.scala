@@ -18,7 +18,7 @@ abstract class Cube:
       .append(faces(FaceType.U).maskedState)
       .append(faces(FaceType.D).maskedState).result()
 
-  private def withFace(face: Face): Cube =
+  def withFace(face: Face): Cube =
     faces.update(face.nominalFace, face)
     this
 
@@ -51,6 +51,9 @@ abstract class Cube:
 
   def printableState: String
 
+  def upperCorners(): Vector[Vector[(FaceType, Tile)]]
+  def lowerCorners(): Vector[Vector[(FaceType, Tile)]]
+
 
 case class Cube2x2(override val faces: mutable.Map[FaceType, Face]) extends Cube:
   override def isSolved: Boolean = state == Cube2x2.SOLVED_STATE
@@ -68,6 +71,33 @@ case class Cube2x2(override val faces: mutable.Map[FaceType, Face]) extends Cube
     f"${tileSymbol(FaceType.B,2)} ${tileSymbol(FaceType.B,3)}\n"+
     f"     ${tileSymbol(FaceType.D,0)} ${tileSymbol(FaceType.D, 1)}\n" +
     f"     ${tileSymbol(FaceType.D,2)} ${tileSymbol(FaceType.D, 3)}\n"
+
+  private def corners(): Vector[Vector[(FaceType, Tile)]] =
+    def corner(face: FaceType, index: Int): (FaceType, Tile) = (face, faces(face).tiles(index))
+    Vector(
+      Vector(corner(FaceType.F, 0), corner(FaceType.U, 2), corner(FaceType.L, 1)),
+      Vector(corner(FaceType.L, 0), corner(FaceType.U, 0), corner(FaceType.B, 1)),
+      Vector(corner(FaceType.B, 0), corner(FaceType.U, 1), corner(FaceType.R, 1)),
+      Vector(corner(FaceType.R, 0), corner(FaceType.U, 3), corner(FaceType.F, 1)),
+      Vector(corner(FaceType.F, 2), corner(FaceType.D, 0), corner(FaceType.L, 3)),
+      Vector(corner(FaceType.L, 2), corner(FaceType.D, 2), corner(FaceType.B, 3)),
+      Vector(corner(FaceType.B, 2), corner(FaceType.D, 3), corner(FaceType.R, 3)),
+      Vector(corner(FaceType.R, 2), corner(FaceType.D, 1), corner(FaceType.F, 3)))
+
+  override def upperCorners(): Vector[Vector[(FaceType, Tile)]] =
+    println(FaceType.upperCorners.mkString("\n"))
+    corners().filter(c =>
+      val cf = c.map(t => t._2.face)
+      println(c.mkString("\n"))
+      println(cf.mkString("\n"))
+      val res = FaceType.upperCorners.exists(uc => uc.sortBy(_.symbol).equals(cf.sortBy(_.symbol)))
+      println(res)
+      println()
+      res
+    )
+
+  override def lowerCorners(): Vector[Vector[(FaceType, Tile)]] = ???
+    //corners().filter(c => c.map(_.face).forall(FaceType.lowerCorners.contains))
 
 
 object Cube2x2:
@@ -93,6 +123,13 @@ object Cube2x2:
   def maskedEquals(state1: String, state2: String, mask: String): Boolean =
     mask zip (state1 zip state2) forall { case(m, (s1, s2)) => m == '0' || s1 == s2 }
 
+  def maskUpperCorners(cube: Cube): Cube =
+    val upperTiles = cube.upperCorners().flatten
+    println(f"${upperTiles.mkString("\n")}")
+    cube.faces.values.foreach(f => cube.withFace(f.copy(tiles = f.tiles.map(t =>
+      println(f"(${f.nominalFace}, $t) ${upperTiles.contains((f.nominalFace, t))}")
+      t.copy(masked = upperTiles.contains((f.nominalFace, t)))))))
+    cube
 
 
 sealed abstract class Move2x2(val symbol: String, val sliceAxis: Axis, val sliceCoords: Int, val face: FaceType,
