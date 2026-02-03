@@ -114,3 +114,33 @@ class Cube3x3Test extends AnyFeatureSpec with GivenWhenThen:
       val face2 = cube2.faces(FaceType.D)
       val faceRotatedCC = face2.rotated(Moves3x3.D1.direction)
       assert(faceRotatedCC.state === "RFRBRBLBL")
+
+  Feature("Apply sequence of moves to solved cube"):
+    Scenario("F F' L L' B B' R R' U U' D D'"):
+      val moves = Vector(
+        Moves3x3.F, Moves3x3.F1, Moves3x3.L, Moves3x3.L1, Moves3x3.B, Moves3x3.B1,
+        Moves3x3.R, Moves3x3.R1, Moves3x3.U, Moves3x3.U1, Moves3x3.D, Moves3x3.D1)
+      val cube = moves.foldLeft(Cube3x3.solved)((c, m) => m.applyToCube(c))
+      assert(cube.isSolved)
+
+    Scenario("4xF 4xL 4xB 4xR 4xU 4xD"):
+      val moves = Vector.fill(4)(Moves3x3.F) ++ Vector.fill(4)(Moves3x3.L) ++ Vector.fill(4)(Moves3x3.B) ++
+        Vector.fill(4)(Moves3x3.R) ++ Vector.fill(4)(Moves3x3.U) ++ Vector.fill(4)(Moves3x3.D)
+      val cube = moves.foldLeft(Cube3x3.solved)((c, m) => m.applyToCube(c))
+      assert(cube.isSolved)
+    
+    Scenario("4xF' 4xL' 4xB' 4xR' 4xU' 4xD'"):
+      val moves = Vector.fill(4)(Moves3x3.F1) ++ Vector.fill(4)(Moves3x3.L1) ++ Vector.fill(4)(Moves3x3.B1) ++
+        Vector.fill(4)(Moves3x3.R1) ++ Vector.fill(4)(Moves3x3.U1) ++ Vector.fill(4)(Moves3x3.D1)
+      val cube = moves.foldLeft(Cube3x3.solved)((c, m) => m.applyToCube(c))
+      assert(cube.isSolved)
+    
+    Scenario("F L B R U D"):
+      val moves = Vector(Moves3x3.F, Moves3x3.L, Moves3x3.B, Moves3x3.R, Moves3x3.U, Moves3x3.D)
+      val cube = moves.foldLeft(Cube3x3.solved)((c, m) => m.applyToCube(c))
+      assert(cube.state === "UUUUFDBDDUFRULLRDDULLUBBFDDLBBRRRLFDBBRLURFFFLFFLDRBBR")
+    
+    Scenario("F' L' B' R' U' D'"):
+      val moves = Vector(Moves3x3.F1, Moves3x3.L1, Moves3x3.B1, Moves3x3.R1, Moves3x3.U1, Moves3x3.D1)
+      val cube = moves.foldLeft(Cube3x3.solved)((c, m) => m.applyToCube(c))
+      assert(cube.state === "BUUDFUDDDRUUDLLDFRFUUDBBDLLLFURRRLBBBBRLURLFFFFFLDRBBR")
