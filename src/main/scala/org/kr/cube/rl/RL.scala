@@ -1,4 +1,6 @@
-package org.kr.cube
+package org.kr.cube.rl
+
+import org.kr.cube.*
 
 import java.io.PrintWriter
 import scala.collection.{immutable, mutable}
