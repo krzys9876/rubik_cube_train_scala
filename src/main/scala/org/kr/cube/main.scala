@@ -11,10 +11,6 @@ import scala.collection.mutable
 def main(): Unit = {
   //trainRL2x2WhiteLayer()
   //testRun2x2WhiteLayer("q-values-2x2-white-layer-3000000-20260203_110743.txt")
-  //testRun2x2WhiteLayer("re-q-values-2x2-white-layer-500000-20260203_133029.txt")
-  //reTrainRL2x2WhiteLayer("q-values-2x2-white-layer-3000000-20260203_110743.txt", "unsolved-2x2-white-layer-20260203_124031.txt")
-  //reTrainRL2x2WhiteLayer("re-q-values-2x2-white-layer-500000-20260203_131910.txt", "unsolved-2x2-white-layer-20260203_131925.txt")
-  //reTrainAndTestRL2x2WhiteLayer("re-q-values-2x2-white-layer-500000-20260203_130753.txt", "unsolved-2x2-white-layer-20260203_130839.txt")
   //trainRL2x2YellowLayer("solved-2x2-white-layer-1000000-20260203_005055.txt")
   //testRun2x2YellowLayer("q-values-2x2-white-layer-3000000-20260203_141521.txt", "q-values-2x2-yellow-layer-1000000-20260203_143242.txt")
   //trainRL2x2UpperLayer("solved-2x2-yellow-layer-1000000-20260203_010048.txt")
@@ -161,55 +157,6 @@ def testRun2x2WhiteLayer(filePath: String): String =
   pw.println(resUnsolved.toVector.map(_._1).mkString("\n"))
   pw.close()
   fileUS
-
-def reTrainRL2x2WhiteLayer(whiteLayerFilePath: String, unsolvedFilePath: String): (String, String) =
-  val start = LocalDateTime.now()
-  println(start)
-  val max = 500000
-  val epochEpisodes = 50000
-  val episodeMoves = 30
-  val agent = Agent.load(whiteLayerFilePath, 0.25, 0.05, 2000L)
-  //val agent = Agent(0.25, 0.05, 2000L)
-  val unsolvedStates = loadSimple(unsolvedFilePath).map(_.split('|')).map({case Array(initS, initMS, unS, unMS, scr) =>
-    (initS, initMS, unS, unMS, scr.split(" ").map(Moves2x2.from).toVector)
-  }) //.filter(_._1 == "BLRRDDBUUBBLDFDULLRFFFUR")
-
-  def prepareCube(): Cube =
-    val entry = unsolvedStates(scala.util.Random.nextInt(unsolvedStates.length))
-    val cube = Cube2x2.solved.applyMask(Environment.whiteLayer2x2Selector)
-    val scramble = entry._5
-    val scrambledCube = scramble.foldLeft(cube)((c, m) => m.applyToCube(c))
-    //println(scrambledCube.state)
-    //println(scrambledCube.maskedState)
-    scrambledCube
-
-  prepareCube()
-
-  val afterAgent = iteration(agent, () => Environment.init(() => prepareCube(), Environment.whiteLayer2x2ExpectedState),
-    max, max, episodeMoves, epochEpisodes, 0)
-  printAgentStats(afterAgent, max)
-  val timestampTxt = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss").format(LocalDateTime.now())
-  println("Saving q-values to file")
-  val fileQ = f"re-q-values-2x2-white-layer-$max-$timestampTxt.txt"
-  afterAgent.saveQState(fileQ)
-  val fileS = f"solved-2x2-white-layer-$max-$timestampTxt.txt"
-  afterAgent.saveSolvedStates(fileS)
-  val end = LocalDateTime.now()
-  println(end)
-  val diffSec = start.until(end, ChronoUnit.SECONDS)
-  println(f"Time: $diffSec seconds / ${diffSec / 3600}:${(diffSec % 3600) / 60}%02d:${diffSec % 60}%02d")
-  (fileQ, fileS)
-
-// retrain multiple times until no unsolved state is discovered
-@tailrec
-def reTrainAndTestRL2x2WhiteLayer(whiteLayerFilePath: String, unsolvedFilePath: String, counter: Int = 0): Unit =
-  val unsolved = loadSimple(unsolvedFilePath)
-  if(unsolved.isEmpty || counter == 10) ()
-  else
-    val (fileQ, _) = reTrainRL2x2WhiteLayer(whiteLayerFilePath, unsolvedFilePath)
-    println(f"Retraining with: $fileQ")
-    val fileUS = testRun2x2WhiteLayer(fileQ)
-    reTrainAndTestRL2x2WhiteLayer(fileQ, fileUS, counter + 1)
 
 
 def trainRL2x2YellowLayer(whileLayerSolvedFilePath: String): Unit =
