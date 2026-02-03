@@ -371,9 +371,6 @@ def solveOneFromScramble(filePathWhiteLayer: String, filePathYellowLayer: String
 def solveOneFromState(filePathWhiteLayer: String, filePathYellowLayer: String, filePathUpperLayer: String,
                          initialState: String): Unit =
   val initialCube = Cube2x2.maskUpperCorners(Cube2x2(initialState))
-
-  println(f"initial state: ${initialCube.state} ${initialCube.maskedState}")
-  println(f"initial:\n${initialCube.printableState}\n")
   solveOne(filePathWhiteLayer, filePathYellowLayer, filePathUpperLayer, initialCube)
 
 

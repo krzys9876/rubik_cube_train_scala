@@ -85,19 +85,11 @@ case class Cube2x2(override val faces: mutable.Map[FaceType, Face]) extends Cube
       Vector(corner(FaceType.R, 2), corner(FaceType.D, 1), corner(FaceType.F, 3)))
 
   override def upperCorners(): Vector[Vector[(FaceType, Tile)]] =
-    println(FaceType.upperCorners.mkString("\n"))
     corners().filter(c =>
       val cf = c.map(t => t._2.face)
-      println(c.mkString("\n"))
-      println(cf.mkString("\n"))
-      val res = FaceType.upperCorners.exists(uc => uc.sortBy(_.symbol).equals(cf.sortBy(_.symbol)))
-      println(res)
-      println()
-      res
-    )
+      FaceType.upperCorners.exists(uc => uc.sortBy(_.symbol).equals(cf.sortBy(_.symbol))))
 
   override def lowerCorners(): Vector[Vector[(FaceType, Tile)]] = ???
-    //corners().filter(c => c.map(_.face).forall(FaceType.lowerCorners.contains))
 
 
 object Cube2x2:
@@ -125,9 +117,7 @@ object Cube2x2:
 
   def maskUpperCorners(cube: Cube): Cube =
     val upperTiles = cube.upperCorners().flatten
-    println(f"${upperTiles.mkString("\n")}")
     cube.faces.values.foreach(f => cube.withFace(f.copy(tiles = f.tiles.map(t =>
-      println(f"(${f.nominalFace}, $t) ${upperTiles.contains((f.nominalFace, t))}")
       t.copy(masked = upperTiles.contains((f.nominalFace, t)))))))
     cube
 
