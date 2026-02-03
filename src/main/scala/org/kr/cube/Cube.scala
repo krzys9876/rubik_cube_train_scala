@@ -4,7 +4,7 @@ import scala.collection.mutable
 
 abstract class Cube:
   val faces: mutable.Map[FaceType, Face]
-  lazy val isSolved: Boolean
+  def isSolved: Boolean
 
   def state: String =
     faces(FaceType.F).state + faces(FaceType.L).state + faces(FaceType.B).state + faces(FaceType.R).state +
@@ -39,9 +39,35 @@ abstract class Cube:
     faces.values.foldLeft(this)((c, f) =>
       c.withFace(f.copy(tiles = f.tiles.map(t => t.copy(masked = mask(f, t))))))
 
+  def tileSymbol(faceType: FaceType, index: Int): String =
+    faces(faceType).tiles(index).face.symbol match {
+      case "F" => "\u001B[34mF\u001B[0m"
+      case "L" => "\u001B[38;2;255;165;0mL\u001B[0m"
+      case "B" => "\u001B[32mB\u001B[0m"
+      case "R" => "\u001B[31mR\u001B[0m"
+      case "U" => "\u001B[33mU\u001B[0m"
+      case "D" => "\u001B[0mD"
+    }
+
+  def printableState: String
+
 
 case class Cube2x2(override val faces: mutable.Map[FaceType, Face]) extends Cube:
-  override lazy val isSolved: Boolean = state == Cube2x2.SOLVED_STATE
+  override def isSolved: Boolean = state == Cube2x2.SOLVED_STATE
+
+  override def printableState: String =
+    f"     ${tileSymbol(FaceType.U,0)} ${tileSymbol(FaceType.U,1)}\n"+
+    f"     ${tileSymbol(FaceType.U,2)} ${tileSymbol(FaceType.U,3)}\n"+
+    f"${tileSymbol(FaceType.L,0)} ${tileSymbol(FaceType.L,1)}  "+
+    f"${tileSymbol(FaceType.F,0)} ${tileSymbol(FaceType.F,1)}  "+
+    f"${tileSymbol(FaceType.R,0)} ${tileSymbol(FaceType.R,1)}  "+
+    f"${tileSymbol(FaceType.B,0)} ${tileSymbol(FaceType.B,1)}\n"+
+    f"${tileSymbol(FaceType.L,2)} ${tileSymbol(FaceType.L,3)}  " +
+    f"${tileSymbol(FaceType.F,2)} ${tileSymbol(FaceType.F,3)}  " +
+    f"${tileSymbol(FaceType.R,2)} ${tileSymbol(FaceType.R,3)}  " +
+    f"${tileSymbol(FaceType.B,2)} ${tileSymbol(FaceType.B,3)}\n"+
+    f"     ${tileSymbol(FaceType.D,0)} ${tileSymbol(FaceType.D, 1)}\n" +
+    f"     ${tileSymbol(FaceType.D,2)} ${tileSymbol(FaceType.D, 3)}\n"
 
 
 object Cube2x2:

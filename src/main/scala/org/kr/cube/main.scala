@@ -8,7 +8,7 @@ import scala.annotation.tailrec
 import scala.collection.mutable
 
 @main
-def main(): Unit =
+def main(): Unit = {
   //trainRL2x2WhiteLayer()
   //testRun2x2WhiteLayer("q-values-2x2-white-layer-3000000-20260203_110743.txt")
   //testRun2x2WhiteLayer("re-q-values-2x2-white-layer-500000-20260203_133029.txt")
@@ -18,12 +18,32 @@ def main(): Unit =
   //trainRL2x2YellowLayer("solved-2x2-white-layer-1000000-20260203_005055.txt")
   //testRun2x2YellowLayer("q-values-2x2-white-layer-3000000-20260203_141521.txt", "q-values-2x2-yellow-layer-1000000-20260203_143242.txt")
   //trainRL2x2UpperLayer("solved-2x2-yellow-layer-1000000-20260203_010048.txt")
-  testRun2x2UpperLayer(
+  /*testRun2x2UpperLayer(
     "q-values-2x2-white-layer-3000000-20260203_141521.txt",
     "q-values-2x2-yellow-layer-1000000-20260203_143242.txt",
     "q-values-2x2-upper-layer-10000000-20260203_151354.txt"
-  )
+  )*/
   //debugUpperLayer("q-values-2x2-upper-layer-10000000-20260203_094831.txt")
+  solveOneFromScramble(
+    "q-values-2x2-white-layer-3000000-20260203_141521.txt",
+    "q-values-2x2-yellow-layer-1000000-20260203_143242.txt",
+    "q-values-2x2-upper-layer-10000000-20260203_151354.txt",
+    "B B L' R B R B' U F' R U D R' B' D"
+  )
+
+  /*solveOneFromState(
+    "q-values-2x2-white-layer-3000000-20260203_141521.txt",
+    "q-values-2x2-yellow-layer-1000000-20260203_143242.txt",
+    "q-values-2x2-upper-layer-10000000-20260203_151354.txt",
+    "BFULLRFBFUBDLUDRFRUDLBRD"
+  )*/
+
+  /*solveRandomOne(
+    "q-values-2x2-white-layer-3000000-20260203_141521.txt",
+    "q-values-2x2-yellow-layer-1000000-20260203_143242.txt",
+    "q-values-2x2-upper-layer-10000000-20260203_151354.txt"
+  )*/
+}
 
 
 /*def whiteLayer(): Unit =
@@ -332,3 +352,74 @@ def debugUpperLayer(filePathUpperLayer: String): Unit =
   if(environment.isSolved) println("Solved!")
   println(hist.mkString("\n"))
 
+def solveOneFromScramble(filePathWhiteLayer: String, filePathYellowLayer: String, filePathUpperLayer: String,
+                         initialScramble: String): Unit =
+  val startSolved = Cube2x2.solved
+  println(startSolved.printableState)
+  val initialCube = initialScramble.split(" ").map(Moves2x2.from).foldLeft(Cube2x2.solved.applyMask(Environment.whiteLayer2x2Selector))((c, m) =>
+    println(f"scramble move: ${m.symbol}")
+    val res = m.applyToCube(c)
+    println(res.printableState)
+    res
+  )
+  println(f"initial scramble: $initialScramble initial state: ${initialCube.state}")
+  println(f"initial:\n${initialCube.printableState}\n")
+  solveOne(filePathWhiteLayer, filePathYellowLayer, filePathUpperLayer, initialCube)
+
+def solveOneFromState(filePathWhiteLayer: String, filePathYellowLayer: String, filePathUpperLayer: String,
+                         initialState: String): Unit =
+  val initialCube = Cube2x2(initialState).applyMask(Environment.whiteLayer2x2Selector)
+  println(f"initial state: ${initialCube.state}")
+  println(f"initial:\n${initialCube.printableState}\n")
+  solveOne(filePathWhiteLayer, filePathYellowLayer, filePathUpperLayer, initialCube)
+
+
+def solveOne(filePathWhiteLayer: String, filePathYellowLayer: String, filePathUpperLayer: String,
+             initialCube: Cube): Unit =
+  println(f"Test run with: $filePathWhiteLayer, $filePathYellowLayer, $filePathUpperLayer")
+  val whiteLayerAgent = Agent.load(filePathWhiteLayer)
+  println(f"Loaded: ${whiteLayerAgent.qState.keys.size} records (white layer)")
+  val yellowLayerAgent = Agent.load(filePathYellowLayer)
+  println(f"Loaded: ${yellowLayerAgent.qState.keys.size} records (yellow layer)")
+  val upperLayerAgent = Agent.load(filePathUpperLayer)
+  println(f"Loaded: ${upperLayerAgent.qState.keys.size} records (upper layer)")
+
+  val initWhiteLayerEnv = Environment.init(() => initialCube, Environment.whiteLayer2x2ExpectedState)
+  val initWhiteState = initWhiteLayerEnv.cube.state
+  // NOTE: we add some randomness to overcome unsolvable states (loops)
+  println("white layer")
+  val envWhiteLayer = solveStage(whiteLayerAgent, initWhiteLayerEnv, 300, 0.005, 0.02)
+  if (envWhiteLayer.isSolved)
+    val initYellowState = envWhiteLayer.cube.state
+    val initYellowLayerEnv = Environment.init(() => envWhiteLayer.cube.applyMask(Environment.yellowLayer2x2Selector), Environment.yellowLayer2x2ExpectedState)
+    println("yellow layer")
+    val envYellowLayer = solveStage(yellowLayerAgent, initYellowLayerEnv, 200, 0.001)
+    if (envYellowLayer.isSolved)
+      val initUpperState = envYellowLayer.cube.state
+      val initUpperLayerEnv = Environment.init(() => envYellowLayer.cube.applyMask(Environment.final2x2Selector), Environment.final2x2ExpectedState)
+      println("upper layer")
+      val envUpperLayer = solveStage(upperLayerAgent, initUpperLayerEnv, 200, 0.001)
+      if (envUpperLayer.isSolved)
+        val length = envWhiteLayer.history.length + envYellowLayer.history.length + envUpperLayer.history.length
+        println(f"Solved in $length steps")
+  println("END")
+
+def solveStage(agent: Agent, environment: Environment, steps: Int, scale: Double = 1.0, epsilon: Double = 0.0): Environment =
+  println(f"initial state: \n\n${environment.cube.printableState}\n")
+  (0 until steps).foreach(_ =>
+    if (!environment.isSolved) {
+      val stateBefore = environment.cube.state
+      val stateBeforeP = environment.cube.printableState
+      val action = agent.nextBestAction(environment, scale, epsilon)
+      environment.step(action)
+      val stateAfter = environment.cube.state
+      val stateAfterP = environment.cube.printableState
+
+      //println(f"before: $stateBefore action: $action after: $stateAfter")
+      println(f"\naction: $action -> \n\n$stateAfterP")
+    })
+  environment
+
+def solveRandomOne(filePathWhiteLayer: String, filePathYellowLayer: String, filePathUpperLayer: String): Unit =
+  val moves = Moves2x2.randomList(scala.util.Random.nextInt(5) + 10).map(_.symbol).mkString(" ")
+  solveOneFromScramble(filePathWhiteLayer, filePathYellowLayer, filePathUpperLayer, moves)
