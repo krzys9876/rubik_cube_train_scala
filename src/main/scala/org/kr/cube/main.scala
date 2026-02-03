@@ -9,20 +9,20 @@ import scala.collection.mutable
 
 @main
 def main(): Unit =
-  trainRL2x2WhiteLayer()
+  //trainRL2x2WhiteLayer()
   //testRun2x2WhiteLayer("q-values-2x2-white-layer-3000000-20260203_110743.txt")
   //testRun2x2WhiteLayer("re-q-values-2x2-white-layer-500000-20260203_133029.txt")
   //reTrainRL2x2WhiteLayer("q-values-2x2-white-layer-3000000-20260203_110743.txt", "unsolved-2x2-white-layer-20260203_124031.txt")
   //reTrainRL2x2WhiteLayer("re-q-values-2x2-white-layer-500000-20260203_131910.txt", "unsolved-2x2-white-layer-20260203_131925.txt")
   //reTrainAndTestRL2x2WhiteLayer("re-q-values-2x2-white-layer-500000-20260203_130753.txt", "unsolved-2x2-white-layer-20260203_130839.txt")
   //trainRL2x2YellowLayer("solved-2x2-white-layer-1000000-20260203_005055.txt")
-  //testRun2x2YellowLayer("q-values-2x2-white-layer-1000000-20260203_005055.txt", "q-values-2x2-yellow-layer-1000000-20260203_010048.txt")
+  //testRun2x2YellowLayer("q-values-2x2-white-layer-3000000-20260203_141521.txt", "q-values-2x2-yellow-layer-1000000-20260203_143242.txt")
   //trainRL2x2UpperLayer("solved-2x2-yellow-layer-1000000-20260203_010048.txt")
-  /*testRun2x2UpperLayer(
-    "q-values-2x2-white-layer-10000000-20260203_021603.txt",
-    "q-values-2x2-yellow-layer-50000000-20260203_024944.txt",
-    "q-values-2x2-upper-layer-10000000-20260203_094831.txt"
-  )*/
+  testRun2x2UpperLayer(
+    "q-values-2x2-white-layer-3000000-20260203_141521.txt",
+    "q-values-2x2-yellow-layer-1000000-20260203_143242.txt",
+    "q-values-2x2-upper-layer-10000000-20260203_151354.txt"
+  )
   //debugUpperLayer("q-values-2x2-upper-layer-10000000-20260203_094831.txt")
 
 
@@ -201,7 +201,7 @@ def trainRL2x2YellowLayer(whileLayerSolvedFilePath: String): Unit =
     val solvedState = solvedStates(scala.util.Random.nextInt(solvedStates.length))
     Cube2x2(solvedState).applyMask(Environment.yellowLayer2x2Selector)
 
-  val agent = Agent()
+  val agent = Agent(0.20, 0.01, 1000L)
   val afterAgent = iteration(agent, () => Environment.init(() => prepareCube(), Environment.yellowLayer2x2ExpectedState), max, max, episodeMoves, epochEpisodes, 0)
   printAgentStats(afterAgent, max)
   val timestampTxt = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss").format(LocalDateTime.now())
@@ -229,19 +229,18 @@ def testRun2x2YellowLayer(filePathWhiteLayer: String, filePathYellowLayer: Strin
   val res = mutable.Map[Int, Int]()
   (0 until 100000).foreach(e =>
     if(e % 10000 == 0) println(e)
-    val envWhiteLayer = Environment.init2x2WhiteLayerTraining(20)
-    (0 until 500).foreach(i =>
-      if(!envWhiteLayer.isSolved)
-        envWhiteLayer.step(whiteLayerAgent.nextBestAction(envWhiteLayer)))
+    val initWhiteLayerEnv = Environment.init2x2WhiteLayerTraining(10 + scala.util.Random.nextInt(20))
+    val initWhiteState = initWhiteLayerEnv.cube.state
+    // NOTE: we add some randomness to overcome unsolvable states (loops)
+    val envWhiteLayer = testRunStage(whiteLayerAgent, initWhiteLayerEnv, 300, 0.005, 0.02)
     if(envWhiteLayer.isSolved)
-      val envYellowLayer = Environment.init(() => envWhiteLayer.cube.applyMask(Environment.yellowLayer2x2Selector), Environment.yellowLayer2x2ExpectedState)
-      (0 until 500).foreach(i =>
-        if (!envYellowLayer.isSolved)
-          envYellowLayer.step(yellowLayerAgent.nextBestAction(envYellowLayer)))
+      val initYellowState = envWhiteLayer.cube.state
+      val initYellowLayerEnv = Environment.init(() => envWhiteLayer.cube.applyMask(Environment.yellowLayer2x2Selector), Environment.yellowLayer2x2ExpectedState)
+      val envYellowLayer = testRunStage(yellowLayerAgent, initYellowLayerEnv, 200, 0.001)
       if(envYellowLayer.isSolved)
         val length = envWhiteLayer.history.length + envYellowLayer.history.length
         res.update(length, res.getOrElse(length, 0) + 1)
-      else res.update(-1, res.getOrElse(-1, 0) + 1)
+      else res.update(-2, res.getOrElse(-2, 0) + 1)
     else res.update(-1, res.getOrElse(-1, 0) + 1)
   )
   println(res.toVector.sortBy(_._1).mkString("\n"))
@@ -249,16 +248,16 @@ def testRun2x2YellowLayer(filePathWhiteLayer: String, filePathYellowLayer: Strin
 def trainRL2x2UpperLayer(yellowLayerSolvedFilePath: String): Unit =
   val start = LocalDateTime.now()
   println(start)
-  val max = 10000000
+  val max = 10000000 // NOTE: the learning process is not linear in this case as the model needs to find patterns
   val epochEpisodes = 50000
   val episodeMoves = 30
-  val solvedStates = loadSimple(yellowLayerSolvedFilePath) // load solved states for white layer to begin with
+  val solvedStates = loadSimple(yellowLayerSolvedFilePath) // load solved states for yellow layer to begin with
 
   def prepareCube(): Cube2x2 =
     val solvedState = solvedStates(scala.util.Random.nextInt(solvedStates.length))
     Cube2x2(solvedState).applyMask(Environment.final2x2Selector)
 
-  val agent = Agent(0.2, 0.001, 5000L) // minimum epsilon - we are looking for pattern, not for different ways to solve the upper layer
+  val agent = Agent(0.2, 0.001, 10000L) // minimum epsilon - we are looking for pattern, not for different ways to solve the upper layer
   val afterAgent = iteration(agent, () => Environment.init(() => prepareCube(), Environment.final2x2ExpectedState), max, max, episodeMoves, epochEpisodes, 0)
   printAgentStats(afterAgent, max)
   val timestampTxt = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss").format(LocalDateTime.now())
