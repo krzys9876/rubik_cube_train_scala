@@ -9,15 +9,15 @@ import scala.collection.mutable
 @main
 def main(): Unit =
   //trainRL2x2WhiteLayer()
-  //testRun2x2WhiteLayer("q-values-2x2-white-layer-2000000-20260202_233105.txt")
+  testRun2x2WhiteLayer("q-values-2x2-white-layer-1000000-20260203_104054.txt")
   //trainRL2x2YellowLayer("solved-2x2-white-layer-1000000-20260203_005055.txt")
   //testRun2x2YellowLayer("q-values-2x2-white-layer-1000000-20260203_005055.txt", "q-values-2x2-yellow-layer-1000000-20260203_010048.txt")
   //trainRL2x2UpperLayer("solved-2x2-yellow-layer-1000000-20260203_010048.txt")
-  testRun2x2UpperLayer(
+  /*testRun2x2UpperLayer(
     "q-values-2x2-white-layer-10000000-20260203_021603.txt",
     "q-values-2x2-yellow-layer-50000000-20260203_024944.txt",
     "q-values-2x2-upper-layer-10000000-20260203_094831.txt"
-  )
+  )*/
   //debugUpperLayer("q-values-2x2-upper-layer-10000000-20260203_094831.txt")
 
 
@@ -87,7 +87,7 @@ def trainRL2x2WhiteLayer(): Unit =
   val max = 1000000
   val epochEpisodes = 50000
   val episodeMoves = 30
-  val agent = Agent()
+  val agent = Agent(0.2, 0.001, 1000L)
   val afterAgent = iteration(agent, () => Environment.init2x2WhiteLayerTraining(50), max, max, episodeMoves, epochEpisodes, 0)
   printAgentStats(afterAgent, max)
   val timestampTxt = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss").format(LocalDateTime.now())
@@ -106,9 +106,7 @@ def testRun2x2WhiteLayer(filePath: String): Unit =
   val res = mutable.Map[Int, Int]()
   (0 until 100000).foreach(e =>
     val env = Environment.init2x2WhiteLayerTraining(20)
-    (0 until 500).foreach(i =>
-      if(!env.isSolved)
-        env.step(agent.nextBestAction(env)))
+    testRunStage(agent, env, 100)
     if(env.isSolved) res.update(env.history.length, res.getOrElse(env.history.length, 0) + 1)
     else res.update(-1, res.getOrElse(-1, 0) + 1)
   )
