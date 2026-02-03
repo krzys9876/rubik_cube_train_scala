@@ -67,7 +67,7 @@ case class Agent(qState: Map[String, (Int, Map[String, Double])], solvedStates: 
     val newEpsilon =
       if(episodeCount > 0 && episodeCount % epsilonDecayEpisodes == 0) Math.max(epsilon * epsilonDecay, epsilonMin)
       else epsilon
-    copy(qState = res._1, epsilon = newEpsilon, episodeCount = episodeCount + 1, solvedStates = solvedStates + environment.state)
+    copy(qState = res._1, epsilon = newEpsilon, episodeCount = episodeCount + 1, solvedStates = solvedStates + environment.cube.state)
 
   def nextBestTrainingAction(environment: Environment): String =
     if(Math.random() < epsilon) nextRandomAction(environment)

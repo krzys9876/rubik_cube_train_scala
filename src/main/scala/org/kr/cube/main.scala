@@ -8,9 +8,10 @@ import scala.collection.mutable
 
 @main
 def main(): Unit =
-  trainRL2x2WhiteLayer()
+  //trainRL2x2WhiteLayer()
   //testRun2x2WhiteLayer("q-values-2x2-white-layer-2000000-20260202_233105.txt")
-  //trainRL2x2YellowLayer("q-values-2x2-white-layer-2000000-20260202_233105.txt")
+  //trainRL2x2YellowLayer("q-values-2x2-white-layer-1000000-20260203_005055.txt", "solved-2x2-white-layer-1000000-20260203_005055.txt")
+  testRun2x2YellowLayer("q-values-2x2-white-layer-1000000-20260203_005055.txt", "q-values-2x2-yellow-layer-1000000-20260203_010048.txt")
 
 
 /*def whiteLayer(): Unit =
@@ -106,18 +107,18 @@ def testRun2x2WhiteLayer(filePath: String): Unit =
   )
   println(res.toVector.sortBy(_._1).mkString("\n"))
 
-def trainRL2x2YellowLayer(whiteLayerFilePath: String): Unit =
+def trainRL2x2YellowLayer(whiteLayerFilePath: String, whileLayerSolvedFilePath: String): Unit =
   val start = LocalDateTime.now()
   println(start)
   val max = 1000000
   val epochEpisodes = 50000
   val episodeMoves = 100
   val whiteLayerAgent = Agent.load(whiteLayerFilePath) // Initialize agent with pretrained q-state
+  val solvedStates = loadSolved(whileLayerSolvedFilePath) // load solved states for white layer to begin with
 
   def prepareCube(): Cube2x2 =
-    val whiteLayerEnv = Environment.init2x2WhiteLayerTraining(50)
-    while (!whiteLayerEnv.isSolved) whiteLayerEnv.step(whiteLayerAgent.nextBestAction(whiteLayerEnv))
-    whiteLayerEnv.cube.applyMask(Environment.yellowLayer2x2Selector)
+    val solvedState = solvedStates(scala.util.Random.nextInt(solvedStates.length))
+    Cube2x2(solvedState).applyMask(Environment.yellowLayer2x2Selector)
 
   val agent = Agent()
   val afterAgent = iteration(agent, () => Environment.init(() => prepareCube(), Environment.yellowLayer2x2ExpectedState), max, max, episodeMoves, epochEpisodes, 0)
@@ -125,7 +126,41 @@ def trainRL2x2YellowLayer(whiteLayerFilePath: String): Unit =
   val timestampTxt = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss").format(LocalDateTime.now())
   println("Saving q-values to file")
   afterAgent.saveQState(f"q-values-2x2-yellow-layer-$max-$timestampTxt.txt")
+  afterAgent.saveSolvedStates(f"solved-2x2-yellow-layer-$max-$timestampTxt.txt")
   val end = LocalDateTime.now()
   println(end)
   val diffSec = start.until(end, ChronoUnit.SECONDS)
   println(f"Time: $diffSec seconds / ${diffSec / 3600}:${(diffSec % 3600) / 60}%02d:${diffSec % 60}%02d")
+
+
+def loadSolved(filePath: String): Vector[String] =
+  val source = scala.io.Source.fromFile(filePath)
+  try
+    source.getLines().toVector
+  finally source.close()
+
+def testRun2x2YellowLayer(filePathWhiteLayer: String, filePathYellowLayer: String): Unit =
+  println(f"Test run with: $filePathWhiteLayer and $filePathYellowLayer")
+  val whiteLayerAgent = Agent.load(filePathWhiteLayer)
+  println(f"Loaded: ${whiteLayerAgent.qState.keys.size} records (white layer)")
+  val yellowLayerAgent = Agent.load(filePathYellowLayer)
+  println(f"Loaded: ${yellowLayerAgent.qState.keys.size} records (yellow layer)")
+  val res = mutable.Map[Int, Int]()
+  (0 until 100000).foreach(e =>
+    if(e % 10000 == 0) println(e)
+    val envWhiteLayer = Environment.init2x2WhiteLayerTraining(20)
+    (0 until 500).foreach(i =>
+      if(!envWhiteLayer.isSolved)
+        envWhiteLayer.step(whiteLayerAgent.nextBestAction(envWhiteLayer)))
+    if(envWhiteLayer.isSolved)
+      val envYellowLayer = Environment.init(() => envWhiteLayer.cube.applyMask(Environment.yellowLayer2x2Selector), Environment.yellowLayer2x2ExpectedState)
+      (0 until 500).foreach(i =>
+        if (!envYellowLayer.isSolved)
+          envYellowLayer.step(yellowLayerAgent.nextBestAction(envYellowLayer)))
+      if(envYellowLayer.isSolved)
+        val length = envWhiteLayer.history.length + envYellowLayer.history.length
+        res.update(length, res.getOrElse(length, 0) + 1)
+      else res.update(-1, res.getOrElse(-1, 0) + 1)
+    else res.update(-1, res.getOrElse(-1, 0) + 1)
+  )
+  println(res.toVector.sortBy(_._1).mkString("\n"))
