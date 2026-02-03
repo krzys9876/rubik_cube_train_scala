@@ -36,8 +36,6 @@ case class Cube2x2(override val faces: mutable.Map[FaceType, Face]) extends Cube
       val cf = c.map(t => t._2.face)
       FaceType.upperCorners.exists(uc => uc.sortBy(_.symbol).equals(cf.sortBy(_.symbol))))
 
-  def lowerCorners(): Vector[Vector[(FaceType, Tile)]] = ???
-
 
 object Cube2x2:
   private val SOLVED_STATE: String = "FFFFLLLLBBBBRRRRUUUUDDDD"
