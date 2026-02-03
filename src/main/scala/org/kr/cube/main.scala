@@ -24,21 +24,22 @@ def main(): Unit = {
     "q-values-2x2-upper-layer-10000000-20260203_151354.txt"
   )*/
   //debugUpperLayer("q-values-2x2-upper-layer-10000000-20260203_094831.txt")
-  solveOneFromScramble(
+  /*solveOneFromScramble(
     "q-values-2x2-white-layer-3000000-20260203_141521.txt",
     "q-values-2x2-yellow-layer-1000000-20260203_143242.txt",
     "q-values-2x2-upper-layer-10000000-20260203_151354.txt",
     "B B L' R B R B' U F' R U D R' B' D"
-  )
+  )*/
 
-  /*solveOneFromState(
+  solveOneFromState(
     "q-values-2x2-white-layer-3000000-20260203_141521.txt",
     "q-values-2x2-yellow-layer-1000000-20260203_143242.txt",
     "q-values-2x2-upper-layer-10000000-20260203_151354.txt",
     //"BFULLRFBFUBDLUDRFRUDLBRD"
     //"UDFLULDUDBRBLFFURRBBLDRF"
-    "UFRBLRRFDDBDULRLBFFLDUBU"
-  )*/
+    //"UFRBLRRFDDBDULRLBFFLDUBU"
+    "LDRFFBBUDLLUBBRDULURFDRF"
+  )
 
   /*solveRandomOne(
     "q-values-2x2-white-layer-3000000-20260203_141521.txt",
