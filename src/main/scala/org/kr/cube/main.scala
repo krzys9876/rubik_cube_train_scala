@@ -10,8 +10,14 @@ import scala.collection.mutable
 def main(): Unit =
   //trainRL2x2WhiteLayer()
   //testRun2x2WhiteLayer("q-values-2x2-white-layer-2000000-20260202_233105.txt")
-  trainRL2x2YellowLayer("solved-2x2-white-layer-1000000-20260203_005055.txt")
-  testRun2x2YellowLayer("q-values-2x2-white-layer-1000000-20260203_005055.txt", "q-values-2x2-yellow-layer-1000000-20260203_010048.txt")
+  //trainRL2x2YellowLayer("solved-2x2-white-layer-1000000-20260203_005055.txt")
+  //testRun2x2YellowLayer("q-values-2x2-white-layer-1000000-20260203_005055.txt", "q-values-2x2-yellow-layer-1000000-20260203_010048.txt")
+  //trainRL2x2UpperLayer("solved-2x2-yellow-layer-1000000-20260203_010048.txt")
+  testRun2x2UpperLayer(
+    "q-values-2x2-white-layer-10000000-20260203_021603.txt",
+    "q-values-2x2-yellow-layer-50000000-20260203_024944.txt",
+    "q-values-2x2-upper-layer-20000000-20260203_083150.txt"
+  )
 
 
 /*def whiteLayer(): Unit =
@@ -163,3 +169,59 @@ def testRun2x2YellowLayer(filePathWhiteLayer: String, filePathYellowLayer: Strin
     else res.update(-1, res.getOrElse(-1, 0) + 1)
   )
   println(res.toVector.sortBy(_._1).mkString("\n"))
+
+def trainRL2x2UpperLayer(yellowLayerSolvedFilePath: String): Unit =
+  val start = LocalDateTime.now()
+  println(start)
+  val max = 10000000
+  val epochEpisodes = 50000
+  val episodeMoves = 30
+  val solvedStates = loadSolved(yellowLayerSolvedFilePath) // load solved states for white layer to begin with
+
+  def prepareCube(): Cube2x2 =
+    val solvedState = solvedStates(scala.util.Random.nextInt(solvedStates.length))
+    Cube2x2(solvedState).applyMask(Environment.final2x2Selector)
+
+  val agent = Agent()
+  val afterAgent = iteration(agent, () => Environment.init(() => prepareCube(), Environment.final2x2ExpectedState), max, max, episodeMoves, epochEpisodes, 0)
+  printAgentStats(afterAgent, max)
+  val timestampTxt = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss").format(LocalDateTime.now())
+  println("Saving q-values to file")
+  afterAgent.saveQState(f"q-values-2x2-upper-layer-$max-$timestampTxt.txt")
+  afterAgent.saveSolvedStates(f"solved-2x2-upper-layer-$max-$timestampTxt.txt")
+  val end = LocalDateTime.now()
+  println(end)
+  val diffSec = start.until(end, ChronoUnit.SECONDS)
+  println(f"Time: $diffSec seconds / ${diffSec / 3600}:${(diffSec % 3600) / 60}%02d:${diffSec % 60}%02d")
+
+def testRun2x2UpperLayer(filePathWhiteLayer: String, filePathYellowLayer: String, filePathUpperLayer: String): Unit =
+  println(f"Test run with: $filePathWhiteLayer, $filePathYellowLayer, $filePathUpperLayer")
+  val whiteLayerAgent = Agent.load(filePathWhiteLayer)
+  println(f"Loaded: ${whiteLayerAgent.qState.keys.size} records (white layer)")
+  val yellowLayerAgent = Agent.load(filePathYellowLayer)
+  println(f"Loaded: ${yellowLayerAgent.qState.keys.size} records (yellow layer)")
+  val upperLayerAgent = Agent.load(filePathUpperLayer)
+  println(f"Loaded: ${upperLayerAgent.qState.keys.size} records (upper layer)")
+  val res = mutable.Map[Int, Int]()
+  (0 until 100000).foreach(e =>
+    if(e % 10000 == 0) println(e)
+    val initWhiteLayerEnv = Environment.init2x2WhiteLayerTraining(20)
+    val envWhiteLayer = testRunStage(whiteLayerAgent, initWhiteLayerEnv, 500)
+    if(envWhiteLayer.isSolved)
+      val initYellowLayerEnv = Environment.init(() => envWhiteLayer.cube.applyMask(Environment.yellowLayer2x2Selector), Environment.yellowLayer2x2ExpectedState)
+      val envYellowLayer = testRunStage(yellowLayerAgent, initYellowLayerEnv, 500)
+      if(envYellowLayer.isSolved)
+        val initUpperLayerEnv = Environment.init(() => envYellowLayer.cube.applyMask(Environment.final2x2Selector), Environment.final2x2ExpectedState)
+        val envUpperLayer = testRunStage(upperLayerAgent, initUpperLayerEnv, 500)
+        if (envUpperLayer.isSolved)
+          val length = envWhiteLayer.history.length + envYellowLayer.history.length + envUpperLayer.history.length
+          res.update(length, res.getOrElse(length, 0) + 1)
+        else res.update(-3, res.getOrElse(-3, 0) + 1)
+      else res.update(-2, res.getOrElse(-2, 0) + 1)
+    else res.update(-1, res.getOrElse(-1, 0) + 1)
+  )
+  println(res.toVector.sortBy(_._1).mkString("\n"))
+
+def testRunStage(agent: Agent, environment: Environment, steps: Int): Environment =
+  (0 until steps).foreach(_ => if (!environment.isSolved) environment.step(agent.nextBestAction(environment)))
+  environment

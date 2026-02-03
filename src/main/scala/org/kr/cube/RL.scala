@@ -41,6 +41,9 @@ object Environment:
   val yellowLayer2x2Selector: (Face, Tile) => Boolean =
     (f: Face, t: Tile) => t.face != Face2x2.U && !(f.axisV.symbol == "Y" && t.coords.r == 1 || f.nominalFace == Face2x2.D)
 
+  val final2x2ExpectedState: String = Cube2x2.solved.state
+  val final2x2Selector: (Face, Tile) => Boolean = (_, _) => false
+
 
 case class EnvironmentLogEntry(stateBefore: String, action: String)
 
