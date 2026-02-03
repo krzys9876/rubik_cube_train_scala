@@ -1,6 +1,6 @@
 package org.kr.cube.test
 
-import org.kr.cube.{Axis, Cube2x2, Face, Face2x2, Moves2x2, Tile}
+import org.kr.cube.{Axis, Cube2x2, Face, FaceType, Moves2x2, Tile}
 import org.scalatest.GivenWhenThen
 import org.scalatest.featurespec.AnyFeatureSpec
 
@@ -51,17 +51,19 @@ class CubeTest extends AnyFeatureSpec with GivenWhenThen:
 
   Feature("Rotate face"):
     Scenario("F F'"):
-      val cube = Cube2x2("FLBRFLBRFLBRFLBRFLBRFLBR")
-      val face = cube.faces(Face2x2.F)
-      assert(face.state === "FLBR")
-      val faceRotatedC = face.rotated(Moves2x2.F.direction)
+      val cube1 = Cube2x2("FLBRFLBRFLBRFLBRFLBRFLBR")
+      val face1 = cube1.faces(FaceType.F)
+      assert(face1.state === "FLBR")
+      val faceRotatedC = face1.rotated(Moves2x2.F.direction)
       assert(faceRotatedC.state === "BFRL")
-      val faceRotatedCC = face.rotated(Moves2x2.F1.direction)
+      val cube2 = Cube2x2("FLBRFLBRFLBRFLBRFLBRFLBR")
+      val face2 = cube2.faces(FaceType.F)
+      val faceRotatedCC = face2.rotated(Moves2x2.F1.direction)
       assert(faceRotatedCC.state === "LRFB")
 
     Scenario("L L'"):
       val cube = Cube2x2("FLBRFLBRFLBRFLBRFLBRFLBR")
-      val face = cube.faces(Face2x2.L)
+      val face = cube.faces(FaceType.L)
       assert(face.state === "FLBR")
       val faceRotatedC = face.rotated(Moves2x2.L.direction)
       assert(faceRotatedC.state === "BFRL")
@@ -70,7 +72,7 @@ class CubeTest extends AnyFeatureSpec with GivenWhenThen:
 
     Scenario("B B'"):
       val cube = Cube2x2("FLBRFLBRFLBRFLBRFLBRFLBR")
-      val face = cube.faces(Face2x2.B)
+      val face = cube.faces(FaceType.B)
       assert(face.state === "FLBR")
       val faceRotatedC = face.rotated(Moves2x2.B.direction)
       assert(faceRotatedC.state === "BFRL")
@@ -78,17 +80,19 @@ class CubeTest extends AnyFeatureSpec with GivenWhenThen:
       assert(faceRotatedCC.state === "LRFB")
 
     Scenario("R R'"):
-      val cube = Cube2x2("FLBRFLBRFLBRFLBRFLBRFLBR")
-      val face = cube.faces(Face2x2.R)
-      assert(face.state === "FLBR")
-      val faceRotatedC = face.rotated(Moves2x2.R.direction)
+      val cube1 = Cube2x2("FLBRFLBRFLBRFLBRFLBRFLBR")
+      val face1 = cube1.faces(FaceType.R)
+      assert(face1.state === "FLBR")
+      val faceRotatedC = face1.rotated(Moves2x2.R.direction)
       assert(faceRotatedC.state === "BFRL")
-      val faceRotatedCC = face.rotated(Moves2x2.R1.direction)
+      val cube2 = Cube2x2("FLBRFLBRFLBRFLBRFLBRFLBR")
+      val face2 = cube2.faces(FaceType.R)
+      val faceRotatedCC = face2.rotated(Moves2x2.R1.direction)
       assert(faceRotatedCC.state === "LRFB")
 
     Scenario("U U'"):
       val cube = Cube2x2("FLBRFLBRFLBRFLBRFLBRFLBR")
-      val face = cube.faces(Face2x2.U)
+      val face = cube.faces(FaceType.U)
       assert(face.state === "FLBR")
       val faceRotatedC = face.rotated(Moves2x2.U.direction)
       assert(faceRotatedC.state === "BFRL")
@@ -96,12 +100,14 @@ class CubeTest extends AnyFeatureSpec with GivenWhenThen:
       assert(faceRotatedCC.state === "LRFB")
 
     Scenario("D D'"):
-      val cube = Cube2x2("FLBRFLBRFLBRFLBRFLBRFLBR")
-      val face = cube.faces(Face2x2.D)
-      assert(face.state === "FLBR")
-      val faceRotatedC = face.rotated(Moves2x2.D.direction)
+      val cube1 = Cube2x2("FLBRFLBRFLBRFLBRFLBRFLBR")
+      val face1 = cube1.faces(FaceType.D)
+      assert(face1.state === "FLBR")
+      val faceRotatedC = face1.rotated(Moves2x2.D.direction)
       assert(faceRotatedC.state === "BFRL")
-      val faceRotatedCC = face.rotated(Moves2x2.D1.direction)
+      val cube2 = Cube2x2("FLBRFLBRFLBRFLBRFLBRFLBR")
+      val face2 = cube2.faces(FaceType.D)
+      val faceRotatedCC = face2.rotated(Moves2x2.D1.direction)
       assert(faceRotatedCC.state === "LRFB")
 
 
@@ -137,7 +143,7 @@ class CubeTest extends AnyFeatureSpec with GivenWhenThen:
 
   Feature("Mask tiles"):
     Scenario("F"):
-      val cube = Cube2x2.solvedWithMask((f: Face, t: Tile) => f.nominalFace == Face2x2.U || (f.axisV.symbol == "Y" && t.coords.r == 0))
+      val cube = Cube2x2.solvedWithMask((f: Face, t: Tile) => f.nominalFace == FaceType.U || (f.axisV.symbol == "Y" && t.coords.r == 0))
       assert(cube.maskedState === "..FF..LL..BB..RR....DDDD")
       val after = Moves2x2.F.applyToCube(cube)
       assert(after.state === "FFFFLDLDBBBBURURUULLRRDD")

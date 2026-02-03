@@ -32,14 +32,14 @@ object Environment:
 
   val whiteLayer2x2ExpectedState: String = "..FF..LL..BB..RR....DDDD"
   val whiteLayer2x2Selector: (Face, Tile) => Boolean =
-    (f: Face, t: Tile) => f.nominalFace == Face2x2.U || (f.axisV.symbol == "Y" && t.coords.r == 0)
+    (f: Face, t: Tile) => f.nominalFace == FaceType.U || (f.axisV.symbol == "Y" && t.coords.r == 0)
 
   def init2x2YellowLayerTraining(scrambleMoves: Int): Environment =
     init(scrambleMoves, yellowLayer2x2ExpectedState, yellowLayer2x2Selector)
 
   val yellowLayer2x2ExpectedState: String = "..FF..LL..BB..RRUUUUDDDD"
   val yellowLayer2x2Selector: (Face, Tile) => Boolean =
-    (f: Face, t: Tile) => t.face != Face2x2.U && !(f.axisV.symbol == "Y" && t.coords.r == 1 || f.nominalFace == Face2x2.D)
+    (f: Face, t: Tile) => t.face != FaceType.U && !(f.axisV.symbol == "Y" && t.coords.r == 1 || f.nominalFace == FaceType.D)
 
   val final2x2ExpectedState: String = Cube2x2.solved.state
   val final2x2Selector: (Face, Tile) => Boolean = (_, _) => false

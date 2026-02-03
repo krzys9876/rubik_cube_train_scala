@@ -2,18 +2,18 @@ package org.kr.cube
 
 import scala.collection.mutable
 
-case class Cube2x2(faces: mutable.Map[Face2x2, Face]):
+case class Cube2x2(faces: mutable.Map[FaceType, Face]):
 
   def state: String =
-    faces(Face2x2.F).state + faces(Face2x2.L).state + faces(Face2x2.B).state + faces(Face2x2.R).state +
-      faces(Face2x2.U).state + faces(Face2x2.D).state
-  def maskedState: String = 
-    new StringBuilder().append(faces(Face2x2.F).maskedState)
-      .append(faces(Face2x2.L).maskedState)
-      .append(faces(Face2x2.B).maskedState)
-      .append(faces(Face2x2.R).maskedState)
-      .append(faces(Face2x2.U).maskedState)
-      .append(faces(Face2x2.D).maskedState).result()
+    faces(FaceType.F).state + faces(FaceType.L).state + faces(FaceType.B).state + faces(FaceType.R).state +
+      faces(FaceType.U).state + faces(FaceType.D).state
+  def maskedState: String =
+    new StringBuilder().append(faces(FaceType.F).maskedState)
+      .append(faces(FaceType.L).maskedState)
+      .append(faces(FaceType.B).maskedState)
+      .append(faces(FaceType.R).maskedState)
+      .append(faces(FaceType.U).maskedState)
+      .append(faces(FaceType.D).maskedState).result()
 
   lazy val isSolved: Boolean = state == Cube2x2.SOLVED_STATE
 
@@ -22,7 +22,7 @@ case class Cube2x2(faces: mutable.Map[Face2x2, Face]):
     this
 
   def slice(axis: Axis, i: Int): Slice =
-    val edges = Face2x2.faceOrder(axis).map({case(face, sort) => faces(face).edge(axis, i, sort)})
+    val edges = FaceType.faceOrder(axis).map({case(face, sort) => faces(face).edge(axis, i, sort)})
     Slice(edges)
 
   def withSliceRotated(faceRotated: Face, slice: Slice): Cube2x2 =
@@ -44,17 +44,17 @@ object Cube2x2:
 
   def solvedWithMask(mask: (Face, Tile) => Boolean): Cube2x2 = solved.applyMask(mask)
 
-  def s(state: String, face: Face2x2, index: Int): String = state.substring(face.index + index, face.index + index + 1)
-  def f(state: String, face: Face2x2): String = state.substring(face.index, face.index + 2*2)
+  def s(state: String, face: FaceType, index: Int): String = state.substring(face.index + index, face.index + index + 1)
+  def f(state: String, face: FaceType): String = state.substring(face.index, face.index + 2*2)
 
   def apply(state: String): Cube2x2 =
-    val faces: mutable.Map[Face2x2, Face] = mutable.Map(
-      Face2x2.F -> Face(2, Axis.X, Axis.Y, Face2x2.F, state.substring(Face2x2.F.index, Face2x2.F.index + 2 * 2)),
-      Face2x2.L -> Face(2, Axis.Zr, Axis.Y, Face2x2.L, state.substring(Face2x2.L.index, Face2x2.L.index + 2 * 2)),
-      Face2x2.B -> Face(2, Axis.Xr, Axis.Y, Face2x2.B, state.substring(Face2x2.B.index, Face2x2.B.index + 2 * 2)),
-      Face2x2.R -> Face(2, Axis.Z, Axis.Y, Face2x2.R, state.substring(Face2x2.R.index, Face2x2.R.index + 2 * 2)),
-      Face2x2.U -> Face(2, Axis.X, Axis.Zr, Face2x2.U, state.substring(Face2x2.U.index, Face2x2.U.index + 2 * 2)),
-      Face2x2.D -> Face(2, Axis.X, Axis.Z, Face2x2.D, state.substring(Face2x2.D.index, Face2x2.D.index + 2 * 2)))
+    val faces: mutable.Map[FaceType, Face] = mutable.Map(
+      FaceType.F -> Face(2, Axis.X, Axis.Y, FaceType.F, state.substring(FaceType.F.index, FaceType.F.index + 2 * 2)),
+      FaceType.L -> Face(2, Axis.Zr, Axis.Y, FaceType.L, state.substring(FaceType.L.index, FaceType.L.index + 2 * 2)),
+      FaceType.B -> Face(2, Axis.Xr, Axis.Y, FaceType.B, state.substring(FaceType.B.index, FaceType.B.index + 2 * 2)),
+      FaceType.R -> Face(2, Axis.Z, Axis.Y, FaceType.R, state.substring(FaceType.R.index, FaceType.R.index + 2 * 2)),
+      FaceType.U -> Face(2, Axis.X, Axis.Zr, FaceType.U, state.substring(FaceType.U.index, FaceType.U.index + 2 * 2)),
+      FaceType.D -> Face(2, Axis.X, Axis.Z, FaceType.D, state.substring(FaceType.D.index, FaceType.D.index + 2 * 2)))
     Cube2x2(faces)
 
   def maskedEquals(state1: String, state2: String, mask: String): Boolean =
@@ -62,7 +62,7 @@ object Cube2x2:
 
 
 
-sealed abstract class Move2x2(val symbol: String, val sliceAxis: Axis, val sliceCoords: Int, val face: Face2x2,
+sealed abstract class Move2x2(val symbol: String, val sliceAxis: Axis, val sliceCoords: Int, val face: FaceType,
                               val direction: MoveDirection):
   def applyToCube(cube: Cube2x2): Cube2x2 =
     val faceRotated = cube.faces(face).rotated(direction)
@@ -70,31 +70,31 @@ sealed abstract class Move2x2(val symbol: String, val sliceAxis: Axis, val slice
     cube.withSliceRotated(faceRotated, slice)
 
   def edgeToEdge(origState: String, state: String,
-                 faceFrom: Face2x2, indexFrom1: Int, indexFrom2: Int,
-                 faceTo: Face2x2, indexTo1: Int, indexTo2: Int): String =
+                 faceFrom: FaceType, indexFrom1: Int, indexFrom2: Int,
+                 faceTo: FaceType, indexTo1: Int, indexTo2: Int): String =
     replaceOne(origState,
       replaceOne(origState, state, faceFrom, indexFrom1, faceTo, indexTo1),
       faceFrom, indexFrom2, faceTo, indexTo2)
 
   private def replaceOne(origState: String, state: String,
-                         faceFrom: Face2x2, indexFrom: Int, faceTo: Face2x2, indexTo: Int): String =
+                         faceFrom: FaceType, indexFrom: Int, faceTo: FaceType, indexTo: Int): String =
     state.substring(0, faceTo.index + indexTo) + Cube2x2.s(origState, faceFrom, indexFrom) +
       state.substring(faceTo.index + indexTo + 1)
 
 
 object Moves2x2:
-  case object F extends Move2x2("F", Axis.Z, 0, Face2x2.F, MoveDirection.Natural)
-  case object F1 extends Move2x2("F'", Axis.Zr, 0, Face2x2.F, MoveDirection.Reversed)
-  case object L extends Move2x2("L", Axis.Xr, 0, Face2x2.L, MoveDirection.Reversed)
-  case object L1 extends Move2x2("L'", Axis.X, 0, Face2x2.L, MoveDirection.Natural)
-  case object B extends Move2x2("B", Axis.Zr, 1, Face2x2.B, MoveDirection.Reversed)
-  case object B1 extends Move2x2("B'", Axis.Z, 1, Face2x2.B, MoveDirection.Natural)
-  case object R extends Move2x2("R", Axis.X, 1, Face2x2.R, MoveDirection.Natural)
-  case object R1 extends Move2x2("R'", Axis.Xr, 1, Face2x2.R, MoveDirection.Reversed)
-  case object U extends Move2x2("U", Axis.Y, 0, Face2x2.U, MoveDirection.Reversed)
-  case object U1 extends Move2x2("U'", Axis.Yr, 0, Face2x2.U, MoveDirection.Natural)
-  case object D extends Move2x2("D", Axis.Yr, 1, Face2x2.D, MoveDirection.Natural)
-  case object D1 extends Move2x2("D'", Axis.Y, 1, Face2x2.D, MoveDirection.Reversed)
+  case object F extends Move2x2("F", Axis.Z, 0, FaceType.F, MoveDirection.Natural)
+  case object F1 extends Move2x2("F'", Axis.Zr, 0, FaceType.F, MoveDirection.Reversed)
+  case object L extends Move2x2("L", Axis.Xr, 0, FaceType.L, MoveDirection.Reversed)
+  case object L1 extends Move2x2("L'", Axis.X, 0, FaceType.L, MoveDirection.Natural)
+  case object B extends Move2x2("B", Axis.Zr, 1, FaceType.B, MoveDirection.Reversed)
+  case object B1 extends Move2x2("B'", Axis.Z, 1, FaceType.B, MoveDirection.Natural)
+  case object R extends Move2x2("R", Axis.X, 1, FaceType.R, MoveDirection.Natural)
+  case object R1 extends Move2x2("R'", Axis.Xr, 1, FaceType.R, MoveDirection.Reversed)
+  case object U extends Move2x2("U", Axis.Y, 0, FaceType.U, MoveDirection.Reversed)
+  case object U1 extends Move2x2("U'", Axis.Yr, 0, FaceType.U, MoveDirection.Natural)
+  case object D extends Move2x2("D", Axis.Yr, 1, FaceType.D, MoveDirection.Natural)
+  case object D1 extends Move2x2("D'", Axis.Y, 1, FaceType.D, MoveDirection.Reversed)
 
   private val all: Vector[Move2x2] = Vector(F, F1, L, L1, B, B1, R, R1, U, U1, D, D1)
   def random: Move2x2 = all(scala.util.Random.nextInt(all.length))
@@ -109,17 +109,17 @@ object Moves2x2:
   def from(symbol: String): Move2x2 = all.find(_.symbol == symbol).get
 
 
-sealed abstract class Face2x2(val symbol: String, val index: Int)
+sealed abstract class FaceType(val symbol: String, val index: Int)
 
-object Face2x2:
-  case object F extends Face2x2("F", 0)
-  case object L extends Face2x2("L", 4)
-  case object B extends Face2x2("B", 8)
-  case object R extends Face2x2("R", 12)
-  case object U extends Face2x2("U", 16)
-  case object D extends Face2x2("D", 20)
+object FaceType:
+  case object F extends FaceType("F", 0)
+  case object L extends FaceType("L", 4)
+  case object B extends FaceType("B", 8)
+  case object R extends FaceType("R", 12)
+  case object U extends FaceType("U", 16)
+  case object D extends FaceType("D", 20)
 
-  def apply(symbol: String): Face2x2 = symbol match
+  def apply(symbol: String): FaceType = symbol match
       case "F" => F
       case "L" => L
       case "B" => B
@@ -127,17 +127,17 @@ object Face2x2:
       case "U" => U
       case "D" => D
 
-  private val faceOrderX: Vector[(Face2x2, CoordsSort)] = Vector(
-    (Face2x2.F, CoordsSort.Ascending), (Face2x2.U, CoordsSort.Descending),
-    (Face2x2.B, CoordsSort.Descending), (Face2x2.D, CoordsSort.Ascending))
-  private val faceOrderY: Vector[(Face2x2, CoordsSort)] = Vector(
-    (Face2x2.F, CoordsSort.Ascending), (Face2x2.L, CoordsSort.Descending),
-    (Face2x2.B, CoordsSort.Descending), (Face2x2.R, CoordsSort.Ascending))
-  private val faceOrderZ: Vector[(Face2x2, CoordsSort)] = Vector(
-    (Face2x2.L, CoordsSort.Ascending), (Face2x2.U, CoordsSort.Descending),
-    (Face2x2.R, CoordsSort.Descending), (Face2x2.D, CoordsSort.Ascending))
+  private val faceOrderX: Vector[(FaceType, CoordsSort)] = Vector(
+    (FaceType.F, CoordsSort.Ascending), (FaceType.U, CoordsSort.Descending),
+    (FaceType.B, CoordsSort.Descending), (FaceType.D, CoordsSort.Ascending))
+  private val faceOrderY: Vector[(FaceType, CoordsSort)] = Vector(
+    (FaceType.F, CoordsSort.Ascending), (FaceType.L, CoordsSort.Descending),
+    (FaceType.B, CoordsSort.Descending), (FaceType.R, CoordsSort.Ascending))
+  private val faceOrderZ: Vector[(FaceType, CoordsSort)] = Vector(
+    (FaceType.L, CoordsSort.Ascending), (FaceType.U, CoordsSort.Descending),
+    (FaceType.R, CoordsSort.Descending), (FaceType.D, CoordsSort.Ascending))
 
-  val faceOrder: Map[Axis, Vector[(Face2x2, CoordsSort)]] =
+  val faceOrder: Map[Axis, Vector[(FaceType, CoordsSort)]] =
     Map(Axis.X -> faceOrderX, Axis.Y -> faceOrderY, Axis.Z -> faceOrderZ,
       Axis.Xr -> faceOrderX.reverse, Axis.Yr -> faceOrderY.reverse, Axis.Zr -> faceOrderZ.reverse)
 
@@ -155,7 +155,7 @@ object Axis:
 
 case class TileCoords(c: Int, r: Int)
 
-case class Tile(face: Face2x2, coords: TileCoords, masked: Boolean = false)
+case class Tile(face: FaceType, coords: TileCoords, masked: Boolean = false)
 
 sealed abstract class MoveDirection(val symbol: String)
 
@@ -169,7 +169,7 @@ object CoordsSort:
   case object Ascending extends CoordsSort("A")
   case object Descending extends CoordsSort("D")
 
-case class Face(size: Int, axisH: Axis, axisV: Axis, nominalFace: Face2x2, tiles: Vector[Tile]):
+case class Face(size: Int, axisH: Axis, axisV: Axis, nominalFace: FaceType, tiles: mutable.ArrayBuffer[Tile]):
   def state: String =
     // Using primitives for efficiency
     val len = tiles.length
@@ -191,16 +191,16 @@ case class Face(size: Int, axisH: Axis, axisV: Axis, nominalFace: Face2x2, tiles
       i += 1
     new String(chars)
 
-  private def col(c: Int, sort: CoordsSort): Vector[Tile] =
+  private def col(c: Int, sort: CoordsSort): mutable.ArrayBuffer[Tile] =
     val colTiles = tiles.filter(_.coords.c == c)
     sortTiles(colTiles, sort, axisV)
 
-  private def row(r: Int, sort: CoordsSort): Vector[Tile] =
+  private def row(r: Int, sort: CoordsSort): mutable.ArrayBuffer[Tile] =
     val rowTiles = tiles.filter(_.coords.r == r)
     sortTiles(rowTiles, sort, axisH)
 
   // Assume, that tiles are sorted in natural order
-  private def sortTiles(sortTiles: Vector[Tile], sort: CoordsSort, axis: Axis): Vector[Tile] =
+  private def sortTiles(sortTiles: mutable.ArrayBuffer[Tile], sort: CoordsSort, axis: Axis): mutable.ArrayBuffer[Tile] =
     if ((!axis.reversed && sort == CoordsSort.Descending) || (axis.reversed && sort == CoordsSort.Ascending))
       sortTiles.reverse
     else sortTiles
@@ -215,7 +215,9 @@ case class Face(size: Int, axisH: Axis, axisV: Axis, nominalFace: Face2x2, tiles
       val target = tiles.find(_.coords == TileCoords(t.coords.r, size - 1 - t.coords.c)).get
       t.copy(face = target.face, masked = target.masked)
     )
-    copy(tiles = newTiles)
+    tiles.clear()
+    tiles.appendAll(newTiles)
+    this
 
   private def rotatedCC: Face =
     // flip coordinates counterclockwise
@@ -227,8 +229,8 @@ case class Face(size: Int, axisH: Axis, axisV: Axis, nominalFace: Face2x2, tiles
 
   def edge(axis: Axis, i: Int, sort: CoordsSort): Edge =
     axis.symbol match
-      case axisH.symbol => Edge(nominalFace, col(i, sort))
-      case axisV.symbol => Edge(nominalFace, row(i, sort))
+      case axisH.symbol => Edge(nominalFace, col(i, sort).toVector)
+      case axisV.symbol => Edge(nominalFace, row(i, sort).toVector)
 
   def withEdge(currentEdge: Edge, newEdge: Edge): Face =
     val newTiles = currentEdge.tiles.indices.foldLeft(tiles)((t, i) =>
@@ -236,25 +238,26 @@ case class Face(size: Int, axisH: Axis, axisV: Axis, nominalFace: Face2x2, tiles
       val newTile = newEdge.tiles(i)
       val tileIndex = t.indexWhere(_.coords == currentTile.coords)
       t.updated(tileIndex, currentTile.copy(face = newTile.face, masked = newTile.masked)))
+    this
     copy(tiles = newTiles)
 
 object Face:
-  def apply(size: Int, axisH: Axis, axisV: Axis, nominalFace: Face2x2): Face =
-    val tiles: Vector[Tile] = 0.until(size).flatMap(r => 0.until(size).map(c => Tile(nominalFace, TileCoords(r, c)))).toVector
-    new Face(size, axisH, axisV, nominalFace, tiles)
+  def apply(size: Int, axisH: Axis, axisV: Axis, nominalFace: FaceType): Face =
+    val tiles = 0.until(size).flatMap(r => 0.until(size).map(c => Tile(nominalFace, TileCoords(r, c))))
+    new Face(size, axisH, axisV, nominalFace, tiles.to(mutable.ArrayBuffer))
 
   // Tiles are always placed on a face in order: ABCD:
   // AB
   // CD
   // But they may have reversed coords. This simplifies textual state
-  def apply(size: Int, axisH: Axis, axisV: Axis, nominalFace: Face2x2, state: String): Face =
+  def apply(size: Int, axisH: Axis, axisV: Axis, nominalFace: FaceType, state: String): Face =
     val tiles = 0.until(state.length).map(i =>
       val r = if(axisH.reversed) size - (i % size) -1 else i % size
       val c = if(axisV.reversed) size - (i / size) -1 else i / size
-      Tile(Face2x2(state.substring(i, i + 1)), TileCoords(r, c))).toVector
-    new Face(size, axisH, axisV, nominalFace, tiles)
+      Tile(FaceType(state.substring(i, i + 1)), TileCoords(r, c))).toArray
+    new Face(size, axisH, axisV, nominalFace, tiles.to(mutable.ArrayBuffer))
 
-case class Edge(nominalFace: Face2x2, tiles: Vector[Tile])
+case class Edge(nominalFace: FaceType, tiles: Vector[Tile])
 
 case class Slice(edges: Vector[Edge]):
   val edgePairs: Vector[(Edge, Edge)] = edges.zip(edges.drop(1).appended(edges.head))
