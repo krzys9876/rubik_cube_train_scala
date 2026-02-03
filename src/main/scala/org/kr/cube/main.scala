@@ -10,7 +10,7 @@ import scala.annotation.tailrec
 import scala.collection.mutable
 
 @main
-def main(): Unit = {
+def main(): Unit =
   //trainRL2x2WhiteLayer()
   //testRun2x2WhiteLayer("q-values-2x2-white-layer-3000000-20260203_110743.txt")
   //trainRL2x2YellowLayer("solved-2x2-white-layer-1000000-20260203_005055.txt")
@@ -39,12 +39,13 @@ def main(): Unit = {
     "LDRFFBBUDLLUBBRDULURFDRF"
   )
 
-  /*solveRandomOne(
+  (0 until 100).foreach(_ =>
+  Train2x2.solveRandomOne(
     "q-values-2x2-white-layer-3000000-20260203_141521.txt",
     "q-values-2x2-yellow-layer-1000000-20260203_143242.txt",
     "q-values-2x2-upper-layer-10000000-20260203_151354.txt"
-  )*/
-}
+  ))
+
 
 
 /*def whiteLayer(): Unit =
