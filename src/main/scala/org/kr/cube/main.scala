@@ -10,7 +10,7 @@ import scala.collection.mutable
 def main(): Unit =
   //trainRL2x2WhiteLayer()
   //testRun2x2WhiteLayer("q-values-2x2-white-layer-2000000-20260202_233105.txt")
-  //trainRL2x2YellowLayer("q-values-2x2-white-layer-1000000-20260203_005055.txt", "solved-2x2-white-layer-1000000-20260203_005055.txt")
+  trainRL2x2YellowLayer("solved-2x2-white-layer-1000000-20260203_005055.txt")
   testRun2x2YellowLayer("q-values-2x2-white-layer-1000000-20260203_005055.txt", "q-values-2x2-yellow-layer-1000000-20260203_010048.txt")
 
 
@@ -107,7 +107,7 @@ def testRun2x2WhiteLayer(filePath: String): Unit =
   )
   println(res.toVector.sortBy(_._1).mkString("\n"))
 
-def trainRL2x2YellowLayer(whiteLayerFilePath: String, whileLayerSolvedFilePath: String): Unit =
+def trainRL2x2YellowLayer(whileLayerSolvedFilePath: String): Unit =
   val start = LocalDateTime.now()
   println(start)
   val max = 1000000
