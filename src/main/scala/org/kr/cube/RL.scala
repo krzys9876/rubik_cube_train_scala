@@ -4,7 +4,7 @@ import java.io.PrintWriter
 import scala.collection.{immutable, mutable}
 
 case class Environment(var cube: Cube2x2, history: mutable.ArrayBuffer[EnvironmentLogEntry],
-                       expectedState: String, var state: String):
+                       expectedState: String, var state: String, initScramble: Vector[String]):
 
   def step(action: String): Environment =
     val nextMove = Moves2x2.from(action)
@@ -21,17 +21,17 @@ object Environment:
     val scramble = Moves2x2.randomList(scrambleMoves)
     val initCube = Cube2x2.solvedWithMask(expectedMask)
     val randomCube = scramble.foldLeft(initCube)((c, m) => m.applyToCube(c))
-    Environment(randomCube, mutable.ArrayBuffer(), expectedState, randomCube.maskedState)
+    Environment(randomCube, mutable.ArrayBuffer(), expectedState, randomCube.maskedState, scramble.map(_.symbol))
 
   def init(cubeGenerator: () => Cube2x2, expectedState: String): Environment =
     val cube = cubeGenerator()
-    Environment(cube, mutable.ArrayBuffer(), expectedState, cube.maskedState)
+    Environment(cube, mutable.ArrayBuffer(), expectedState, cube.maskedState, Vector())
 
   def init2x2WhiteLayerTraining(scrambleMoves: Int): Environment =
     init(scrambleMoves, whiteLayer2x2ExpectedState, whiteLayer2x2Selector)
 
-  private val whiteLayer2x2ExpectedState: String = "..FF..LL..BB..RR....DDDD"
-  private val whiteLayer2x2Selector: (Face, Tile) => Boolean =
+  val whiteLayer2x2ExpectedState: String = "..FF..LL..BB..RR....DDDD"
+  val whiteLayer2x2Selector: (Face, Tile) => Boolean =
     (f: Face, t: Tile) => f.nominalFace == Face2x2.U || (f.axisV.symbol == "Y" && t.coords.r == 0)
 
   def init2x2YellowLayerTraining(scrambleMoves: Int): Environment =
@@ -71,17 +71,19 @@ case class Agent(qState: Map[String, (Int, Map[String, Double])], solvedStates: 
       else epsilon
     copy(qState = res._1, epsilon = newEpsilon, episodeCount = episodeCount + 1, solvedStates = solvedStates + environment.cube.state)
 
-  def nextBestTrainingAction(environment: Environment): String =
+  def nextBestTrainingAction(environment: Environment, scale: Double = 0.0): String =
     if(Math.random() < epsilon) nextRandomAction(environment)
-    else nextBestAction(environment)
+    else nextBestAction(environment, scale)
 
-  def nextBestAction(environment: Environment): String =
-    val qValues = qState.getOrElse(environment.state, (0, Map()))._2
-    if (qValues.isEmpty) nextRandomAction(environment)
+  def nextBestAction(environment: Environment, scale: Double = 0.0, epsilon: Double = 0.0): String =
+    if(Math.random() < epsilon) nextRandomAction(environment)
     else
-      val maxQ = qValues.values.max
-      val bestList = qValues.filter(_._2 == maxQ)
-      bestList.keys.toVector(scala.util.Random.nextInt(bestList.size))
+      val qValues = qState.getOrElse(environment.state, (0, Map()))._2
+      if (qValues.isEmpty) nextRandomAction(environment)
+      else
+        val maxQ = qValues.values.max
+        val bestList = qValues.filter(v => (scale == 0.0 && v._2 == maxQ) || Math.abs(v._2 - maxQ) < scale)
+        bestList.keys.toVector(scala.util.Random.nextInt(bestList.size))
 
   def nextRandomAction(environment: Environment): String = Moves2x2.randomExceptOpposite(None).symbol
 
@@ -102,7 +104,7 @@ object Agent:
   def apply(epsilonInit: Double, epsilonMin: Double, epsilonDecayEpisodes: Long): Agent =
     Agent(Map(), immutable.Set(), epsilonInit, epsilonMin, epsilonDecayEpisodes)
 
-  def load(filePath: String): Agent =
+  def load(filePath: String, epsilonInit: Double = 0.2, epsilonMin: Double = 0.05, epsilonDecayEpisodes: Long = 1000L): Agent =
     val source = scala.io.Source.fromFile(filePath)
     try
       // each row contains: key (cube state), counter, map of action -> q-value (double)
