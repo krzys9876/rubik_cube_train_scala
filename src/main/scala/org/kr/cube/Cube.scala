@@ -223,3 +223,23 @@ case class Edge(nominalFace: FaceType, tiles: Vector[Tile])
 
 case class Slice(edges: Vector[Edge]):
   val edgePairs: Vector[(Edge, Edge)] = edges.zip(edges.drop(1).appended(edges.head))
+
+
+abstract class Move(val symbol: String, val sliceAxis: Axis, val sliceCoords: Int, val face: FaceType,
+                    val direction: MoveDirection):
+  def applyToCube(cube: Cube): Cube =
+    val faceRotated = cube.faces(face).rotated(direction)
+    val slice = cube.slice(sliceAxis, sliceCoords)
+    cube.withSliceRotated(faceRotated, slice)
+
+  def edgeToEdge(origState: String, state: String,
+                 faceFrom: FaceType, indexFrom1: Int, indexFrom2: Int,
+                 faceTo: FaceType, indexTo1: Int, indexTo2: Int): String =
+    replaceOne(origState,
+      replaceOne(origState, state, faceFrom, indexFrom1, faceTo, indexTo1),
+      faceFrom, indexFrom2, faceTo, indexTo2)
+
+  private def replaceOne(origState: String, state: String,
+                         faceFrom: FaceType, indexFrom: Int, faceTo: FaceType, indexTo: Int): String =
+    state.substring(0, Cube2x2.faceStateIndex(faceTo) + indexTo) + Cube2x2.s(origState, faceFrom, indexFrom) +
+      state.substring(Cube2x2.faceStateIndex(faceTo) + indexTo + 1)

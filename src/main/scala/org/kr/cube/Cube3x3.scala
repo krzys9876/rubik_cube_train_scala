@@ -46,3 +46,30 @@ object Cube3x3:
   val faceStateIndex: Map[FaceType, Int] = Map(FaceType.F -> 0, FaceType.L -> 9, FaceType.B -> 18, FaceType.R -> 27,
     FaceType.U -> 36, FaceType.D -> 45)
 
+
+object Moves3x3:
+  case object F extends Move("F", Axis.Z, 0, FaceType.F, MoveDirection.Natural)
+  case object F1 extends Move("F'", Axis.Zr, 0, FaceType.F, MoveDirection.Reversed)
+  case object L extends Move("L", Axis.Xr, 0, FaceType.L, MoveDirection.Reversed)
+  case object L1 extends Move("L'", Axis.X, 0, FaceType.L, MoveDirection.Natural)
+  case object B extends Move("B", Axis.Zr, 2, FaceType.B, MoveDirection.Reversed)
+  case object B1 extends Move("B'", Axis.Z, 2, FaceType.B, MoveDirection.Natural)
+  case object R extends Move("R", Axis.X, 2, FaceType.R, MoveDirection.Natural)
+  case object R1 extends Move("R'", Axis.Xr, 2, FaceType.R, MoveDirection.Reversed)
+  case object U extends Move("U", Axis.Y, 0, FaceType.U, MoveDirection.Reversed)
+  case object U1 extends Move("U'", Axis.Yr, 0, FaceType.U, MoveDirection.Natural)
+  case object D extends Move("D", Axis.Yr, 2, FaceType.D, MoveDirection.Natural)
+  case object D1 extends Move("D'", Axis.Y, 2, FaceType.D, MoveDirection.Reversed)
+
+  private val all: Vector[Move] = Vector(F, F1, L, L1, B, B1, R, R1, U, U1, D, D1)
+  def random: Move = all(scala.util.Random.nextInt(all.length))
+  def randomList(n: Int): Vector[Move] =
+    (0 until n).foldLeft(Vector[Move]())((l, _) => l.appended(randomExceptOpposite(l.lastOption.map(_.symbol))))
+
+  def randomExceptOpposite(prevSymbol: Option[String]): Move =
+    val available = all.filterNot(s => prevSymbol.isDefined &&
+      (s.symbol.substring(0,1) == prevSymbol.get.substring(0,1) && s.symbol.length != prevSymbol.get.length))
+    available(scala.util.Random.nextInt(available.length))
+
+  def from(symbol: String): Move = all.find(_.symbol == symbol).get
+
