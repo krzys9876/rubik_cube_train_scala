@@ -283,7 +283,7 @@ def testRun2x2UpperLayer(filePathWhiteLayer: String, filePathYellowLayer: String
   val resSolved = mutable.Map[String, Int]()
   (0 until 100000).foreach(e =>
     if(e % 10000 == 0) println(f"$e solved: ${resSolved.values.sum} unsolved: ${resUnsolved.values.sum}")
-    val initWhiteLayerEnv = Environment.init2x2WhiteLayerTraining(20)
+    val initWhiteLayerEnv = Environment.init2x2WhiteLayerTraining(10 + scala.util.Random.nextInt(20))
     val initWhiteState = initWhiteLayerEnv.cube.state
     // NOTE: we add some randomness to overcome unsolvable states (loops)
     val envWhiteLayer = testRunStage(whiteLayerAgent, initWhiteLayerEnv, 300, 0.005, 0.02)
