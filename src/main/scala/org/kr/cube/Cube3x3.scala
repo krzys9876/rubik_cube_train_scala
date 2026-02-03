@@ -25,8 +25,6 @@ case class Cube3x3(override val faces: mutable.Map[FaceType, Face]) extends Cube
       f"         ${tileSymbol(FaceType.D,3)}${tileSymbol(FaceType.D,4)}${tileSymbol(FaceType.D,5)}\n" +
       f"         ${tileSymbol(FaceType.D,6)}${tileSymbol(FaceType.D,7)}${tileSymbol(FaceType.D,8)}\n"
 
-  override def upperCorners(): Vector[Vector[(FaceType, Tile)]] = ???
-  override def lowerCorners(): Vector[Vector[(FaceType, Tile)]] = ???
 
 object Cube3x3:
   private val SOLVED_STATE: String = "FFFFFFFFFLLLLLLLLLBBBBBBBBBRRRRRRRRRUUUUUUUUUDDDDDDDDD"

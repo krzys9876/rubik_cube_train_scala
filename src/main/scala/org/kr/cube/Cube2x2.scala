@@ -31,12 +31,12 @@ case class Cube2x2(override val faces: mutable.Map[FaceType, Face]) extends Cube
       Vector(corner(FaceType.B, 2), corner(FaceType.D, 3), corner(FaceType.R, 3)),
       Vector(corner(FaceType.R, 2), corner(FaceType.D, 1), corner(FaceType.F, 3)))
 
-  override def upperCorners(): Vector[Vector[(FaceType, Tile)]] =
+  def upperCorners(): Vector[Vector[(FaceType, Tile)]] =
     corners().filter(c =>
       val cf = c.map(t => t._2.face)
       FaceType.upperCorners.exists(uc => uc.sortBy(_.symbol).equals(cf.sortBy(_.symbol))))
 
-  override def lowerCorners(): Vector[Vector[(FaceType, Tile)]] = ???
+  def lowerCorners(): Vector[Vector[(FaceType, Tile)]] = ???
 
 
 object Cube2x2:
@@ -48,7 +48,7 @@ object Cube2x2:
 
   def s(state: String, face: FaceType, index: Int): String = state.substring(faceStateIndex(face) + index, faceStateIndex(face) + index + 1)
 
-  def apply(state: String): Cube =
+  def apply(state: String): Cube2x2 =
     val faces: mutable.Map[FaceType, Face] = mutable.Map(
       FaceType.F -> Face(2, Axis.X, Axis.Y, FaceType.F, state.substring(faceStateIndex(FaceType.F), faceStateIndex(FaceType.F) + 2 * 2)),
       FaceType.L -> Face(2, Axis.Zr, Axis.Y, FaceType.L, state.substring(faceStateIndex(FaceType.L), faceStateIndex(FaceType.L) + 2 * 2)),
@@ -61,7 +61,7 @@ object Cube2x2:
   def maskedEquals(state1: String, state2: String, mask: String): Boolean =
     mask zip (state1 zip state2) forall { case(m, (s1, s2)) => m == '0' || s1 == s2 }
 
-  def maskUpperCorners(cube: Cube): Cube =
+  def maskUpperCorners(cube: Cube2x2): Cube2x2 =
     val upperTiles = cube.upperCorners().flatten
     cube.faces.values.foreach(f => cube.withFace(f.copy(tiles = f.tiles.map(t =>
       t.copy(masked = upperTiles.contains((f.nominalFace, t)))))))

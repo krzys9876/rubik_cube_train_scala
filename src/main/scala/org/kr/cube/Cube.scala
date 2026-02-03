@@ -51,10 +51,6 @@ abstract class Cube:
 
   def printableState: String
 
-  def upperCorners(): Vector[Vector[(FaceType, Tile)]]
-  def lowerCorners(): Vector[Vector[(FaceType, Tile)]]
-
-
 
 sealed abstract class FaceType(val symbol: String)
 
