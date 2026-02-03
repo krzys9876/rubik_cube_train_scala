@@ -6,7 +6,7 @@ import org.scalatest.featurespec.AnyFeatureSpec
 
 import scala.annotation.tailrec
 
-class CubeTest extends AnyFeatureSpec with GivenWhenThen:
+class Cube2x2Test extends AnyFeatureSpec with GivenWhenThen:
   Feature("Create cube"):
     Scenario("Create cube with solved state"):
       Given("No initial state")
