@@ -2,13 +2,6 @@ package org.kr.cube
 
 import org.kr.cube.rl.{Agent, Environment, EpochLog, Train2x2}
 
-import java.io.PrintWriter
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoUnit
-import scala.annotation.tailrec
-import scala.collection.mutable
-
 @main
 def main(): Unit =
   //trainRL2x2WhiteLayer()
@@ -29,7 +22,7 @@ def main(): Unit =
     "B B L' R B R B' U F' R U D R' B' D"
   )*/
 
-  Train2x2.solveOneFromState(
+  /*Train2x2.solveOneFromState(
     "q-values-2x2-white-layer-3000000-20260203_141521.txt",
     "q-values-2x2-yellow-layer-1000000-20260203_143242.txt",
     "q-values-2x2-upper-layer-10000000-20260203_151354.txt",
@@ -37,14 +30,17 @@ def main(): Unit =
     //"UDFLULDUDBRBLFFURRBBLDRF"
     //"UFRBLRRFDDBDULRLBFFLDUBU"
     "LDRFFBBUDLLUBBRDULURFDRF"
-  )
+  )*/
 
-  (0 until 100).foreach(_ =>
+  /*(0 until 100).foreach(_ =>
   Train2x2.solveRandomOne(
     "q-values-2x2-white-layer-3000000-20260203_141521.txt",
     "q-values-2x2-yellow-layer-1000000-20260203_143242.txt",
     "q-values-2x2-upper-layer-10000000-20260203_151354.txt"
-  ))
+  ))*/
+  
+  val cube = Cube3x3.solved
+  println(cube.printableState)
 
 
 

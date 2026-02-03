@@ -56,15 +56,15 @@ abstract class Cube:
 
 
 
-sealed abstract class FaceType(val symbol: String, val index: Int)
+sealed abstract class FaceType(val symbol: String)
 
 object FaceType:
-  case object F extends FaceType("F", 0)
-  case object L extends FaceType("L", 4)
-  case object B extends FaceType("B", 8)
-  case object R extends FaceType("R", 12)
-  case object U extends FaceType("U", 16)
-  case object D extends FaceType("D", 20)
+  case object F extends FaceType("F")
+  case object L extends FaceType("L")
+  case object B extends FaceType("B")
+  case object R extends FaceType("R")
+  case object U extends FaceType("U")
+  case object D extends FaceType("D")
 
   def apply(symbol: String): FaceType = symbol match
       case "F" => F

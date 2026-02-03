@@ -46,17 +46,16 @@ object Cube2x2:
 
   def solvedWithMask(mask: (Face, Tile) => Boolean): Cube = solved.applyMask(mask)
 
-  def s(state: String, face: FaceType, index: Int): String = state.substring(face.index + index, face.index + index + 1)
-  def f(state: String, face: FaceType): String = state.substring(face.index, face.index + 2*2)
+  def s(state: String, face: FaceType, index: Int): String = state.substring(faceStateIndex(face) + index, faceStateIndex(face) + index + 1)
 
   def apply(state: String): Cube =
     val faces: mutable.Map[FaceType, Face] = mutable.Map(
-      FaceType.F -> Face(2, Axis.X, Axis.Y, FaceType.F, state.substring(FaceType.F.index, FaceType.F.index + 2 * 2)),
-      FaceType.L -> Face(2, Axis.Zr, Axis.Y, FaceType.L, state.substring(FaceType.L.index, FaceType.L.index + 2 * 2)),
-      FaceType.B -> Face(2, Axis.Xr, Axis.Y, FaceType.B, state.substring(FaceType.B.index, FaceType.B.index + 2 * 2)),
-      FaceType.R -> Face(2, Axis.Z, Axis.Y, FaceType.R, state.substring(FaceType.R.index, FaceType.R.index + 2 * 2)),
-      FaceType.U -> Face(2, Axis.X, Axis.Zr, FaceType.U, state.substring(FaceType.U.index, FaceType.U.index + 2 * 2)),
-      FaceType.D -> Face(2, Axis.X, Axis.Z, FaceType.D, state.substring(FaceType.D.index, FaceType.D.index + 2 * 2)))
+      FaceType.F -> Face(2, Axis.X, Axis.Y, FaceType.F, state.substring(faceStateIndex(FaceType.F), faceStateIndex(FaceType.F) + 2 * 2)),
+      FaceType.L -> Face(2, Axis.Zr, Axis.Y, FaceType.L, state.substring(faceStateIndex(FaceType.L), faceStateIndex(FaceType.L) + 2 * 2)),
+      FaceType.B -> Face(2, Axis.Xr, Axis.Y, FaceType.B, state.substring(faceStateIndex(FaceType.B), faceStateIndex(FaceType.B) + 2 * 2)),
+      FaceType.R -> Face(2, Axis.Z, Axis.Y, FaceType.R, state.substring(faceStateIndex(FaceType.R), faceStateIndex(FaceType.R) + 2 * 2)),
+      FaceType.U -> Face(2, Axis.X, Axis.Zr, FaceType.U, state.substring(faceStateIndex(FaceType.U), faceStateIndex(FaceType.U) + 2 * 2)),
+      FaceType.D -> Face(2, Axis.X, Axis.Z, FaceType.D, state.substring(faceStateIndex(FaceType.D), faceStateIndex(FaceType.D) + 2 * 2)))
     Cube2x2(faces)
 
   def maskedEquals(state1: String, state2: String, mask: String): Boolean =
@@ -67,6 +66,9 @@ object Cube2x2:
     cube.faces.values.foreach(f => cube.withFace(f.copy(tiles = f.tiles.map(t =>
       t.copy(masked = upperTiles.contains((f.nominalFace, t)))))))
     cube
+
+  val faceStateIndex: Map[FaceType, Int] = Map(FaceType.F -> 0, FaceType.L -> 4, FaceType.B -> 8, FaceType.R -> 12,
+    FaceType.U -> 16, FaceType.D -> 20)
 
 
 sealed abstract class Move2x2(val symbol: String, val sliceAxis: Axis, val sliceCoords: Int, val face: FaceType,
@@ -85,8 +87,8 @@ sealed abstract class Move2x2(val symbol: String, val sliceAxis: Axis, val slice
 
   private def replaceOne(origState: String, state: String,
                          faceFrom: FaceType, indexFrom: Int, faceTo: FaceType, indexTo: Int): String =
-    state.substring(0, faceTo.index + indexTo) + Cube2x2.s(origState, faceFrom, indexFrom) +
-      state.substring(faceTo.index + indexTo + 1)
+    state.substring(0, Cube2x2.faceStateIndex(faceTo) + indexTo) + Cube2x2.s(origState, faceFrom, indexFrom) +
+      state.substring(Cube2x2.faceStateIndex(faceTo) + indexTo + 1)
 
 
 object Moves2x2:

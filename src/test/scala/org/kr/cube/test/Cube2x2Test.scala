@@ -158,7 +158,7 @@ class Cube2x2Test extends AnyFeatureSpec with GivenWhenThen:
   Feature("internals"):
     Scenario("tiles"):
       val cube = Cube2x2("FFFFLDLDBBBBURURUULLRRDD")
-      cube.faces.keys.toVector.sortBy(_.index).foreach(k => println(cube.faces(k)))
+      cube.faces.keys.toVector.sortBy(k => Cube2x2.faceStateIndex(k)).foreach(k => println(cube.faces(k)))
 
     Scenario("slices"):
       val cube = Cube2x2.solved
