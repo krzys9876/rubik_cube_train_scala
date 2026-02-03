@@ -113,7 +113,6 @@ def trainRL2x2YellowLayer(whiteLayerFilePath: String, whileLayerSolvedFilePath: 
   val max = 1000000
   val epochEpisodes = 50000
   val episodeMoves = 100
-  val whiteLayerAgent = Agent.load(whiteLayerFilePath) // Initialize agent with pretrained q-state
   val solvedStates = loadSolved(whileLayerSolvedFilePath) // load solved states for white layer to begin with
 
   def prepareCube(): Cube2x2 =
