@@ -62,21 +62,25 @@ class CubeTest extends AnyFeatureSpec with GivenWhenThen:
       assert(faceRotatedCC.state === "LRFB")
 
     Scenario("L L'"):
-      val cube = Cube2x2("FLBRFLBRFLBRFLBRFLBRFLBR")
-      val face = cube.faces(FaceType.L)
-      assert(face.state === "FLBR")
-      val faceRotatedC = face.rotated(Moves2x2.L.direction)
+      val cube1 = Cube2x2("FLBRFLBRFLBRFLBRFLBRFLBR")
+      val face1 = cube1.faces(FaceType.L)
+      assert(face1.state === "FLBR")
+      val faceRotatedC = face1.rotated(Moves2x2.L.direction)
       assert(faceRotatedC.state === "BFRL")
-      val faceRotatedCC = face.rotated(Moves2x2.L1.direction)
+      val cube2 = Cube2x2("FLBRFLBRFLBRFLBRFLBRFLBR")
+      val face2 = cube2.faces(FaceType.L)
+      val faceRotatedCC = face2.rotated(Moves2x2.L1.direction)
       assert(faceRotatedCC.state === "LRFB")
 
     Scenario("B B'"):
-      val cube = Cube2x2("FLBRFLBRFLBRFLBRFLBRFLBR")
-      val face = cube.faces(FaceType.B)
-      assert(face.state === "FLBR")
-      val faceRotatedC = face.rotated(Moves2x2.B.direction)
+      val cube1 = Cube2x2("FLBRFLBRFLBRFLBRFLBRFLBR")
+      val face1 = cube1.faces(FaceType.B)
+      assert(face1.state === "FLBR")
+      val faceRotatedC = face1.rotated(Moves2x2.B.direction)
       assert(faceRotatedC.state === "BFRL")
-      val faceRotatedCC = face.rotated(Moves2x2.B1.direction)
+      val cube2 = Cube2x2("FLBRFLBRFLBRFLBRFLBRFLBR")
+      val face2 = cube2.faces(FaceType.B)
+      val faceRotatedCC = face2.rotated(Moves2x2.B1.direction)
       assert(faceRotatedCC.state === "LRFB")
 
     Scenario("R R'"):
@@ -91,12 +95,14 @@ class CubeTest extends AnyFeatureSpec with GivenWhenThen:
       assert(faceRotatedCC.state === "LRFB")
 
     Scenario("U U'"):
-      val cube = Cube2x2("FLBRFLBRFLBRFLBRFLBRFLBR")
-      val face = cube.faces(FaceType.U)
-      assert(face.state === "FLBR")
-      val faceRotatedC = face.rotated(Moves2x2.U.direction)
+      val cube1 = Cube2x2("FLBRFLBRFLBRFLBRFLBRFLBR")
+      val face1 = cube1.faces(FaceType.U)
+      assert(face1.state === "FLBR")
+      val faceRotatedC = face1.rotated(Moves2x2.U.direction)
       assert(faceRotatedC.state === "BFRL")
-      val faceRotatedCC = face.rotated(Moves2x2.U1.direction)
+      val cube2 = Cube2x2("FLBRFLBRFLBRFLBRFLBRFLBR")
+      val face2 = cube2.faces(FaceType.U)
+      val faceRotatedCC = face2.rotated(Moves2x2.U1.direction)
       assert(faceRotatedCC.state === "LRFB")
 
     Scenario("D D'"):

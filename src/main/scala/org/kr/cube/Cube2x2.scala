@@ -225,7 +225,9 @@ case class Face(size: Int, axisH: Axis, axisV: Axis, nominalFace: FaceType, tile
       val target = tiles.find(_.coords == TileCoords(size -1 - t.coords.r, t.coords.c)).get
       t.copy(face = target.face, masked = target.masked)
     )
-    copy(tiles = newTiles)
+    tiles.clear()
+    tiles.appendAll(newTiles)
+    this
 
   def edge(axis: Axis, i: Int, sort: CoordsSort): Edge =
     axis.symbol match
@@ -238,8 +240,9 @@ case class Face(size: Int, axisH: Axis, axisV: Axis, nominalFace: FaceType, tile
       val newTile = newEdge.tiles(i)
       val tileIndex = t.indexWhere(_.coords == currentTile.coords)
       t.updated(tileIndex, currentTile.copy(face = newTile.face, masked = newTile.masked)))
+    tiles.clear()
+    tiles.appendAll(newTiles)
     this
-    copy(tiles = newTiles)
 
 object Face:
   def apply(size: Int, axisH: Axis, axisV: Axis, nominalFace: FaceType): Face =
