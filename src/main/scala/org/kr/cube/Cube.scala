@@ -174,6 +174,18 @@ object FaceType:
     Map(Axis.X -> faceOrderX, Axis.Y -> faceOrderY, Axis.Z -> faceOrderZ,
       Axis.Xr -> faceOrderX.reverse, Axis.Yr -> faceOrderY.reverse, Axis.Zr -> faceOrderZ.reverse)
 
+  val upperCorners: Vector[Vector[FaceType]] = Vector(
+    Vector(FaceType.F, FaceType.U, FaceType.L),
+    Vector(FaceType.L, FaceType.U, FaceType.B),
+    Vector(FaceType.B, FaceType.U, FaceType.R),
+    Vector(FaceType.R, FaceType.U, FaceType.F))
+
+  val lowerCorners: Vector[Vector[FaceType]] = Vector(
+    Vector(FaceType.F, FaceType.D, FaceType.L),
+    Vector(FaceType.L, FaceType.D, FaceType.B),
+    Vector(FaceType.B, FaceType.D, FaceType.R),
+    Vector(FaceType.R, FaceType.D, FaceType.F))
+
 
 abstract class Axis(val symbol: String, val reversed: Boolean)
 
@@ -279,7 +291,7 @@ case class Face(size: Int, axisH: Axis, axisV: Axis, nominalFace: FaceType, tile
 
 object Face:
   def apply(size: Int, axisH: Axis, axisV: Axis, nominalFace: FaceType): Face =
-    val tiles = 0.until(size).flatMap(r => 0.until(size).map(c => Tile(nominalFace, TileCoords(r, c))))
+    val tiles = 0.until(size).flatMap(c => 0.until(size).map(r => Tile(nominalFace, TileCoords(c, r))))
     new Face(size, axisH, axisV, nominalFace, tiles.to(mutable.ArrayBuffer))
 
   // Tiles are always placed on a face in order: ABCD:
@@ -288,9 +300,9 @@ object Face:
   // But they may have reversed coords. This simplifies textual state
   def apply(size: Int, axisH: Axis, axisV: Axis, nominalFace: FaceType, state: String): Face =
     val tiles = 0.until(state.length).map(i =>
-      val r = if(axisH.reversed) size - (i % size) -1 else i % size
-      val c = if(axisV.reversed) size - (i / size) -1 else i / size
-      Tile(FaceType(state.substring(i, i + 1)), TileCoords(r, c))).toArray
+      val c = if(axisH.reversed) size - (i % size) -1 else i % size
+      val r = if(axisV.reversed) size - (i / size) -1 else i / size
+      Tile(FaceType(state.substring(i, i + 1)), TileCoords(c, r))).toArray
     new Face(size, axisH, axisV, nominalFace, tiles.to(mutable.ArrayBuffer))
 
 case class Edge(nominalFace: FaceType, tiles: Vector[Tile])
