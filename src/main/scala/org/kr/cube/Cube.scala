@@ -2,11 +2,14 @@ package org.kr.cube
 
 import scala.collection.mutable
 
-case class Cube2x2(faces: mutable.Map[FaceType, Face]):
+abstract class Cube:
+  val faces: mutable.Map[FaceType, Face]
+  lazy val isSolved: Boolean
 
   def state: String =
     faces(FaceType.F).state + faces(FaceType.L).state + faces(FaceType.B).state + faces(FaceType.R).state +
       faces(FaceType.U).state + faces(FaceType.D).state
+
   def maskedState: String =
     new StringBuilder().append(faces(FaceType.F).maskedState)
       .append(faces(FaceType.L).maskedState)
@@ -15,39 +18,43 @@ case class Cube2x2(faces: mutable.Map[FaceType, Face]):
       .append(faces(FaceType.U).maskedState)
       .append(faces(FaceType.D).maskedState).result()
 
-  lazy val isSolved: Boolean = state == Cube2x2.SOLVED_STATE
-
-  private def withFace(face: Face): Cube2x2 =
+  private def withFace(face: Face): Cube =
     faces.update(face.nominalFace, face)
     this
 
   def slice(axis: Axis, i: Int): Slice =
-    val edges = FaceType.faceOrder(axis).map({case(face, sort) => faces(face).edge(axis, i, sort)})
+    val edges = FaceType.faceOrder(axis).map({ case (face, sort) => faces(face).edge(axis, i, sort) })
     Slice(edges)
 
-  def withSliceRotated(faceRotated: Face, slice: Slice): Cube2x2 =
-    val newFaces = slice.edgePairs.map({case (eFrom, eTo) =>
+  def withSliceRotated(faceRotated: Face, slice: Slice): Cube =
+    val newFaces = slice.edgePairs.map({ case (eFrom, eTo) =>
       //NOTE: we must take original faces as we replace all faces, and we effectively overwrite the first with the last
-      eTo.nominalFace -> this.faces(eTo.nominalFace).withEdge(eTo, eFrom)})
+      eTo.nominalFace -> this.faces(eTo.nominalFace).withEdge(eTo, eFrom)
+    })
     faces += (faceRotated.nominalFace -> faceRotated)
     faces ++= newFaces
     this
 
-  def applyMask(mask: (Face, Tile) => Boolean): Cube2x2 =
+  def applyMask(mask: (Face, Tile) => Boolean): Cube =
     faces.values.foldLeft(this)((c, f) =>
       c.withFace(f.copy(tiles = f.tiles.map(t => t.copy(masked = mask(f, t))))))
+
+
+case class Cube2x2(override val faces: mutable.Map[FaceType, Face]) extends Cube:
+  override lazy val isSolved: Boolean = state == Cube2x2.SOLVED_STATE
+
 
 object Cube2x2:
   private val SOLVED_STATE: String = "FFFFLLLLBBBBRRRRUUUUDDDD"
 
-  def solved: Cube2x2 = Cube2x2(SOLVED_STATE)
+  def solved: Cube = Cube2x2(SOLVED_STATE)
 
-  def solvedWithMask(mask: (Face, Tile) => Boolean): Cube2x2 = solved.applyMask(mask)
+  def solvedWithMask(mask: (Face, Tile) => Boolean): Cube = solved.applyMask(mask)
 
   def s(state: String, face: FaceType, index: Int): String = state.substring(face.index + index, face.index + index + 1)
   def f(state: String, face: FaceType): String = state.substring(face.index, face.index + 2*2)
 
-  def apply(state: String): Cube2x2 =
+  def apply(state: String): Cube =
     val faces: mutable.Map[FaceType, Face] = mutable.Map(
       FaceType.F -> Face(2, Axis.X, Axis.Y, FaceType.F, state.substring(FaceType.F.index, FaceType.F.index + 2 * 2)),
       FaceType.L -> Face(2, Axis.Zr, Axis.Y, FaceType.L, state.substring(FaceType.L.index, FaceType.L.index + 2 * 2)),
@@ -64,7 +71,7 @@ object Cube2x2:
 
 sealed abstract class Move2x2(val symbol: String, val sliceAxis: Axis, val sliceCoords: Int, val face: FaceType,
                               val direction: MoveDirection):
-  def applyToCube(cube: Cube2x2): Cube2x2 =
+  def applyToCube(cube: Cube): Cube =
     val faceRotated = cube.faces(face).rotated(direction)
     val slice = cube.slice(sliceAxis, sliceCoords)
     cube.withSliceRotated(faceRotated, slice)

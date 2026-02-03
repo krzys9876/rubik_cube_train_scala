@@ -151,7 +151,7 @@ def reTrainRL2x2WhiteLayer(whiteLayerFilePath: String, unsolvedFilePath: String)
     (initS, initMS, unS, unMS, scr.split(" ").map(Moves2x2.from).toVector)
   }) //.filter(_._1 == "BLRRDDBUUBBLDFDULLRFFFUR")
 
-  def prepareCube(): Cube2x2 =
+  def prepareCube(): Cube =
     val entry = unsolvedStates(scala.util.Random.nextInt(unsolvedStates.length))
     val cube = Cube2x2.solved.applyMask(Environment.whiteLayer2x2Selector)
     val scramble = entry._5
@@ -197,7 +197,7 @@ def trainRL2x2YellowLayer(whileLayerSolvedFilePath: String): Unit =
   val episodeMoves = 100
   val solvedStates = loadSimple(whileLayerSolvedFilePath) // load solved states for white layer to begin with
 
-  def prepareCube(): Cube2x2 =
+  def prepareCube(): Cube =
     val solvedState = solvedStates(scala.util.Random.nextInt(solvedStates.length))
     Cube2x2(solvedState).applyMask(Environment.yellowLayer2x2Selector)
 
@@ -253,7 +253,7 @@ def trainRL2x2UpperLayer(yellowLayerSolvedFilePath: String): Unit =
   val episodeMoves = 30
   val solvedStates = loadSimple(yellowLayerSolvedFilePath) // load solved states for yellow layer to begin with
 
-  def prepareCube(): Cube2x2 =
+  def prepareCube(): Cube =
     val solvedState = solvedStates(scala.util.Random.nextInt(solvedStates.length))
     Cube2x2(solvedState).applyMask(Environment.final2x2Selector)
 

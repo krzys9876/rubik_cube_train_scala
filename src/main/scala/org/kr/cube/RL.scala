@@ -3,7 +3,7 @@ package org.kr.cube
 import java.io.PrintWriter
 import scala.collection.{immutable, mutable}
 
-case class Environment(var cube: Cube2x2, history: mutable.ArrayBuffer[EnvironmentLogEntry],
+case class Environment(var cube: Cube, history: mutable.ArrayBuffer[EnvironmentLogEntry],
                        expectedState: String, var state: String, initScramble: Vector[String]):
 
   def step(action: String): Environment =
@@ -23,7 +23,7 @@ object Environment:
     val randomCube = scramble.foldLeft(initCube)((c, m) => m.applyToCube(c))
     Environment(randomCube, mutable.ArrayBuffer(), expectedState, randomCube.maskedState, scramble.map(_.symbol))
 
-  def init(cubeGenerator: () => Cube2x2, expectedState: String): Environment =
+  def init(cubeGenerator: () => Cube, expectedState: String): Environment =
     val cube = cubeGenerator()
     Environment(cube, mutable.ArrayBuffer(), expectedState, cube.maskedState, Vector())
 
