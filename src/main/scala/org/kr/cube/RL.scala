@@ -47,12 +47,11 @@ object Environment:
 
 case class EnvironmentLogEntry(stateBefore: String, action: String)
 
-case class Agent(qState: Map[String, (Int, Map[String, Double])], solvedStates: immutable.Set[String], epsilon: Double = 0.25, episodeCount: Long = 0):
+case class Agent(qState: Map[String, (Int, Map[String, Double])], solvedStates: immutable.Set[String],
+                 epsilon: Double = 0.25, epsilonMin: Double = 0.05, epsilonDecayEpisodes: Double = 1500, episodeCount: Long = 0):
   private val alpha: Double = 0.1
   private val gamma: Double = 0.95
   private val epsilonDecay: Double = 0.99
-  private val epsilonMin: Double = 0.05
-  private val epsilonDecayEpisodes: Double = 1500
 
   def updateEpisode(environment: Environment): Agent =
     if(!environment.isSolved || environment.history.isEmpty) this
@@ -77,14 +76,12 @@ case class Agent(qState: Map[String, (Int, Map[String, Double])], solvedStates: 
     else nextBestAction(environment)
 
   def nextBestAction(environment: Environment): String =
-    if (Math.random() < epsilon) nextRandomAction(environment)
+    val qValues = qState.getOrElse(environment.state, (0, Map()))._2
+    if (qValues.isEmpty) nextRandomAction(environment)
     else
-      val qValues = qState.getOrElse(environment.state, (0, Map()))._2
-      if (qValues.isEmpty) nextRandomAction(environment)
-      else
-        val maxQ = qValues.values.max
-        val bestList = qValues.filter(_._2 == maxQ)
-        bestList.keys.toVector(scala.util.Random.nextInt(bestList.size))
+      val maxQ = qValues.values.max
+      val bestList = qValues.filter(_._2 == maxQ)
+      bestList.keys.toVector(scala.util.Random.nextInt(bestList.size))
 
   def nextRandomAction(environment: Environment): String = Moves2x2.randomExceptOpposite(None).symbol
 
@@ -101,6 +98,9 @@ case class Agent(qState: Map[String, (Int, Map[String, Double])], solvedStates: 
 
 object Agent:
   def apply(): Agent = Agent(Map(), immutable.Set())
+
+  def apply(epsilonInit: Double, epsilonMin: Double, epsilonDecayEpisodes: Long): Agent =
+    Agent(Map(), immutable.Set(), epsilonInit, epsilonMin, epsilonDecayEpisodes)
 
   def load(filePath: String): Agent =
     val source = scala.io.Source.fromFile(filePath)

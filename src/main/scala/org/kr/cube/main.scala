@@ -16,8 +16,9 @@ def main(): Unit =
   testRun2x2UpperLayer(
     "q-values-2x2-white-layer-10000000-20260203_021603.txt",
     "q-values-2x2-yellow-layer-50000000-20260203_024944.txt",
-    "q-values-2x2-upper-layer-20000000-20260203_083150.txt"
+    "q-values-2x2-upper-layer-10000000-20260203_094831.txt"
   )
+  //debugUpperLayer("q-values-2x2-upper-layer-10000000-20260203_094831.txt")
 
 
 /*def whiteLayer(): Unit =
@@ -182,7 +183,7 @@ def trainRL2x2UpperLayer(yellowLayerSolvedFilePath: String): Unit =
     val solvedState = solvedStates(scala.util.Random.nextInt(solvedStates.length))
     Cube2x2(solvedState).applyMask(Environment.final2x2Selector)
 
-  val agent = Agent()
+  val agent = Agent(0.2, 0.001, 5000L) // minimum epsilon - we are looking for pattern, not for different ways to solve the upper layer
   val afterAgent = iteration(agent, () => Environment.init(() => prepareCube(), Environment.final2x2ExpectedState), max, max, episodeMoves, epochEpisodes, 0)
   printAgentStats(afterAgent, max)
   val timestampTxt = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss").format(LocalDateTime.now())
@@ -202,7 +203,12 @@ def testRun2x2UpperLayer(filePathWhiteLayer: String, filePathYellowLayer: String
   println(f"Loaded: ${yellowLayerAgent.qState.keys.size} records (yellow layer)")
   val upperLayerAgent = Agent.load(filePathUpperLayer)
   println(f"Loaded: ${upperLayerAgent.qState.keys.size} records (upper layer)")
+
+  //val solvedYellowStates = loadSolved("solved-2x2-yellow-layer-1000000-20260203_010048.txt")
+
   val res = mutable.Map[Int, Int]()
+  val resUnsolved = mutable.Map[String, Int]()
+  val resSolved = mutable.Map[String, Int]()
   (0 until 100000).foreach(e =>
     if(e % 10000 == 0) println(e)
     val initWhiteLayerEnv = Environment.init2x2WhiteLayerTraining(20)
@@ -211,17 +217,39 @@ def testRun2x2UpperLayer(filePathWhiteLayer: String, filePathYellowLayer: String
       val initYellowLayerEnv = Environment.init(() => envWhiteLayer.cube.applyMask(Environment.yellowLayer2x2Selector), Environment.yellowLayer2x2ExpectedState)
       val envYellowLayer = testRunStage(yellowLayerAgent, initYellowLayerEnv, 500)
       if(envYellowLayer.isSolved)
+        val initUpperState = envYellowLayer.cube.state //if(solvedYellowStates.contains(envYellowLayer.cube.state)) println(envYellowLayer.cube.state)
         val initUpperLayerEnv = Environment.init(() => envYellowLayer.cube.applyMask(Environment.final2x2Selector), Environment.final2x2ExpectedState)
         val envUpperLayer = testRunStage(upperLayerAgent, initUpperLayerEnv, 500)
         if (envUpperLayer.isSolved)
           val length = envWhiteLayer.history.length + envYellowLayer.history.length + envUpperLayer.history.length
+          resSolved.update(initUpperState, resSolved.getOrElse(initUpperState, 0) + 1)
           res.update(length, res.getOrElse(length, 0) + 1)
-        else res.update(-3, res.getOrElse(-3, 0) + 1)
+        else
+          resUnsolved.update(initUpperState, resUnsolved.getOrElse(initUpperState, 0) + 1)
+          res.update(-3, res.getOrElse(-3, 0) + 1)
       else res.update(-2, res.getOrElse(-2, 0) + 1)
     else res.update(-1, res.getOrElse(-1, 0) + 1)
   )
   println(res.toVector.sortBy(_._1).mkString("\n"))
+  println("Unsolved")
+  println(resUnsolved.toVector.sortBy(_._2).reverse.mkString("\n"))
+  println("Solved")
+  println(resSolved.toVector.sortBy(_._2).reverse.mkString("\n"))
 
 def testRunStage(agent: Agent, environment: Environment, steps: Int): Environment =
   (0 until steps).foreach(_ => if (!environment.isSolved) environment.step(agent.nextBestAction(environment)))
   environment
+
+def debugUpperLayer(filePathUpperLayer: String): Unit =
+  val agent = Agent.load(filePathUpperLayer)
+  println(f"Loaded: ${agent.qState.keys.size} records (upper layer)")
+  val environment = Environment.init(() => Cube2x2("LRFFFBLLRLBBBFRRUUUUDDDD"), Environment.final2x2ExpectedState)
+  val hist = mutable.ArrayBuffer[String]()
+  (0 until 100).foreach(_ =>
+    if (!environment.isSolved) {
+      environment.step(agent.nextBestAction(environment))
+      hist.append(f"${environment.history.last.toString}|${environment.history.last.action}|${environment.cube.state}|${environment.isSolved}")
+    })
+  if(environment.isSolved) println("Solved!")
+  println(hist.mkString("\n"))
+
