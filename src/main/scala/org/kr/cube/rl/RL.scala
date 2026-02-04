@@ -6,10 +6,11 @@ import java.io.PrintWriter
 import scala.collection.{immutable, mutable}
 
 case class Environment(var cube: Cube, history: mutable.ArrayBuffer[EnvironmentLogEntry],
-                       expectedState: String, var state: String, initScramble: Vector[String]):
+                       expectedState: String, var state: String, initScramble: Vector[String],
+                       moveDecoder: MoveDecoder):
 
   def step(action: String): Environment =
-    val nextMove = Moves2x2.from(action)
+    val nextMove = moveDecoder.decodeMove(action)
     val stateBefore = state
     cube = nextMove.applyToCube(cube)
     state = cube.maskedState
@@ -19,20 +20,27 @@ case class Environment(var cube: Cube, history: mutable.ArrayBuffer[EnvironmentL
   def isSolved: Boolean = state == expectedState
 
 object Environment:
-  def init(cubeGenerator: () => Cube, expectedState: String): Environment =
+  def init2x2(cubeGenerator: () => Cube, expectedState: String): Environment =
     val cube = cubeGenerator()
-    Environment(cube, mutable.ArrayBuffer(), expectedState, cube.maskedState, Vector())
+    Environment(cube, mutable.ArrayBuffer(), expectedState, cube.maskedState, Vector(), MoveDecoder2x2())
 
-  def init2x2WhiteLayerTraining(scrambleMoves: Int): Environment = {
+  def init2x2WhiteLayerTraining(scrambleMoves: Int): Environment =
     val scramble = Moves2x2.randomList(scrambleMoves)
     val initCube = Cube2x2.maskUpperCorners(Cube2x2.solved2x2)
     val randomCube = scramble.foldLeft(initCube)((c, m) => m.applyToCube(c))
-    Environment(randomCube, mutable.ArrayBuffer(), whiteLayer2x2ExpectedState, randomCube.maskedState, scramble.map(_.symbol))
-  }
+    Environment(randomCube, mutable.ArrayBuffer(), whiteLayer2x2ExpectedState, randomCube.maskedState, scramble.map(_.symbol), MoveDecoder2x2())
 
   val whiteLayer2x2ExpectedState: String = "..FF..LL..BB..RR....DDDD"
   val yellowLayer2x2ExpectedState: String = "..FF..LL..BB..RRUUUUDDDD"
   val final2x2ExpectedState: String = Cube2x2.SOLVED_STATE
+
+  val whiteCross3x3ExpectedState: String = "....F..F.....L..L.....B..B.....R..R.....U.....D.DDD.D."
+
+  def init3x3WhiteCrossTraining(scrambleMoves: Int): Environment =
+    val scramble = Moves3x3.randomList(scrambleMoves)
+    val initCube = Cube3x3.maskAllExceptWhiteCross(Cube3x3.solved3x3)
+    val randomCube = scramble.foldLeft(initCube)((c, m) => m.applyToCube(c))
+    Environment(randomCube, mutable.ArrayBuffer(), whiteCross3x3ExpectedState, randomCube.maskedState, scramble.map(_.symbol), MoveDecoder3x3())
 
 
 case class EnvironmentLogEntry(stateBefore: String, action: String)
@@ -75,7 +83,7 @@ case class Agent(qState: Map[String, (Int, Map[String, Double])], solvedStates: 
         val bestList = qValues.filter(v => (scale == 0.0 && v._2 == maxQ) || Math.abs(v._2 - maxQ) < scale)
         bestList.keys.toVector(scala.util.Random.nextInt(bestList.size))
 
-  def nextRandomAction(environment: Environment): String = Moves2x2.randomExceptOpposite(None).symbol
+  def nextRandomAction(environment: Environment): String = environment.moveDecoder.randomMove(environment.history.lastOption.map(_.action))
 
   def saveQState(filePath: String): Unit =
     val pw = new PrintWriter(filePath)
@@ -110,3 +118,15 @@ object Agent:
 
 case class EpochLog(episodeCount: Long, successCount: Long):
   override def toString: String = f"episodes: $episodeCount, success: $successCount, ratio: ${successCount.toDouble / episodeCount.toDouble * 100.0}%.3f%%"
+
+abstract class MoveDecoder:
+  def decodeMove(symbol: String): Move
+  def randomMove(except: Option[String]): String
+
+case class MoveDecoder2x2() extends MoveDecoder:
+  override def decodeMove(symbol: String): Move = Moves2x2.from(symbol)
+  override def randomMove(except: Option[String]): String = Moves2x2.randomExceptOpposite(except).symbol
+
+case class MoveDecoder3x3() extends MoveDecoder:
+  override def decodeMove(symbol: String): Move = Moves3x3.from(symbol)
+  override def randomMove(except: Option[String]): String = Moves3x3.randomExceptOpposite(except).symbol
