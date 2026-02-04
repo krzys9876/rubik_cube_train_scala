@@ -8,10 +8,10 @@ object Train3x3:
   def trainRL3x3WhiteCross(): Unit =
     val start = LocalDateTime.now()
     println(start)
-    val max = 1000000
+    val max = 2000000
     val epochEpisodes = 50000
     val episodeMoves = 50
-    val agent = Agent(0.25, 0.05, 2000L) // The most random and exploratory
+    val agent = Agent(0.25, 0.05, 5000L) // The most random and exploratory
     val afterAgent = Train.iteration(agent, () => Environment.init3x3WhiteCrossTraining(1 + scala.util.Random.nextInt(50)), max, max, episodeMoves, epochEpisodes, 0)
     Train.printAgentStats(afterAgent, max)
     val timestampTxt = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss").format(LocalDateTime.now())
