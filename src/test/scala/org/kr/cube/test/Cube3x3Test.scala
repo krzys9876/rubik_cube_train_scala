@@ -144,3 +144,9 @@ class Cube3x3Test extends AnyFeatureSpec with GivenWhenThen:
       val moves = Vector(Moves3x3.F1, Moves3x3.L1, Moves3x3.B1, Moves3x3.R1, Moves3x3.U1, Moves3x3.D1)
       val cube = moves.foldLeft(Cube3x3.solved)((c, m) => m.applyToCube(c))
       assert(cube.state === "BUUDFUDDDRUUDLLDFRFUUDBBDLLLFURRRLBBBBRLURLFFFFFLDRBBR")
+
+  Feature("Mask tiles"):
+    Scenario("mask all except white cross"):
+      val cube = Cube3x3.maskAllExceptWhiteCross(Cube3x3.solved3x3)
+      assert(cube.maskedState === "....F..F.....L..L.....B..B.....R..R.....U.....D.DDD.D.")
+

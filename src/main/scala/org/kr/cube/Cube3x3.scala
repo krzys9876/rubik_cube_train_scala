@@ -1,5 +1,7 @@
 package org.kr.cube
 
+import org.kr.cube.FaceType.F
+
 import scala.collection.mutable
 
 case class Cube3x3(override val faces: mutable.Map[FaceType, Face]) extends Cube:
@@ -25,13 +27,50 @@ case class Cube3x3(override val faces: mutable.Map[FaceType, Face]) extends Cube
       f"         ${tileSymbol(FaceType.D,3)}${tileSymbol(FaceType.D,4)}${tileSymbol(FaceType.D,5)}\n" +
       f"         ${tileSymbol(FaceType.D,6)}${tileSymbol(FaceType.D,7)}${tileSymbol(FaceType.D,8)}\n"
 
+  private def t(face: FaceType, index: Int): (FaceType, Tile) = (face, faces(face).tiles(index))
+  
+  private def corners(): Vector[Vector[(FaceType, Tile)]] =
+    Vector(
+      Vector(t(FaceType.F, 0), t(FaceType.U, 6), t(FaceType.L, 2)),
+      Vector(t(FaceType.L, 0), t(FaceType.U, 0), t(FaceType.B, 2)),
+      Vector(t(FaceType.B, 0), t(FaceType.U, 2), t(FaceType.R, 2)),
+      Vector(t(FaceType.R, 0), t(FaceType.U, 8), t(FaceType.F, 2)),
+      Vector(t(FaceType.F, 6), t(FaceType.D, 0), t(FaceType.L, 8)),
+      Vector(t(FaceType.L, 6), t(FaceType.D, 6), t(FaceType.B, 8)),
+      Vector(t(FaceType.B, 6), t(FaceType.D, 8), t(FaceType.R, 8)),
+      Vector(t(FaceType.R, 6), t(FaceType.D, 2), t(FaceType.F, 8)))
+
+  private def edges(): Vector[Vector[(FaceType, Tile)]] =
+    Vector(
+      Vector(t(FaceType.F, 1), t(FaceType.U, 7)),
+      Vector(t(FaceType.L, 1), t(FaceType.U, 3)),
+      Vector(t(FaceType.B, 1), t(FaceType.U, 1)),
+      Vector(t(FaceType.R, 1), t(FaceType.U, 5)),
+      Vector(t(FaceType.F, 3), t(FaceType.L, 5)),
+      Vector(t(FaceType.L, 3), t(FaceType.B, 5)),
+      Vector(t(FaceType.B, 3), t(FaceType.R, 5)),
+      Vector(t(FaceType.R, 3), t(FaceType.F, 5)),
+      Vector(t(FaceType.F, 7), t(FaceType.D, 1)),
+      Vector(t(FaceType.L, 7), t(FaceType.D, 3)),
+      Vector(t(FaceType.B, 7), t(FaceType.D, 7)),
+      Vector(t(FaceType.R, 7), t(FaceType.D, 5)))
+
+  def centers(): Vector[(FaceType, Tile)] =
+    Vector(t(FaceType.F, 4), t(FaceType.L, 4), t(FaceType.B, 4), t(FaceType.R, 4), t(FaceType.U, 4), t(FaceType.D, 4))
+
+  def lowerEdges(): Vector[Vector[(FaceType, Tile)]] =
+    edges().filter(c =>
+      val cf = c.map(t => t._2.face)
+      FaceType.lowerEdges.exists(uc => uc.sortBy(_.symbol).equals(cf.sortBy(_.symbol))))
+
 
 object Cube3x3:
   private val SOLVED_STATE: String = "FFFFFFFFFLLLLLLLLLBBBBBBBBBRRRRRRRRRUUUUUUUUUDDDDDDDDD"
 
   def solved: Cube = Cube3x3(SOLVED_STATE)
+  def solved3x3: Cube3x3 = Cube3x3(SOLVED_STATE)
 
-  def apply(state: String): Cube =
+  def apply(state: String): Cube3x3 =
     val faces: mutable.Map[FaceType, Face] = mutable.Map(
       FaceType.F -> Face(3, Axis.X, Axis.Y, FaceType.F, state.substring(faceStateIndex(FaceType.F), faceStateIndex(FaceType.F) + 3 * 3)),
       FaceType.L -> Face(3, Axis.Zr, Axis.Y, FaceType.L, state.substring(faceStateIndex(FaceType.L), faceStateIndex(FaceType.L) + 3 * 3)),
@@ -43,6 +82,12 @@ object Cube3x3:
 
   val faceStateIndex: Map[FaceType, Int] = Map(FaceType.F -> 0, FaceType.L -> 9, FaceType.B -> 18, FaceType.R -> 27,
     FaceType.U -> 36, FaceType.D -> 45)
+
+  def maskAllExceptWhiteCross(cube: Cube3x3): Cube =
+    val whiteCrossTiles = cube.lowerEdges().flatten ++ cube.centers()
+    cube.faces.values.foreach(f => cube.withFace(f.copy(tiles = f.tiles.map(t =>
+      t.copy(masked = !whiteCrossTiles.contains((f.nominalFace, t)))))))
+    cube
 
 
 object Moves3x3:
@@ -70,4 +115,3 @@ object Moves3x3:
     available(scala.util.Random.nextInt(available.length))
 
   def from(symbol: String): Move = all.find(_.symbol == symbol).get
-

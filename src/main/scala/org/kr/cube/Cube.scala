@@ -92,6 +92,12 @@ object FaceType:
     Vector(FaceType.B, FaceType.D, FaceType.R),
     Vector(FaceType.R, FaceType.D, FaceType.F))
 
+  val lowerEdges: Vector[Vector[FaceType]] = Vector(
+    Vector(FaceType.F, FaceType.D),
+    Vector(FaceType.L, FaceType.D),
+    Vector(FaceType.B, FaceType.D),
+    Vector(FaceType.R, FaceType.D))
+
 
 abstract class Axis(val symbol: String, val reversed: Boolean)
 
