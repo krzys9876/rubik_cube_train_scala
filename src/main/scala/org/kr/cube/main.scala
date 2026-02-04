@@ -4,25 +4,25 @@ import org.kr.cube.rl.{Agent, Environment, EpochLog, Train2x2}
 
 @main
 def main(): Unit =
-  //trainRL2x2WhiteLayer()
-  //testRun2x2WhiteLayer("q-values-2x2-white-layer-3000000-20260203_110743.txt")
-  //trainRL2x2YellowLayer("solved-2x2-white-layer-1000000-20260203_005055.txt")
-  //testRun2x2YellowLayer("q-values-2x2-white-layer-3000000-20260203_141521.txt", "q-values-2x2-yellow-layer-1000000-20260203_143242.txt")
+  //Train2x2.trainRL2x2WhiteLayer()
+  //Train2x2.testRun2x2WhiteLayer("q-values-2x2-white-layer-3000000-20260204_083938.txt")
+  //Train2x2.trainRL2x2YellowLayer("solved-2x2-white-layer-1000000-20260203_005055.txt")
+  //Train2x2.testRun2x2YellowLayer("q-values-2x2-white-layer-3000000-20260203_141521.txt", "q-values-2x2-yellow-layer-1000000-20260203_143242.txt")
   //trainRL2x2UpperLayer("solved-2x2-yellow-layer-1000000-20260203_010048.txt")
-  /*testRun2x2UpperLayer(
+  Train2x2.testRun2x2UpperLayer(
     "q-values-2x2-white-layer-3000000-20260203_141521.txt",
     "q-values-2x2-yellow-layer-1000000-20260203_143242.txt",
     "q-values-2x2-upper-layer-10000000-20260203_151354.txt"
-  )*/
+  )
   //debugUpperLayer("q-values-2x2-upper-layer-10000000-20260203_094831.txt")
-  /*solveOneFromScramble(
+  /*Train2x2.solveOneFromScramble(
     "q-values-2x2-white-layer-3000000-20260203_141521.txt",
     "q-values-2x2-yellow-layer-1000000-20260203_143242.txt",
     "q-values-2x2-upper-layer-10000000-20260203_151354.txt",
     "B B L' R B R B' U F' R U D R' B' D"
-  )*/
+  )
 
-  /*Train2x2.solveOneFromState(
+  Train2x2.solveOneFromState(
     "q-values-2x2-white-layer-3000000-20260203_141521.txt",
     "q-values-2x2-yellow-layer-1000000-20260203_143242.txt",
     "q-values-2x2-upper-layer-10000000-20260203_151354.txt",
@@ -38,9 +38,9 @@ def main(): Unit =
     "q-values-2x2-yellow-layer-1000000-20260203_143242.txt",
     "q-values-2x2-upper-layer-10000000-20260203_151354.txt"
   ))*/
-  
-  val cube = Cube3x3.solved
-  println(cube.printableState)
+
+  /*val cube = Cube3x3.solved
+  println(cube.printableState)*/
 
 
 

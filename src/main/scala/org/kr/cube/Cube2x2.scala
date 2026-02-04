@@ -38,11 +38,10 @@ case class Cube2x2(override val faces: mutable.Map[FaceType, Face]) extends Cube
 
 
 object Cube2x2:
-  private val SOLVED_STATE: String = "FFFFLLLLBBBBRRRRUUUUDDDD"
+  val SOLVED_STATE: String = "FFFFLLLLBBBBRRRRUUUUDDDD"
 
   def solved: Cube = Cube2x2(SOLVED_STATE)
-
-  def solvedWithMask(mask: (Face, Tile) => Boolean): Cube = solved.applyMask(mask)
+  def solved2x2: Cube2x2 = Cube2x2(SOLVED_STATE)
 
   def s(state: String, face: FaceType, index: Int): String = state.substring(faceStateIndex(face) + index, faceStateIndex(face) + index + 1)
 
@@ -59,11 +58,18 @@ object Cube2x2:
   def maskedEquals(state1: String, state2: String, mask: String): Boolean =
     mask zip (state1 zip state2) forall { case(m, (s1, s2)) => m == '0' || s1 == s2 }
 
-  def maskUpperCorners(cube: Cube2x2): Cube2x2 =
+  def maskUpperCorners(cube: Cube2x2): Cube =
     val upperTiles = cube.upperCorners().flatten
     cube.faces.values.foreach(f => cube.withFace(f.copy(tiles = f.tiles.map(t =>
       t.copy(masked = upperTiles.contains((f.nominalFace, t)))))))
     cube
+
+  def maskUpperLayer(cube: Cube2x2): Cube =
+    val upperTiles = cube.upperCorners().flatten.filter(t => t._2.face != FaceType.U)
+    cube.faces.values.foreach(f => cube.withFace(f.copy(tiles = f.tiles.map(t =>
+      t.copy(masked = upperTiles.contains((f.nominalFace, t)))))))
+    cube
+
 
   val faceStateIndex: Map[FaceType, Int] = Map(FaceType.F -> 0, FaceType.L -> 4, FaceType.B -> 8, FaceType.R -> 12,
     FaceType.U -> 16, FaceType.D -> 20)

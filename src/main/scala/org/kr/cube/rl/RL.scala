@@ -19,32 +19,20 @@ case class Environment(var cube: Cube, history: mutable.ArrayBuffer[EnvironmentL
   def isSolved: Boolean = state == expectedState
 
 object Environment:
-  def init(scrambleMoves: Int, expectedState: String, expectedMask: (Face, Tile) => Boolean): Environment =
-    val scramble = Moves2x2.randomList(scrambleMoves)
-    val initCube = Cube2x2.solvedWithMask(expectedMask)
-    val randomCube = scramble.foldLeft(initCube)((c, m) => m.applyToCube(c))
-    Environment(randomCube, mutable.ArrayBuffer(), expectedState, randomCube.maskedState, scramble.map(_.symbol))
-
   def init(cubeGenerator: () => Cube, expectedState: String): Environment =
     val cube = cubeGenerator()
     Environment(cube, mutable.ArrayBuffer(), expectedState, cube.maskedState, Vector())
 
-  def init2x2WhiteLayerTraining(scrambleMoves: Int): Environment =
-    init(scrambleMoves, whiteLayer2x2ExpectedState, whiteLayer2x2Selector)
+  def init2x2WhiteLayerTraining(scrambleMoves: Int): Environment = {
+    val scramble = Moves2x2.randomList(scrambleMoves)
+    val initCube = Cube2x2.maskUpperCorners(Cube2x2.solved2x2)
+    val randomCube = scramble.foldLeft(initCube)((c, m) => m.applyToCube(c))
+    Environment(randomCube, mutable.ArrayBuffer(), whiteLayer2x2ExpectedState, randomCube.maskedState, scramble.map(_.symbol))
+  }
 
   val whiteLayer2x2ExpectedState: String = "..FF..LL..BB..RR....DDDD"
-  val whiteLayer2x2Selector: (Face, Tile) => Boolean =
-    (f: Face, t: Tile) => f.nominalFace == FaceType.U || (f.axisV.symbol == "Y" && t.coords.r == 0)
-
-  def init2x2YellowLayerTraining(scrambleMoves: Int): Environment =
-    init(scrambleMoves, yellowLayer2x2ExpectedState, yellowLayer2x2Selector)
-
   val yellowLayer2x2ExpectedState: String = "..FF..LL..BB..RRUUUUDDDD"
-  val yellowLayer2x2Selector: (Face, Tile) => Boolean =
-    (f: Face, t: Tile) => t.face != FaceType.U && !(f.axisV.symbol == "Y" && t.coords.r == 1 || f.nominalFace == FaceType.D)
-
-  val final2x2ExpectedState: String = Cube2x2.solved.state
-  val final2x2Selector: (Face, Tile) => Boolean = (_, _) => false
+  val final2x2ExpectedState: String = Cube2x2.SOLVED_STATE
 
 
 case class EnvironmentLogEntry(stateBefore: String, action: String)

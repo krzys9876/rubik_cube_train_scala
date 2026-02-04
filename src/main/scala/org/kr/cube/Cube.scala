@@ -35,10 +35,6 @@ abstract class Cube:
     faces ++= newFaces
     this
 
-  def applyMask(mask: (Face, Tile) => Boolean): Cube =
-    faces.values.foldLeft(this)((c, f) =>
-      c.withFace(f.copy(tiles = f.tiles.map(t => t.copy(masked = mask(f, t))))))
-
   def tileSymbol(faceType: FaceType, index: Int): String =
     faces(faceType).tiles(index).face.symbol match {
       case "F" => "\u001B[44m\u001B[30m F \u001B[0m"
