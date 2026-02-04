@@ -148,12 +148,20 @@ class Cube2x2Test extends AnyFeatureSpec with GivenWhenThen:
       assert(cube.state === "BUDDRUDRFUDLLULBBRLFFFBR")
 
   Feature("Mask tiles"):
-    Scenario("F"):
+    Scenario("move masked cube (F)"):
       val cube = Cube2x2.maskUpperCorners(Cube2x2.solved2x2)
       assert(cube.maskedState === "..FF..LL..BB..RR....DDDD")
       val after = Moves2x2.F.applyToCube(cube)
       assert(after.state === "FFFFLDLDBBBBURURUULLRRDD")
       assert(after.maskedState === "F.F..DLD..BB...R..L.R.DD")
+
+    Scenario("mask upper corners"):
+      val cube = Cube2x2.maskUpperCorners(Cube2x2.solved2x2)
+      assert(cube.maskedState === "..FF..LL..BB..RR....DDDD")
+
+    Scenario("mask upper layer (excluding yellow layer)"):
+      val cube = Cube2x2.maskUpperLayer(Cube2x2.solved2x2)
+      assert(cube.maskedState === "..FF..LL..BB..RRUUUUDDDD")
 
   Feature("internals"):
     Scenario("tiles"):
