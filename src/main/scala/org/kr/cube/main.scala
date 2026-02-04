@@ -7,13 +7,13 @@ def main(): Unit =
   //Train2x2.trainRL2x2WhiteLayer()
   //Train2x2.testRun2x2WhiteLayer("q-values-2x2-white-layer-3000000-20260204_083938.txt")
   //Train2x2.trainRL2x2YellowLayer("solved-2x2-white-layer-1000000-20260203_005055.txt")
-  //Train2x2.testRun2x2YellowLayer("q-values-2x2-white-layer-3000000-20260203_141521.txt", "q-values-2x2-yellow-layer-1000000-20260203_143242.txt")
+  Train2x2.testRun2x2YellowLayer("q-values-2x2-white-layer-3000000-20260203_141521.txt", "q-values-2x2-yellow-layer-1000000-20260203_143242.txt")
   //trainRL2x2UpperLayer("solved-2x2-yellow-layer-1000000-20260203_010048.txt")
-  Train2x2.testRun2x2UpperLayer(
+  /*Train2x2.testRun2x2UpperLayer(
     "q-values-2x2-white-layer-3000000-20260203_141521.txt",
     "q-values-2x2-yellow-layer-1000000-20260203_143242.txt",
     "q-values-2x2-upper-layer-10000000-20260203_151354.txt"
-  )
+  )*/
   //debugUpperLayer("q-values-2x2-upper-layer-10000000-20260203_094831.txt")
   /*Train2x2.solveOneFromScramble(
     "q-values-2x2-white-layer-3000000-20260203_141521.txt",
