@@ -196,16 +196,8 @@ object Train2x2:
         val initYellowLayerEnv = Environment.init(() => Cube2x2.maskUpperLayer(Cube2x2(initYellowState)), Environment.yellowLayer2x2ExpectedState)
         val envYellowLayer = testRunStage(yellowLayerAgent, initYellowLayerEnv, 200, 0.001)
         if (envYellowLayer.isSolved)
-          val initUpperState = envYellowLayer.cube.state
-          val initUpperLayerEnv = Environment.init(() => Cube2x2(initUpperState), Environment.final2x2ExpectedState)
-          val envUpperLayer = testRunStage(upperLayerAgent, initUpperLayerEnv, 200, 0.001)
-          if (envUpperLayer.isSolved)
-            val length = envWhiteLayer.history.length + envYellowLayer.history.length + envUpperLayer.history.length
-            resSolved.update(initUpperState, resSolved.getOrElse(initUpperState, 0) + 1)
-            res.update(length, res.getOrElse(length, 0) + 1)
-          else
-            resUnsolved.update(initUpperState, resUnsolved.getOrElse(initUpperState, 0) + 1)
-            res.update(-3, res.getOrElse(-3, 0) + 1)
+          val envUpperLayer = upperLayerStage(envYellowLayer.cube.state, upperLayerAgent, res, resUnsolved, resSolved,
+            envWhiteLayer.history.length + envYellowLayer.history.length)
         else
           resUnsolved.update(initYellowState, resUnsolved.getOrElse(initYellowState, 0) + 1)
           res.update(-2, res.getOrElse(-2, 0) + 1)
@@ -218,6 +210,20 @@ object Train2x2:
   println(resUnsolved.toVector.sortBy(_._2).reverse.mkString("\n"))
   println("Solved")
   println(resSolved.toVector.sortBy(_._2).reverse.mkString("\n"))*/
+
+  private def upperLayerStage(initialState: String, agent: Agent, res: mutable.Map[Int, Int],
+                              resUnsolved: mutable.Map[String, Int], resSolved: mutable.Map[String, Int],
+                              prevLength: Int): Environment =
+    val initUpperLayerEnv = Environment.init(() => Cube2x2(initialState), Environment.final2x2ExpectedState)
+    val envUpperLayer = testRunStage(agent, initUpperLayerEnv, 200, 0.001)
+    if (envUpperLayer.isSolved)
+      val length = prevLength + envUpperLayer.history.length
+      resSolved.update(initialState, resSolved.getOrElse(initialState, 0) + 1)
+      res.update(length, res.getOrElse(length, 0) + 1)
+    else
+      resUnsolved.update(initialState, resUnsolved.getOrElse(initialState, 0) + 1)
+      res.update(-3, res.getOrElse(-3, 0) + 1)
+    envUpperLayer
 
   def testRunStage(agent: Agent, environment: Environment, steps: Int, scale: Double = 1.0, epsilon: Double = 0.0): Environment =
     (0 until steps).foreach(_ => if (!environment.isSolved) environment.step(agent.nextBestAction(environment, scale, epsilon)))
@@ -286,7 +292,7 @@ object Train2x2:
           println(f"Solved in $length steps")
     println("END")
 
-  def solveStage(agent: Agent, environment: Environment, steps: Int, scale: Double = 1.0, epsilon: Double = 0.0): Environment =
+  private def solveStage(agent: Agent, environment: Environment, steps: Int, scale: Double = 1.0, epsilon: Double = 0.0): Environment =
     println(f"initial state: \n\n${environment.cube.printableState}\n")
     (0 until steps).foreach(_ =>
       if (!environment.isSolved) {
