@@ -28,8 +28,8 @@ object Train2x2:
     println(f"Time: $diffSec seconds / ${diffSec / 3600}:${(diffSec % 3600) / 60}%02d:${diffSec % 60}%02d")
 
   def testRun2x2WhiteLayer(filePath: String): String =
-    val (agent, _, _) = loadAgents(Some(filePath), None, None)
-    val (res, resUnsolved, resSolved) = createTestRunResults()
+    val (agent, _, _) = Train.loadAgents(Some(filePath), None, None)
+    val (res, resUnsolved, resSolved) = Train.createTestRunResults()
     (0 until 100000).foreach(e =>
       if (e % 10000 == 0) println(f"$e solved: ${resSolved.values.sum} unsolved: ${resUnsolved.values.sum}")
       val env = Environment.init2x2WhiteLayerTraining(10 + scala.util.Random.nextInt(20))
@@ -78,8 +78,8 @@ object Train2x2:
     finally source.close()
 
   def testRun2x2YellowLayer(filePathWhiteLayer: String, filePathYellowLayer: String): Unit =
-    val (whiteLayerAgent, yellowLayerAgent, _) = loadAgents(Some(filePathWhiteLayer), Some(filePathYellowLayer), None)
-    val (res, resUnsolved, resSolved) = createTestRunResults()
+    val (whiteLayerAgent, yellowLayerAgent, _) = Train.loadAgents(Some(filePathWhiteLayer), Some(filePathYellowLayer), None)
+    val (res, resUnsolved, resSolved) = Train.createTestRunResults()
     (0 until 100000).foreach(e =>
       if (e % 10000 == 0) println(f"$e solved: ${resSolved.values.sum} unsolved: ${resUnsolved.values.sum}")
       val initWhiteLayerEnv = Environment.init2x2WhiteLayerTraining(10 + scala.util.Random.nextInt(20))
@@ -110,26 +110,11 @@ object Train2x2:
     println(end)
     val diffSec = start.until(end, ChronoUnit.SECONDS)
     println(f"Time: $diffSec seconds / ${diffSec / 3600}:${(diffSec % 3600) / 60}%02d:${diffSec % 60}%02d")
-
-  private def createTestRunResults(): (mutable.Map[Int, Int], mutable.Map[String, Int], mutable.Map[String, Int]) =
-   (mutable.Map[Int, Int](), mutable.Map[String, Int](), mutable.Map[String, Int]())
-
-
-  private def loadAgents(filePathWhiteLayer: Option[String], filePathYellowLayer: Option[String],
-                         filePathUpperLayer: Option[String]): (Option[Agent], Option[Agent], Option[Agent]) =
-    def loadOneAgent(filePath: String, label: String): Agent =
-      val agent = Agent.load(filePath)
-      println(f"Loaded: ${agent.qState.keys.size} records ($label) from $filePath")
-      agent
-    val whiteLayerAgent = filePathWhiteLayer.map(f => loadOneAgent(f, "white layer"))
-    val yellowLayerAgent = filePathYellowLayer.map(f => loadOneAgent(f, "yellow layer"))
-    val upperLayerAgent = filePathUpperLayer.map(f => loadOneAgent(f, "upper layer"))
-    (whiteLayerAgent, yellowLayerAgent, upperLayerAgent)
-
+    
 
   def testRun2x2UpperLayer(filePathWhiteLayer: String, filePathYellowLayer: String, filePathUpperLayer: String): Unit =
-    val (whiteLayerAgent, yellowLayerAgent, upperLayerAgent) = loadAgents(Some(filePathWhiteLayer), Some(filePathYellowLayer), Some(filePathUpperLayer))
-    val (res, resUnsolved, resSolved) = createTestRunResults()
+    val (whiteLayerAgent, yellowLayerAgent, upperLayerAgent) = Train.loadAgents(Some(filePathWhiteLayer), Some(filePathYellowLayer), Some(filePathUpperLayer))
+    val (res, resUnsolved, resSolved) = Train.createTestRunResults()
     (0 until 100000).foreach(e =>
       if (e % 10000 == 0) println(f"$e solved: ${resSolved.values.sum} unsolved: ${resUnsolved.values.sum}")
       val initWhiteLayerEnv = Environment.init2x2WhiteLayerTraining(10 + scala.util.Random.nextInt(20))
@@ -148,7 +133,7 @@ object Train2x2:
                               resSolved: Option[mutable.Map[String, Int]]): Environment =
     val initWhiteState = initWhiteLayerEnv.cube.state
     // NOTE: we add some randomness to overcome unsolvable states (loops)
-    val envWhiteLayer = testRunStage(whiteLayerAgent, initWhiteLayerEnv, 300, 0.005, 0.02)
+    val envWhiteLayer = Train.testRunStage(whiteLayerAgent, initWhiteLayerEnv, 300, 0.005, 0.02)
     if (envWhiteLayer.isSolved)
       if(yellowLayerAgent.isDefined) yellowLayerStage(envWhiteLayer.cube.state, yellowLayerAgent.get, upperLayerAgent,
         res, resUnsolved, resSolved, envWhiteLayer.history.length)
@@ -166,7 +151,7 @@ object Train2x2:
                                resSolved: Option[mutable.Map[String, Int]],
                                prevLength: Int): Environment =
     val initYellowLayerEnv = Environment.init2x2(() => Cube2x2.maskUpperLayer(Cube2x2(initialState)), Environment.yellowLayer2x2ExpectedState)
-    val envYellowLayer = testRunStage(yellowLayerAgent, initYellowLayerEnv, 200, 0.001)
+    val envYellowLayer = Train.testRunStage(yellowLayerAgent, initYellowLayerEnv, 200, 0.001)
     if (envYellowLayer.isSolved)
       if(upperLayerAgent.isDefined)
         upperLayerStage(envYellowLayer.cube.state, upperLayerAgent.get, res, resUnsolved, resSolved,
@@ -183,7 +168,7 @@ object Train2x2:
                               resUnsolved: Option[mutable.Map[String, Int]], resSolved: Option[mutable.Map[String, Int]],
                               prevLength: Int): Environment =
     val initUpperLayerEnv = Environment.init2x2(() => Cube2x2(initialState), Environment.final2x2ExpectedState)
-    val envUpperLayer = testRunStage(agent, initUpperLayerEnv, 200, 0.001)
+    val envUpperLayer = Train.testRunStage(agent, initUpperLayerEnv, 200, 0.001)
     if (envUpperLayer.isSolved)
       val length = prevLength + envUpperLayer.history.length
       if(resSolved.isDefined) resSolved.get.update(initialState, resSolved.get.getOrElse(initialState, 0) + 1)
@@ -192,11 +177,8 @@ object Train2x2:
       if(resUnsolved.isDefined) resUnsolved.get.update(initialState, resUnsolved.get.getOrElse(initialState, 0) + 1)
       if(res.isDefined) res.get.update(-3, res.get.getOrElse(-3, 0) + 1)
     envUpperLayer
-
-  def testRunStage(agent: Agent, environment: Environment, steps: Int, scale: Double = 1.0, epsilon: Double = 0.0): Environment =
-    (0 until steps).foreach(_ => if (!environment.isSolved) environment.step(agent.nextBestAction(environment, scale, epsilon)))
-    environment
-
+  
+  
   def debugUpperLayer(filePathUpperLayer: String): Unit =
     val agent = Agent.load(filePathUpperLayer)
     println(f"Loaded: ${agent.qState.keys.size} records (upper layer)")

@@ -2,6 +2,7 @@ package org.kr.cube.rl
 
 import java.time.LocalDateTime
 import scala.annotation.tailrec
+import scala.collection.mutable
 
 object Train:
   def printAgentStats(agent: Agent, max: Long): Unit =
@@ -38,4 +39,22 @@ object Train:
         println(f"epoch: ${EpochLog(epochEpisodes, nextSuccessCounter).toString}")
         nextSuccessCounter = 0
       iteration(agent.updateEpisode(afterEnvironment), envGenerator, toGo - 1, initialMax, maxMoves, epochEpisodes, nextSuccessCounter)
-  
+
+  def loadAgents(filePathWhiteLayer: Option[String], filePathYellowLayer: Option[String],
+                 filePathUpperLayer: Option[String]): (Option[Agent], Option[Agent], Option[Agent]) =
+    def loadOneAgent(filePath: String, label: String): Agent =
+      val agent = Agent.load(filePath)
+      println(f"Loaded: ${agent.qState.keys.size} records ($label) from $filePath")
+      agent
+
+    val whiteLayerAgent = filePathWhiteLayer.map(f => loadOneAgent(f, "white layer"))
+    val yellowLayerAgent = filePathYellowLayer.map(f => loadOneAgent(f, "yellow layer"))
+    val upperLayerAgent = filePathUpperLayer.map(f => loadOneAgent(f, "upper layer"))
+    (whiteLayerAgent, yellowLayerAgent, upperLayerAgent)
+
+  def createTestRunResults(): (mutable.Map[Int, Int], mutable.Map[String, Int], mutable.Map[String, Int]) =
+    (mutable.Map[Int, Int](), mutable.Map[String, Int](), mutable.Map[String, Int]())
+
+  def testRunStage(agent: Agent, environment: Environment, steps: Int, scale: Double = 1.0, epsilon: Double = 0.0): Environment =
+    (0 until steps).foreach(_ => if (!environment.isSolved) environment.step(agent.nextBestAction(environment, scale, epsilon)))
+    environment

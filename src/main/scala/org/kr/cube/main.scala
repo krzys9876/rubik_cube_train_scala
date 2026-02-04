@@ -4,7 +4,8 @@ import org.kr.cube.rl.{Agent, Environment, EpochLog, Train2x2, Train3x3}
 
 @main
 def main(): Unit =
-  Train3x3.trainRL3x3WhiteCross()
+  //Train3x3.trainRL3x3WhiteCross()
+  Train3x3.testRun3x3WhiteCross("q-values-3x3-white-cross-3000000-20260204_171819.txt")
 
   //Train2x2.trainRL2x2WhiteLayer()
   //Train2x2.testRun2x2WhiteLayer("q-values-2x2-white-layer-3000000-20260204_161752.txt")
