@@ -53,16 +53,22 @@ object Train:
 
 
   def startSolving(stages: Vector[StageSpec], envGenerator: Map[String, String => Environment],
-                   stageConfig: Map[String, StageConfig], 
+                   stageConfig: Map[String, StageConfig],
                    steps: Int = 100000, debugEvery: Int = 10000, printState: Boolean = false): TestRunResults =
     val results = TestRunResults.empty
     (0 until steps).foreach(e =>
       if (e > 0 && (e % debugEvery == 0)) println(f"$e solved: ${results.resSolved.values.sum} unsolved: ${results.resUnsolved.values.sum}")
-      solveNextStage("X", stages, Some(results), 0, false, envGenerator, stageConfig)
+      solveNextStage("X", stages, Some(results), 0, printState, envGenerator, stageConfig)
     )
     results
 
-  
+  def startSolvingSingle(initialState: String, stages: Vector[StageSpec], envGenerator: Map[String, String => Environment],
+                   stageConfig: Map[String, StageConfig], printState: Boolean = false): TestRunResults =
+    val results = TestRunResults.empty
+    solveNextStage(initialState, stages, Some(results), 0, printState, envGenerator, stageConfig)
+    results
+
+
   @tailrec
   def solveNextStage(initState: String, stages: Vector[StageSpec],
                      res: Option[TestRunResults], prevLength: Int, printState: Boolean,
@@ -76,7 +82,7 @@ object Train:
     if (envAfter.isSolved) {
       val remainingAgents = stages.tail
       val newLength = prevLength + envAfter.history.length
-      if (remainingAgents.nonEmpty) 
+      if (remainingAgents.nonEmpty)
         solveNextStage(envAfter.cube.state, remainingAgents, res, newLength, printState, envGenerator, stageConfig)
       else
         if (res.isDefined)
