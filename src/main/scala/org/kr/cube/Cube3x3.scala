@@ -63,13 +63,36 @@ case class Cube3x3(override val faces: mutable.Map[FaceType, Face]) extends Cube
       val cf = c.map(t => t._2.face)
       FaceType.lowerEdges.exists(uc => uc.sortBy(_.symbol).equals(cf.sortBy(_.symbol))))
 
-  def lowerCorners(): Vector[Vector[(FaceType, Tile)]] = {
-    val lowerCorners1 = Vector(FaceType.lowerCorners(0)/*, FaceType.lowerCorners(1)*/)
-    //val lowerCorners1 = FaceType.lowerCorners
+  def lowerCornerFL(): Vector[Vector[(FaceType, Tile)]] =
+    val lowerCorners = Vector(FaceType.lowerCorners(0))
     corners().filter(c =>
       val cf = c.map(t => t._2.face)
-      lowerCorners1.exists(uc => uc.sortBy(_.symbol).equals(cf.sortBy(_.symbol))))
-  }
+      lowerCorners.exists(uc => uc.sortBy(_.symbol).equals(cf.sortBy(_.symbol))))
+
+  // We order add lower corners one by one
+  def lowerCornersFL(): Vector[Vector[(FaceType, Tile)]] =
+    val lowerCorners = Vector(FaceType.lowerCorners(0))
+    corners().filter(c =>
+      val cf = c.map(t => t._2.face)
+      lowerCorners.exists(uc => uc.sortBy(_.symbol).equals(cf.sortBy(_.symbol))))
+
+  def lowerCornersLB(): Vector[Vector[(FaceType, Tile)]] =
+    val lowerCorners = Vector(FaceType.lowerCorners(0), FaceType.lowerCorners(1))
+    corners().filter(c =>
+      val cf = c.map(t => t._2.face)
+      lowerCorners.exists(uc => uc.sortBy(_.symbol).equals(cf.sortBy(_.symbol))))
+
+  def lowerCornersBR(): Vector[Vector[(FaceType, Tile)]] =
+    val lowerCorners = Vector(FaceType.lowerCorners(0), FaceType.lowerCorners(1), FaceType.lowerCorners(2))
+    corners().filter(c =>
+      val cf = c.map(t => t._2.face)
+      lowerCorners.exists(uc => uc.sortBy(_.symbol).equals(cf.sortBy(_.symbol))))
+
+  def lowerCornersAll(): Vector[Vector[(FaceType, Tile)]] =
+    val lowerCorners = FaceType.lowerCorners
+    corners().filter(c =>
+      val cf = c.map(t => t._2.face)
+      lowerCorners.exists(uc => uc.sortBy(_.symbol).equals(cf.sortBy(_.symbol))))
 
 
 object Cube3x3:
@@ -97,8 +120,26 @@ object Cube3x3:
       t.copy(masked = !whiteCrossTiles.contains((f.nominalFace, t)))))))
     cube
 
-  def maskUpperLayers(cube: Cube3x3): Cube =
-    val whiteLayerTiles = cube.lowerEdges().flatten ++ cube.centers() ++ cube.lowerCorners().flatten
+  def maskUpperLayersFL(cube: Cube3x3): Cube =
+    val whiteLayerTiles = cube.lowerEdges().flatten ++ cube.centers() ++ cube.lowerCornersFL().flatten
+    cube.faces.values.foreach(f => cube.withFace(f.copy(tiles = f.tiles.map(t =>
+      t.copy(masked = !whiteLayerTiles.contains((f.nominalFace, t)))))))
+    cube
+
+  def maskUpperLayersLB(cube: Cube3x3): Cube =
+    val whiteLayerTiles = cube.lowerEdges().flatten ++ cube.centers() ++ cube.lowerCornersLB().flatten
+    cube.faces.values.foreach(f => cube.withFace(f.copy(tiles = f.tiles.map(t =>
+      t.copy(masked = !whiteLayerTiles.contains((f.nominalFace, t)))))))
+    cube
+
+  def maskUpperLayersBR(cube: Cube3x3): Cube =
+    val whiteLayerTiles = cube.lowerEdges().flatten ++ cube.centers() ++ cube.lowerCornersBR().flatten
+    cube.faces.values.foreach(f => cube.withFace(f.copy(tiles = f.tiles.map(t =>
+      t.copy(masked = !whiteLayerTiles.contains((f.nominalFace, t)))))))
+    cube
+
+  def maskUpperLayersAll(cube: Cube3x3): Cube =
+    val whiteLayerTiles = cube.lowerEdges().flatten ++ cube.centers() ++ cube.lowerCornersAll().flatten
     cube.faces.values.foreach(f => cube.withFace(f.copy(tiles = f.tiles.map(t =>
       t.copy(masked = !whiteLayerTiles.contains((f.nominalFace, t)))))))
     cube

@@ -65,10 +65,11 @@ object Environment:
   val yellowLayer2x2ExpectedState: String = "..FF..LL..BB..RRUUUUDDDD"
   val final2x2ExpectedState: String = Cube2x2.SOLVED_STATE
 
-  val whiteCross3x3ExpectedState: String = "....F..F.....L..L.....B..B.....R..R.....U.....D.DDD.D."
-  //val whiteLayer3x3ExpectedState: String = "....F.FFF....L.LLL....B.BBB....R.RRR....U....DDDDDDDDD"
-  //val whiteLayer3x3ExpectedState: String = "....F.FF.....L.LLL....B..BB....R..R.....U....DD.DDDDD."
-  val whiteLayer3x3ExpectedState: String = "....F.FF.....L..LL....B..B.....R..R.....U....DD.DDD.D."
+  val whiteCross3x3ExpectedState: String =    "....F..F.....L..L.....B..B.....R..R.....U.....D.DDD.D."
+  val whiteLayer3x3FLExpectedState: String =  "....F.FF.....L..LL....B..B.....R..R.....U....DD.DDD.D."
+  val whiteLayer3x3LBExpectedState: String =  "....F.FF.....L.LLL....B..BB....R..R.....U....DD.DDDDD."
+  val whiteLayer3x3BRExpectedState: String =  "....F.FF.....L.LLL....B.BBB....R..RR....U....DD.DDDDDD"
+  val whiteLayer3x3AllExpectedState: String = "....F.FFF....L.LLL....B.BBB....R.RRR....U....DDDDDDDDD"
 
   def init3x3WhiteCrossTraining(scrambleMoves: Int): Environment =
     val scramble = Moves3x3.randomList(scrambleMoves)
@@ -76,11 +77,17 @@ object Environment:
     val randomCube = scramble.foldLeft(initCube)((c, m) => m.applyToCube(c))
     Environment(randomCube, mutable.ArrayBuffer(), whiteCross3x3ExpectedState, randomCube.maskedState, scramble.map(_.symbol), MoveDecoder3x3())
 
-  def init3x3WhiteLayerTraining(scrambleMoves: Int): Environment =
+  def init3x3WhiteLayerTrainingFL(scrambleMoves: Int): Environment =
     val scramble = Moves3x3.randomList(scrambleMoves)
-    val initCube = Cube3x3.maskUpperLayers(Cube3x3.solved3x3)
+    val initCube = Cube3x3.maskUpperLayersFL(Cube3x3.solved3x3)
     val randomCube = scramble.foldLeft(initCube)((c, m) => m.applyToCube(c))
-    Environment(randomCube, mutable.ArrayBuffer(), whiteLayer3x3ExpectedState, randomCube.maskedState, scramble.map(_.symbol), MoveDecoder3x3())
+    Environment(randomCube, mutable.ArrayBuffer(), whiteLayer3x3FLExpectedState, randomCube.maskedState, scramble.map(_.symbol), MoveDecoder3x3())
+
+  def init3x3WhiteLayerTrainingLB(scrambleMoves: Int): Environment =
+    val scramble = Moves3x3.randomList(scrambleMoves)
+    val initCube = Cube3x3.maskUpperLayersLB(Cube3x3.solved3x3)
+    val randomCube = scramble.foldLeft(initCube)((c, m) => m.applyToCube(c))
+    Environment(randomCube, mutable.ArrayBuffer(), whiteLayer3x3LBExpectedState, randomCube.maskedState, scramble.map(_.symbol), MoveDecoder3x3())
 
 
 case class EnvironmentLogEntry(stateBefore: String, action: String)
