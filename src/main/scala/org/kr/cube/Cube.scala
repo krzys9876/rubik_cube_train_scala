@@ -45,7 +45,18 @@ abstract class Cube:
       case "D" => "\u001B[107m\u001B[30m D \u001B[0m"
     }
 
+  def maskTiles(tiles: Vector[(FaceType, Tile)]): Cube =
+    faces.values.foreach(f => withFace(f.copy(tiles = f.tiles.map(t =>
+      t.copy(masked = tiles.contains((f.nominalFace, t)))))))
+    this
+
+  def maskTilesInverted(tiles: Vector[(FaceType, Tile)]): Cube =
+    faces.values.foreach(f => withFace(f.copy(tiles = f.tiles.map(t =>
+      t.copy(masked = !tiles.contains((f.nominalFace, t)))))))
+    this
+
   def printableState: String
+
 
 
 sealed abstract class FaceType(val symbol: String)

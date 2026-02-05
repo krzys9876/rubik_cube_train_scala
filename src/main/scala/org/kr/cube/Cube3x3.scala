@@ -116,33 +116,25 @@ object Cube3x3:
 
   def maskAllExceptWhiteCross(cube: Cube3x3): Cube =
     val whiteCrossTiles = cube.lowerEdges().flatten ++ cube.centers()
-    cube.faces.values.foreach(f => cube.withFace(f.copy(tiles = f.tiles.map(t =>
-      t.copy(masked = !whiteCrossTiles.contains((f.nominalFace, t)))))))
-    cube
+    cube.maskTilesInverted(whiteCrossTiles)
+
 
   def maskUpperLayersFL(cube: Cube3x3): Cube =
     val whiteLayerTiles = cube.lowerEdges().flatten ++ cube.centers() ++ cube.lowerCornersFL().flatten
-    cube.faces.values.foreach(f => cube.withFace(f.copy(tiles = f.tiles.map(t =>
-      t.copy(masked = !whiteLayerTiles.contains((f.nominalFace, t)))))))
-    cube
+    cube.maskTilesInverted(whiteLayerTiles)
+
 
   def maskUpperLayersLB(cube: Cube3x3): Cube =
     val whiteLayerTiles = cube.lowerEdges().flatten ++ cube.centers() ++ cube.lowerCornersLB().flatten
-    cube.faces.values.foreach(f => cube.withFace(f.copy(tiles = f.tiles.map(t =>
-      t.copy(masked = !whiteLayerTiles.contains((f.nominalFace, t)))))))
-    cube
+    cube.maskTilesInverted(whiteLayerTiles)
 
   def maskUpperLayersBR(cube: Cube3x3): Cube =
     val whiteLayerTiles = cube.lowerEdges().flatten ++ cube.centers() ++ cube.lowerCornersBR().flatten
-    cube.faces.values.foreach(f => cube.withFace(f.copy(tiles = f.tiles.map(t =>
-      t.copy(masked = !whiteLayerTiles.contains((f.nominalFace, t)))))))
-    cube
+    cube.maskTilesInverted(whiteLayerTiles)
 
   def maskUpperLayersAll(cube: Cube3x3): Cube =
     val whiteLayerTiles = cube.lowerEdges().flatten ++ cube.centers() ++ cube.lowerCornersAll().flatten
-    cube.faces.values.foreach(f => cube.withFace(f.copy(tiles = f.tiles.map(t =>
-      t.copy(masked = !whiteLayerTiles.contains((f.nominalFace, t)))))))
-    cube
+    cube.maskTilesInverted(whiteLayerTiles)
 
 
 object Moves3x3:

@@ -60,15 +60,11 @@ object Cube2x2:
 
   def maskUpperCorners(cube: Cube2x2): Cube =
     val upperTiles = cube.upperCorners().flatten
-    cube.faces.values.foreach(f => cube.withFace(f.copy(tiles = f.tiles.map(t =>
-      t.copy(masked = upperTiles.contains((f.nominalFace, t)))))))
-    cube
+    cube.maskTiles(upperTiles)
 
   def maskUpperLayer(cube: Cube2x2): Cube =
     val upperTiles = cube.upperCorners().flatten.filter(t => t._2.face != FaceType.U)
-    cube.faces.values.foreach(f => cube.withFace(f.copy(tiles = f.tiles.map(t =>
-      t.copy(masked = upperTiles.contains((f.nominalFace, t)))))))
-    cube
+    cube.maskTiles(upperTiles)
 
 
   val faceStateIndex: Map[FaceType, Int] = Map(FaceType.F -> 0, FaceType.L -> 4, FaceType.B -> 8, FaceType.R -> 12,

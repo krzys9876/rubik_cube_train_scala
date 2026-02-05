@@ -66,12 +66,12 @@ def main(): Unit =
     "LDRFFBBUDLLUBBRDULURFDRF"
   )*/
 
-  /*(0 until 100).foreach(_ =>
+  (0 until 1).foreach(_ =>
   Train2x2.solveRandomOne(
-    "q-values-2x2-white-layer-3000000-20260203_141521.txt",
-    "q-values-2x2-yellow-layer-1000000-20260203_143242.txt",
-    "q-values-2x2-upper-layer-10000000-20260203_151354.txt"
-  ))*/
+    "q-values-2x2-white-layer-2000000-20260205_110931.txt",
+    "q-values-2x2-yellow-layer-2000000-20260205_111250.txt",
+    "q-values-2x2-upper-layer-10000000-20260205_112548.txt"
+  ))
 
   /*val cube = Cube3x3.solved
   println(cube.printableState)*/
