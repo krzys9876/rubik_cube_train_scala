@@ -64,7 +64,7 @@ case class Cube3x3(override val faces: mutable.Map[FaceType, Face]) extends Cube
       FaceType.lowerEdges.exists(uc => uc.sortBy(_.symbol).equals(cf.sortBy(_.symbol))))
 
   def lowerCorners(): Vector[Vector[(FaceType, Tile)]] = {
-    val lowerCorners1 = Vector(FaceType.lowerCorners(0), FaceType.lowerCorners(1))
+    val lowerCorners1 = Vector(FaceType.lowerCorners(0)/*, FaceType.lowerCorners(1)*/)
     //val lowerCorners1 = FaceType.lowerCorners
     corners().filter(c =>
       val cf = c.map(t => t._2.face)

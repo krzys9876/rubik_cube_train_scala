@@ -6,7 +6,7 @@ import java.io.PrintWriter
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
-import scala.collection.mutable
+import scala.annotation.tailrec
 
 object Train3x3:
   def trainRL3x3WhiteCross(): Unit =
@@ -28,49 +28,25 @@ object Train3x3:
     println(f"Time: $diffSec seconds / ${diffSec / 3600}:${(diffSec % 3600) / 60}%02d:${diffSec % 60}%02d")
 
   def testRun3x3WhiteCross(filePath: String): String =
-    val agent = Train.loadAgents(Vector((filePath, "white cross"))).head
-    val (res, resUnsolved, resSolved) = Train.createTestRunResults()
-    (0 until 100000).foreach(e =>
-      if (e % 10000 == 0) println(f"$e solved: ${resSolved.values.sum} unsolved: ${resUnsolved.values.sum}")
-      val env = Environment.init3x3WhiteCrossTraining(10 + scala.util.Random.nextInt(20))
-      whiteCrossStage(env, agent, None, Some(res), Some(resUnsolved), Some(resSolved))
-    )
-    println(res.toVector.sortBy(_._1).mkString("\n"))
+    val stages = Train.loadAgents(Vector(AgentFile(filePath, "white cross")))
+    val results = Train.startSolving(stages, envGenerator, stageConfig, 100000, 10000, false)
+    println(results.res.toVector.sortBy(_._1).mkString("\n"))
     val timestampTxt = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss").format(LocalDateTime.now())
     println("Saving unsolved states to file")
-    println(resUnsolved.toVector.sortBy(_._2).reverse.mkString("\n"))
+    println(results.resUnsolved.toVector.sortBy(_._2).reverse.mkString("\n"))
     val fileUS = f"unsolved-2x2-white-layer-$timestampTxt.txt"
     val pw = new PrintWriter(fileUS)
-    pw.println(resUnsolved.toVector.map(_._1).mkString("\n"))
+    pw.println(results.resUnsolved.toVector.map(_._1).mkString("\n"))
     pw.close()
     fileUS
 
-  private def whiteCrossStage(initWhiteCrossEnv: Environment, whiteCrossAgent: Agent, whiteLayerLAgent: Option[Agent], /*upperLayerAgent: Option[Agent],*/
-                              res: Option[mutable.Map[Int, Int]],
-                              resUnsolved: Option[mutable.Map[String, Int]],
-                              resSolved: Option[mutable.Map[String, Int]],
-                              printState: Boolean = false): Environment =
-    val initWhiteCrossState = initWhiteCrossEnv.cube.state
-    // NOTE: we add some randomness to overcome unsolvable states (loops)
-    val envWhiteCross = Train.testRunStage(whiteCrossAgent, initWhiteCrossEnv, 300, 0.001, 0.01, printState)
-    if (envWhiteCross.isSolved)
-      if (whiteLayerLAgent.isDefined) whiteLayerLStage(envWhiteCross, whiteLayerLAgent.get, /* upperLayerAgent,*/
-        res, resUnsolved, resSolved, envWhiteCross.history.length)
-      else
-        if (resSolved.isDefined) resSolved.get.update(initWhiteCrossState, resSolved.get.getOrElse(initWhiteCrossState, 0) + 1)
-        if (res.isDefined) res.get.update(envWhiteCross.history.length, res.get.getOrElse(envWhiteCross.history.length, 0) + 1)
-        envWhiteCross
-    else
-      if (resUnsolved.isDefined) resUnsolved.get.update(initWhiteCrossState, resUnsolved.get.getOrElse(initWhiteCrossState, 0) + 1)
-      if (res.isDefined) res.get.update(-1, res.get.getOrElse(-1, 0) + 1)
-      envWhiteCross
 
   def trainRL3x3WhiteLayerL(whiteCrossSolvedFilePath: String): Unit =
     val start = LocalDateTime.now()
     println(start)
     val max = 3000000
     val epochEpisodes = 50000
-    val episodeMoves = 30
+    val episodeMoves = 50
     val solvedStates = Train.loadSimple(whiteCrossSolvedFilePath)
 
     def prepareCube(): Cube =
@@ -94,41 +70,26 @@ object Train3x3:
     println(f"Time: $diffSec seconds / ${diffSec / 3600}:${(diffSec % 3600) / 60}%02d:${diffSec % 60}%02d")
 
 
-  private def whiteLayerLStage(initWhiteLayerLEnv: Environment, whiteLayerLAgent: Agent /*, yellowLayerAgent: Option[Agent], upperLayerAgent: Option[Agent]*/ ,
-                               res: Option[mutable.Map[Int, Int]],
-                               resUnsolved: Option[mutable.Map[String, Int]],
-                               resSolved: Option[mutable.Map[String, Int]],
-                               prevLength: Int, printState: Boolean = false): Environment =
-    val initWhiteLayerLState = initWhiteLayerLEnv.cube.state
-    // NOTE: we add some randomness to overcome unsolvable states (loops)
-    val envWhiteLayerL = Train.testRunStage(whiteLayerLAgent, initWhiteLayerLEnv, 300, 0.001, 0.01, printState)
-    if (envWhiteLayerL.isSolved)
-      /*if (yellowLayerAgent.isDefined) yellowLayerStage(envWhiteLayer.cube.state, yellowLayerAgent.get, upperLayerAgent,
-        res, resUnsolved, resSolved, envWhiteLayer.history.length)
-      else*/
-      if (resSolved.isDefined) resSolved.get.update(initWhiteLayerLState, resSolved.get.getOrElse(initWhiteLayerLState, 0) + 1)
-      if (res.isDefined) res.get.update(prevLength + envWhiteLayerL.history.length, res.get.getOrElse(prevLength + envWhiteLayerL.history.length, 0) + 1)
-      envWhiteLayerL
-    else
-      if (resUnsolved.isDefined) resUnsolved.get.update(initWhiteLayerLState, resUnsolved.get.getOrElse(initWhiteLayerLState, 0) + 1)
-      if (res.isDefined) res.get.update(-1, res.get.getOrElse(-1, 0) + 1)
-      envWhiteLayerL
-
   def testRun3x3WhiteLayerL(filePathWhiteCross: String, filePathWhiteLayerL: String): String =
-    val agents = Train.loadAgents(Vector((filePathWhiteCross,"white cross"), (filePathWhiteLayerL, "white layer (L)")))
-    val (agentWhiteCross, agetnWhileLayerL) = (agents.head, agents(1))
-    val (res, resUnsolved, resSolved) = Train.createTestRunResults()
-    (0 until 100000).foreach(e =>
-      if (e % 10000 == 0) println(f"$e solved: ${resSolved.values.sum} unsolved: ${resUnsolved.values.sum}")
-      val env = Environment.init3x3WhiteCrossTraining(10 + scala.util.Random.nextInt(20))
-      whiteCrossStage(env, agentWhiteCross, Some(agetnWhileLayerL), Some(res), Some(resUnsolved), Some(resSolved))
-    )
-    println(res.toVector.sortBy(_._1).mkString("\n"))
+    val stages = Train.loadAgents(Vector(AgentFile(filePathWhiteCross,"white cross"), AgentFile(filePathWhiteLayerL, "white layer (0)")))
+    val results = Train.startSolving(stages, envGenerator, stageConfig, 100000, 10000, false)
+    println(results.res.toVector.sortBy(_._1).mkString("\n"))
     val timestampTxt = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss").format(LocalDateTime.now())
     println("Saving unsolved states to file")
-    println(resUnsolved.toVector.sortBy(_._2).reverse.mkString("\n"))
+    println(results.resUnsolved.toVector.sortBy(_._2).reverse.mkString("\n"))
     val fileUS = f"unsolved-2x2-white-layer-$timestampTxt.txt"
     val pw = new PrintWriter(fileUS)
-    pw.println(resUnsolved.toVector.map(_._1).mkString("\n"))
+    pw.println(results.resUnsolved.toVector.map(_._1).mkString("\n"))
     pw.close()
     fileUS
+  
+
+  val envGenerator: Map[String, String => Environment] = Map(
+    "white cross" -> (_ => Environment.init3x3WhiteCrossTraining(10 + scala.util.Random.nextInt(20))),
+    "white layer (0)" -> (state => Environment.init3x3(() => Cube3x3.maskUpperLayers(Cube3x3(state)), Environment.whiteLayer3x3ExpectedState)))
+
+  // Parameters for testRunStage (moves, precision, epsilon)
+  val stageConfig: Map[String, StageConfig] = Map(
+    "white cross" -> StageConfig(100, 0.001, 0.0), // No randomness
+    "white layer (0)" -> StageConfig(100, 0.001, 0.0) // No randomness
+  )

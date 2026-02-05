@@ -67,7 +67,8 @@ object Environment:
 
   val whiteCross3x3ExpectedState: String = "....F..F.....L..L.....B..B.....R..R.....U.....D.DDD.D."
   //val whiteLayer3x3ExpectedState: String = "....F.FFF....L.LLL....B.BBB....R.RRR....U....DDDDDDDDD"
-  val whiteLayer3x3ExpectedState: String = "....F.FF.....L.LLL....B..BB....R..R.....U....DD.DDDDD."
+  //val whiteLayer3x3ExpectedState: String = "....F.FF.....L.LLL....B..BB....R..R.....U....DD.DDDDD."
+  val whiteLayer3x3ExpectedState: String = "....F.FF.....L..LL....B..B.....R..R.....U....DD.DDD.D."
 
   def init3x3WhiteCrossTraining(scrambleMoves: Int): Environment =
     val scramble = Moves3x3.randomList(scrambleMoves)
