@@ -1,5 +1,6 @@
 package org.kr.cube.rl
 
+import org.kr.cube.rl.Train.startSolving
 import org.kr.cube.{Cube, Cube2x2, Moves2x2}
 
 import java.io.PrintWriter
@@ -28,13 +29,8 @@ object Train2x2:
     println(f"Time: $diffSec seconds / ${diffSec / 3600}:${(diffSec % 3600) / 60}%02d:${diffSec % 60}%02d")
 
   def testRun2x2WhiteLayer(filePath: String): String =
-    val agent = Train.loadAgents(Vector(AgentFile(filePath,"white layer"))).head.agent
-    val results = TestRunResults.empty
-    (0 until 100000).foreach(e =>
-      if (e % 10000 == 0) println(f"$e solved: ${results.resSolved.values.sum} unsolved: ${results.resUnsolved.values.sum}")
-      val env = Environment.init2x2WhiteLayerTraining(10 + scala.util.Random.nextInt(20))
-      whiteLayerStage(env, agent, None, None, Some(results))
-    )
+    val stages = Train.loadAgents(Vector(AgentFile(filePath,"white layer")))
+    val results = Train.startSolving(stages, envGenerator, stageConfig, 100000, 10000, false)
     println(results.res.toVector.sortBy(_._1).mkString("\n"))
     val timestampTxt = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss").format(LocalDateTime.now())
     println("Saving unsolved states to file")
@@ -72,14 +68,8 @@ object Train2x2:
 
 
   def testRun2x2YellowLayer(filePathWhiteLayer: String, filePathYellowLayer: String): Unit =
-    val agents = Train.loadAgents(Vector(AgentFile(filePathWhiteLayer,"white layer"), AgentFile(filePathYellowLayer, "yellow layer")))
-    val (whiteLayerAgent, yellowLayerAgent) = (agents.head.agent, agents(1).agent)
-    val results = TestRunResults.empty
-    (0 until 100000).foreach(e =>
-      if (e % 10000 == 0) println(f"$e solved: ${results.resSolved.values.sum} unsolved: ${results.resUnsolved.values.sum}")
-      val initWhiteLayerEnv = Environment.init2x2WhiteLayerTraining(10 + scala.util.Random.nextInt(20))
-      whiteLayerStage(initWhiteLayerEnv, whiteLayerAgent, Some(yellowLayerAgent), None, Some(results))
-    )
+    val stages = Train.loadAgents(Vector(AgentFile(filePathWhiteLayer,"white layer"), AgentFile(filePathYellowLayer, "yellow layer")))
+    val results = startSolving(stages, envGenerator, stageConfig, 100000, 10000, false)
     println(results.res.toVector.sortBy(_._1).mkString("\n"))
 
   def trainRL2x2UpperLayer(yellowLayerSolvedFilePath: String): Unit =
@@ -108,16 +98,9 @@ object Train2x2:
 
 
   def testRun2x2UpperLayer(filePathWhiteLayer: String, filePathYellowLayer: String, filePathUpperLayer: String): Unit =
-    val agents = Train.loadAgents(Vector(AgentFile(filePathWhiteLayer,"white layer"),
+    val stages = Train.loadAgents(Vector(AgentFile(filePathWhiteLayer,"white layer"),
       AgentFile(filePathYellowLayer, "yellow layer"), AgentFile(filePathUpperLayer, "upper layer")))
-    val (whiteLayerAgent, yellowLayerAgent, upperLayerAgent) = (agents.head.agent, agents(1).agent, agents(2).agent)
-    val results = TestRunResults.empty
-    (0 until 100000).foreach(e =>
-      if (e % 10000 == 0) println(f"$e solved: ${results.resSolved.values.sum} unsolved: ${results.resUnsolved.values.sum}")
-      val initWhiteLayerEnv = Environment.init2x2WhiteLayerTraining(10 + scala.util.Random.nextInt(20))
-      whiteLayerStage(initWhiteLayerEnv, whiteLayerAgent, Some(yellowLayerAgent), Some(upperLayerAgent),
-        Some(results))
-    )
+    val results = Train.startSolving(stages, envGenerator, stageConfig, 100000, 10000, false)
     println(results.res.toVector.sortBy(_._1).mkString("\n"))
   /*println("Unsolved")
   println(resUnsolved.toVector.sortBy(_._2).reverse.mkString("\n"))
@@ -228,3 +211,15 @@ object Train2x2:
     if(finishedEnv.isSolved) println(f"Solved in ${results.res.toVector.map(_._1).head} moves")
 
 
+  val envGenerator: Map[String, String => Environment] = Map(
+    "white layer" -> (_ => Environment.init2x2WhiteLayerTraining(10 + scala.util.Random.nextInt(20))),
+    "yellow layer" -> (state => Environment.init2x2(() => Cube2x2.maskUpperLayer(Cube2x2(state)), Environment.yellowLayer2x2ExpectedState)),
+    "upper layer" -> (state => Environment.init2x2(() => Cube2x2(state), Environment.final2x2ExpectedState))
+  )
+
+  // Parameters for testRunStage (moves, precision, epsilon)
+  val stageConfig: Map[String, StageConfig] = Map(
+    "white layer" -> StageConfig(200, 0.001, 0.0),
+    "yellow layer" -> StageConfig(200, 0.001, 0.0),
+    "upper layer" -> StageConfig(200, 0.001, 0.0)
+  )
