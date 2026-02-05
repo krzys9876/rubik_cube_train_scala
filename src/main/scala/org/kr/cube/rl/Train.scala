@@ -30,17 +30,13 @@ object Train:
         nextSuccessCounter = 0
       iteration(agent.updateEpisode(afterEnvironment), envGenerator, toGo - 1, initialMax, maxMoves, epochEpisodes, nextSuccessCounter)
 
-  def loadAgents(filePathWhiteLayer: Option[String], filePathYellowLayer: Option[String],
-                 filePathUpperLayer: Option[String]): (Option[Agent], Option[Agent], Option[Agent]) =
+  def loadAgents(filePaths: Vector[(String, String)]): Vector[Agent] =
     def loadOneAgent(filePath: String, label: String): Agent =
       val agent = Agent.load(filePath)
       println(f"Loaded: ${agent.qState.keys.size} records ($label) from $filePath")
       agent
-
-    val whiteLayerAgent = filePathWhiteLayer.map(f => loadOneAgent(f, "white layer"))
-    val yellowLayerAgent = filePathYellowLayer.map(f => loadOneAgent(f, "yellow layer"))
-    val upperLayerAgent = filePathUpperLayer.map(f => loadOneAgent(f, "upper layer"))
-    (whiteLayerAgent, yellowLayerAgent, upperLayerAgent)
+    
+    filePaths.map({case(file, label) => loadOneAgent(file, label)})
 
   def createTestRunResults(): (mutable.Map[Int, Int], mutable.Map[String, Int], mutable.Map[String, Int]) =
     (mutable.Map[Int, Int](), mutable.Map[String, Int](), mutable.Map[String, Int]())

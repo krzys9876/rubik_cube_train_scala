@@ -28,12 +28,12 @@ object Train3x3:
     println(f"Time: $diffSec seconds / ${diffSec / 3600}:${(diffSec % 3600) / 60}%02d:${diffSec % 60}%02d")
 
   def testRun3x3WhiteCross(filePath: String): String =
-    val (agent, _, _) = Train.loadAgents(Some(filePath), None, None)
+    val agent = Train.loadAgents(Vector((filePath, "white cross"))).head
     val (res, resUnsolved, resSolved) = Train.createTestRunResults()
     (0 until 100000).foreach(e =>
       if (e % 10000 == 0) println(f"$e solved: ${resSolved.values.sum} unsolved: ${resUnsolved.values.sum}")
       val env = Environment.init3x3WhiteCrossTraining(10 + scala.util.Random.nextInt(20))
-      whiteCrossStage(env, agent.get, None, Some(res), Some(resUnsolved), Some(resSolved))
+      whiteCrossStage(env, agent, None, Some(res), Some(resUnsolved), Some(resSolved))
     )
     println(res.toVector.sortBy(_._1).mkString("\n"))
     val timestampTxt = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss").format(LocalDateTime.now())
@@ -65,7 +65,7 @@ object Train3x3:
       if (res.isDefined) res.get.update(-1, res.get.getOrElse(-1, 0) + 1)
       envWhiteCross
 
-  def trainRL3x3WhiteLayer(whiteCrossSolvedFilePath: String): Unit =
+  def trainRL3x3WhiteLayerL(whiteCrossSolvedFilePath: String): Unit =
     val start = LocalDateTime.now()
     println(start)
     val max = 3000000
@@ -86,8 +86,8 @@ object Train3x3:
     agent.printStats(max)
     val timestampTxt = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss").format(LocalDateTime.now())
     println("Saving q-values to file")
-    afterAgent.saveQState(f"q-values-3x3-white-layer-$max-$timestampTxt.txt")
-    afterAgent.saveSolvedStates(f"solved-3x3-white-layer-$max-$timestampTxt.txt")
+    afterAgent.saveQState(f"q-values-3x3-white-layer-l-$max-$timestampTxt.txt")
+    afterAgent.saveSolvedStates(f"solved-3x3-white-layer-l-$max-$timestampTxt.txt")
     val end = LocalDateTime.now()
     println(end)
     val diffSec = start.until(end, ChronoUnit.SECONDS)
@@ -115,12 +115,13 @@ object Train3x3:
       envWhiteLayerL
 
   def testRun3x3WhiteLayerL(filePathWhiteCross: String, filePathWhiteLayerL: String): String =
-    val (agentWhiteCross, agetnWhileLayerL, _) = Train.loadAgents(Some(filePathWhiteCross), Some(filePathWhiteLayerL), None)
+    val agents = Train.loadAgents(Vector((filePathWhiteCross,"white cross"), (filePathWhiteLayerL, "white layer (L)")))
+    val (agentWhiteCross, agetnWhileLayerL) = (agents.head, agents(1))
     val (res, resUnsolved, resSolved) = Train.createTestRunResults()
     (0 until 100000).foreach(e =>
       if (e % 10000 == 0) println(f"$e solved: ${resSolved.values.sum} unsolved: ${resUnsolved.values.sum}")
       val env = Environment.init3x3WhiteCrossTraining(10 + scala.util.Random.nextInt(20))
-      whiteCrossStage(env, agentWhiteCross.get, agetnWhileLayerL, Some(res), Some(resUnsolved), Some(resSolved))
+      whiteCrossStage(env, agentWhiteCross, Some(agetnWhileLayerL), Some(res), Some(resUnsolved), Some(resSolved))
     )
     println(res.toVector.sortBy(_._1).mkString("\n"))
     val timestampTxt = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss").format(LocalDateTime.now())

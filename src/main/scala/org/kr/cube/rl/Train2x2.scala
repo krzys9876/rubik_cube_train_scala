@@ -28,12 +28,12 @@ object Train2x2:
     println(f"Time: $diffSec seconds / ${diffSec / 3600}:${(diffSec % 3600) / 60}%02d:${diffSec % 60}%02d")
 
   def testRun2x2WhiteLayer(filePath: String): String =
-    val (agent, _, _) = Train.loadAgents(Some(filePath), None, None)
+    val agent = Train.loadAgents(Vector((filePath,"white layer"))).head
     val (res, resUnsolved, resSolved) = Train.createTestRunResults()
     (0 until 100000).foreach(e =>
       if (e % 10000 == 0) println(f"$e solved: ${resSolved.values.sum} unsolved: ${resUnsolved.values.sum}")
       val env = Environment.init2x2WhiteLayerTraining(10 + scala.util.Random.nextInt(20))
-      whiteLayerStage(env, agent.get, None, None, Some(res), Some(resUnsolved), Some(resSolved))
+      whiteLayerStage(env, agent, None, None, Some(res), Some(resUnsolved), Some(resSolved))
     )
     println(res.toVector.sortBy(_._1).mkString("\n"))
     val timestampTxt = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss").format(LocalDateTime.now())
@@ -70,14 +70,15 @@ object Train2x2:
     val diffSec = start.until(end, ChronoUnit.SECONDS)
     println(f"Time: $diffSec seconds / ${diffSec / 3600}:${(diffSec % 3600) / 60}%02d:${diffSec % 60}%02d")
 
-  
+
   def testRun2x2YellowLayer(filePathWhiteLayer: String, filePathYellowLayer: String): Unit =
-    val (whiteLayerAgent, yellowLayerAgent, _) = Train.loadAgents(Some(filePathWhiteLayer), Some(filePathYellowLayer), None)
+    val agents = Train.loadAgents(Vector((filePathWhiteLayer,"white layer"), (filePathYellowLayer, "yellow layer")))
+    val (whiteLayerAgent, yellowLayerAgent) = (agents.head, agents(1))
     val (res, resUnsolved, resSolved) = Train.createTestRunResults()
     (0 until 100000).foreach(e =>
       if (e % 10000 == 0) println(f"$e solved: ${resSolved.values.sum} unsolved: ${resUnsolved.values.sum}")
       val initWhiteLayerEnv = Environment.init2x2WhiteLayerTraining(10 + scala.util.Random.nextInt(20))
-      whiteLayerStage(initWhiteLayerEnv, whiteLayerAgent.get, yellowLayerAgent, None, Some(res), Some(resUnsolved), Some(resSolved))
+      whiteLayerStage(initWhiteLayerEnv, whiteLayerAgent, Some(yellowLayerAgent), None, Some(res), Some(resUnsolved), Some(resSolved))
     )
     println(res.toVector.sortBy(_._1).mkString("\n"))
 
@@ -107,12 +108,13 @@ object Train2x2:
 
 
   def testRun2x2UpperLayer(filePathWhiteLayer: String, filePathYellowLayer: String, filePathUpperLayer: String): Unit =
-    val (whiteLayerAgent, yellowLayerAgent, upperLayerAgent) = Train.loadAgents(Some(filePathWhiteLayer), Some(filePathYellowLayer), Some(filePathUpperLayer))
+    val agents = Train.loadAgents(Vector((filePathWhiteLayer,"white layer"), (filePathYellowLayer, "yellow layer"), (filePathUpperLayer, "upper layer")))
+    val (whiteLayerAgent, yellowLayerAgent, upperLayerAgent) = (agents.head, agents(1), agents(2))
     val (res, resUnsolved, resSolved) = Train.createTestRunResults()
     (0 until 100000).foreach(e =>
       if (e % 10000 == 0) println(f"$e solved: ${resSolved.values.sum} unsolved: ${resUnsolved.values.sum}")
       val initWhiteLayerEnv = Environment.init2x2WhiteLayerTraining(10 + scala.util.Random.nextInt(20))
-      whiteLayerStage(initWhiteLayerEnv, whiteLayerAgent.get, yellowLayerAgent, upperLayerAgent,
+      whiteLayerStage(initWhiteLayerEnv, whiteLayerAgent, Some(yellowLayerAgent), Some(upperLayerAgent),
         Some(res), Some(resUnsolved), Some(resSolved))
     )
     println(res.toVector.sortBy(_._1).mkString("\n"))
@@ -215,11 +217,12 @@ object Train2x2:
 
   def solveOne(filePathWhiteLayer: String, filePathYellowLayer: String, filePathUpperLayer: String,
                initialCube: Cube): Unit =
-    val (whiteLayerAgent, yellowLayerAgent, upperLayerAgent) = Train.loadAgents(Some(filePathWhiteLayer), Some(filePathYellowLayer), Some(filePathUpperLayer))
+    val agents = Train.loadAgents(Vector((filePathWhiteLayer,"white layer"), (filePathYellowLayer, "yellow layer"), (filePathUpperLayer, "upper layer")))
+    val (whiteLayerAgent, yellowLayerAgent, upperLayerAgent) = (agents.head, agents(1), agents(2))
     val (res, resUnsolved, resSolved) = Train.createTestRunResults()
     println(f"initial:\n${initialCube.printableState}\n")
     val initWhiteLayerEnv = Environment.init2x2(() => Cube2x2.maskUpperCorners(Cube2x2(initialCube.state)), Environment.whiteLayer2x2ExpectedState)
-    val finishedEnv = whiteLayerStage(initWhiteLayerEnv, whiteLayerAgent.get, yellowLayerAgent, upperLayerAgent,
+    val finishedEnv = whiteLayerStage(initWhiteLayerEnv, whiteLayerAgent, Some(yellowLayerAgent), Some(upperLayerAgent),
       Some(res), Some(resUnsolved), Some(resSolved), true)
     if(finishedEnv.isSolved) println(f"Solved in ${res.toVector.map(_._1).head} moves")
 
