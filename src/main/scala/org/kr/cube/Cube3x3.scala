@@ -63,6 +63,14 @@ case class Cube3x3(override val faces: mutable.Map[FaceType, Face]) extends Cube
       val cf = c.map(t => t._2.face)
       FaceType.lowerEdges.exists(uc => uc.sortBy(_.symbol).equals(cf.sortBy(_.symbol))))
 
+  def lowerCorners(): Vector[Vector[(FaceType, Tile)]] = {
+    val lowerCorners1 = Vector(FaceType.lowerCorners(0), FaceType.lowerCorners(1))
+    //val lowerCorners1 = FaceType.lowerCorners
+    corners().filter(c =>
+      val cf = c.map(t => t._2.face)
+      lowerCorners1.exists(uc => uc.sortBy(_.symbol).equals(cf.sortBy(_.symbol))))
+  }
+
 
 object Cube3x3:
   private val SOLVED_STATE: String = "FFFFFFFFFLLLLLLLLLBBBBBBBBBRRRRRRRRRUUUUUUUUUDDDDDDDDD"
@@ -87,6 +95,12 @@ object Cube3x3:
     val whiteCrossTiles = cube.lowerEdges().flatten ++ cube.centers()
     cube.faces.values.foreach(f => cube.withFace(f.copy(tiles = f.tiles.map(t =>
       t.copy(masked = !whiteCrossTiles.contains((f.nominalFace, t)))))))
+    cube
+
+  def maskUpperLayers(cube: Cube3x3): Cube =
+    val whiteLayerTiles = cube.lowerEdges().flatten ++ cube.centers() ++ cube.lowerCorners().flatten
+    cube.faces.values.foreach(f => cube.withFace(f.copy(tiles = f.tiles.map(t =>
+      t.copy(masked = !whiteLayerTiles.contains((f.nominalFace, t)))))))
     cube
 
 
@@ -115,3 +129,7 @@ object Moves3x3:
     available(scala.util.Random.nextInt(available.length))
 
   def from(symbol: String): Move = all.find(_.symbol == symbol).get
+
+  val reverse: Map[Move, Move] = Map(
+    F -> F1, L -> L1, B -> B1, R -> R1, U -> U1, D -> D1,
+    F1 -> F, L1 -> L, B1 -> B, R1 -> R, U1 -> U, D1 -> D)

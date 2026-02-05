@@ -51,3 +51,9 @@ object Train:
       if (!environment.isSolved)
         environment.step(agent.nextBestAction(environment, scale, epsilon), printState))
     environment
+
+  def loadSimple(filePath: String): Vector[String] =
+    val source = scala.io.Source.fromFile(filePath)
+    try
+      source.getLines().toVector
+    finally source.close()

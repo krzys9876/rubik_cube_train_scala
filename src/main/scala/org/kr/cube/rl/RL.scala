@@ -35,7 +35,7 @@ case class Environment(var cube: Cube, history: mutable.ArrayBuffer[EnvironmentL
         hasLoop = detectLoop(state)
         this
       else
-        cube = Moves2x2.reverse(nextMove).applyToCube(cube)
+        cube = moveDecoder.reverse(nextMove).applyToCube(cube)
         trainingStep(agent, attempts - 1)
 
 
@@ -51,6 +51,10 @@ object Environment:
     val cube = cubeGenerator()
     Environment(cube, mutable.ArrayBuffer(), expectedState, cube.maskedState, Vector(), MoveDecoder2x2())
 
+  def init3x3(cubeGenerator: () => Cube, expectedState: String): Environment =
+    val cube = cubeGenerator()
+    Environment(cube, mutable.ArrayBuffer(), expectedState, cube.maskedState, Vector(), MoveDecoder3x3())
+
   def init2x2WhiteLayerTraining(scrambleMoves: Int): Environment =
     val scramble = Moves2x2.randomList(scrambleMoves)
     val initCube = Cube2x2.maskUpperCorners(Cube2x2.solved2x2)
@@ -62,12 +66,20 @@ object Environment:
   val final2x2ExpectedState: String = Cube2x2.SOLVED_STATE
 
   val whiteCross3x3ExpectedState: String = "....F..F.....L..L.....B..B.....R..R.....U.....D.DDD.D."
+  //val whiteLayer3x3ExpectedState: String = "....F.FFF....L.LLL....B.BBB....R.RRR....U....DDDDDDDDD"
+  val whiteLayer3x3ExpectedState: String = "....F.FF.....L.LLL....B..BB....R..R.....U....DD.DDDDD."
 
   def init3x3WhiteCrossTraining(scrambleMoves: Int): Environment =
     val scramble = Moves3x3.randomList(scrambleMoves)
     val initCube = Cube3x3.maskAllExceptWhiteCross(Cube3x3.solved3x3)
     val randomCube = scramble.foldLeft(initCube)((c, m) => m.applyToCube(c))
     Environment(randomCube, mutable.ArrayBuffer(), whiteCross3x3ExpectedState, randomCube.maskedState, scramble.map(_.symbol), MoveDecoder3x3())
+
+  def init3x3WhiteLayerTraining(scrambleMoves: Int): Environment =
+    val scramble = Moves3x3.randomList(scrambleMoves)
+    val initCube = Cube3x3.maskUpperLayers(Cube3x3.solved3x3)
+    val randomCube = scramble.foldLeft(initCube)((c, m) => m.applyToCube(c))
+    Environment(randomCube, mutable.ArrayBuffer(), whiteLayer3x3ExpectedState, randomCube.maskedState, scramble.map(_.symbol), MoveDecoder3x3())
 
 
 case class EnvironmentLogEntry(stateBefore: String, action: String)
@@ -170,11 +182,14 @@ case class EpochLog(episodeCount: Long, successCount: Long):
 abstract class MoveDecoder:
   def decodeMove(symbol: String): Move
   def randomMove(except: Option[String]): String
+  def reverse(move: Move): Move
 
 case class MoveDecoder2x2() extends MoveDecoder:
   override def decodeMove(symbol: String): Move = Moves2x2.from(symbol)
   override def randomMove(except: Option[String]): String = Moves2x2.randomExceptOpposite(except).symbol
+  override def reverse(move: Move): Move = Moves2x2.reverse(move)
 
 case class MoveDecoder3x3() extends MoveDecoder:
   override def decodeMove(symbol: String): Move = Moves3x3.from(symbol)
   override def randomMove(except: Option[String]): String = Moves3x3.randomExceptOpposite(except).symbol
+  override def reverse(move: Move): Move = Moves3x3.reverse(move)

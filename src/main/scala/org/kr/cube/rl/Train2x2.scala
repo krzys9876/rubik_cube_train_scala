@@ -52,7 +52,7 @@ object Train2x2:
     val max = 2000000
     val epochEpisodes = 50000
     val episodeMoves = 100
-    val solvedStates = loadSimple(whileLayerSolvedFilePath) // load solved states for white layer to begin with
+    val solvedStates = Train.loadSimple(whileLayerSolvedFilePath) // load solved states for white layer to begin with
 
     def prepareCube(): Cube =
       val solvedState = solvedStates(scala.util.Random.nextInt(solvedStates.length))
@@ -70,13 +70,7 @@ object Train2x2:
     val diffSec = start.until(end, ChronoUnit.SECONDS)
     println(f"Time: $diffSec seconds / ${diffSec / 3600}:${(diffSec % 3600) / 60}%02d:${diffSec % 60}%02d")
 
-
-  def loadSimple(filePath: String): Vector[String] =
-    val source = scala.io.Source.fromFile(filePath)
-    try
-      source.getLines().toVector
-    finally source.close()
-
+  
   def testRun2x2YellowLayer(filePathWhiteLayer: String, filePathYellowLayer: String): Unit =
     val (whiteLayerAgent, yellowLayerAgent, _) = Train.loadAgents(Some(filePathWhiteLayer), Some(filePathYellowLayer), None)
     val (res, resUnsolved, resSolved) = Train.createTestRunResults()
@@ -93,7 +87,7 @@ object Train2x2:
     val max = 10000000 // NOTE: the learning process is not linear in this case as the model needs to find patterns
     val epochEpisodes = 50000
     val episodeMoves = 30
-    val solvedStates = loadSimple(yellowLayerSolvedFilePath) // load solved states for yellow layer to begin with
+    val solvedStates = Train.loadSimple(yellowLayerSolvedFilePath) // load solved states for yellow layer to begin with
 
     def prepareCube(): Cube =
       val solvedState = solvedStates(scala.util.Random.nextInt(solvedStates.length))
