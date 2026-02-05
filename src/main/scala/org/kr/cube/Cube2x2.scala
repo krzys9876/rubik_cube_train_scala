@@ -101,3 +101,7 @@ object Moves2x2:
 
   def from(symbol: String): Move = all.find(_.symbol == symbol).get
 
+  val reverse: Map[Move, Move] = Map(
+    F -> F1, L -> L1, B -> B1, R -> R1, U -> U1, D -> D1,
+    F1 -> F, L1 -> L, B1 -> B, R1 -> R, U1 -> U, D1 -> D)
+

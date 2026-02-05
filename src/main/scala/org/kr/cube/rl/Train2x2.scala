@@ -12,12 +12,12 @@ object Train2x2:
   def trainRL2x2WhiteLayer(): Unit =
     val start = LocalDateTime.now()
     println(start)
-    val max = 3000000
+    val max = 2000000
     val epochEpisodes = 50000
     val episodeMoves = 50
-    val agent = Agent(0.25, 0.05, 2000L) // The most random and exploratory
+    val agent = Agent(0.25, 0.02, 5000L) // The most random and exploratory
     val afterAgent = Train.iteration(agent, () => Environment.init2x2WhiteLayerTraining(1 + scala.util.Random.nextInt(50)), max, max, episodeMoves, epochEpisodes, 0)
-    Train.printAgentStats(afterAgent, max)
+    agent.printStats(max)
     val timestampTxt = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss").format(LocalDateTime.now())
     println("Saving q-values to file")
     afterAgent.saveQState(f"q-values-2x2-white-layer-$max-$timestampTxt.txt")
@@ -49,7 +49,7 @@ object Train2x2:
   def trainRL2x2YellowLayer(whileLayerSolvedFilePath: String): Unit =
     val start = LocalDateTime.now()
     println(start)
-    val max = 1000000
+    val max = 2000000
     val epochEpisodes = 50000
     val episodeMoves = 100
     val solvedStates = loadSimple(whileLayerSolvedFilePath) // load solved states for white layer to begin with
@@ -58,9 +58,9 @@ object Train2x2:
       val solvedState = solvedStates(scala.util.Random.nextInt(solvedStates.length))
       Cube2x2.maskUpperLayer(Cube2x2(solvedState))
 
-    val agent = Agent(0.20, 0.01, 1000L)
+    val agent = Agent(0.20, 0.005, 2000L)
     val afterAgent = Train.iteration(agent, () => Environment.init2x2(() => prepareCube(), Environment.yellowLayer2x2ExpectedState), max, max, episodeMoves, epochEpisodes, 0)
-    Train.printAgentStats(afterAgent, max)
+    agent.printStats(max)
     val timestampTxt = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss").format(LocalDateTime.now())
     println("Saving q-values to file")
     afterAgent.saveQState(f"q-values-2x2-yellow-layer-$max-$timestampTxt.txt")
@@ -99,9 +99,9 @@ object Train2x2:
       val solvedState = solvedStates(scala.util.Random.nextInt(solvedStates.length))
       Cube2x2(solvedState)
 
-    val agent = Agent(0.2, 0.001, 10000L) // minimum epsilon - we are looking for pattern, not for different ways to solve the upper layer
+    val agent = Agent(0.2, 0.005, 10000L) // minimum epsilon - we are looking for pattern, not for different ways to solve the upper layer
     val afterAgent = Train.iteration(agent, () => Environment.init2x2(() => prepareCube(), Environment.final2x2ExpectedState), max, max, episodeMoves, epochEpisodes, 0)
-    Train.printAgentStats(afterAgent, max)
+    agent.printStats(max)
     val timestampTxt = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss").format(LocalDateTime.now())
     println("Saving q-values to file")
     afterAgent.saveQState(f"q-values-2x2-upper-layer-$max-$timestampTxt.txt")
@@ -110,7 +110,7 @@ object Train2x2:
     println(end)
     val diffSec = start.until(end, ChronoUnit.SECONDS)
     println(f"Time: $diffSec seconds / ${diffSec / 3600}:${(diffSec % 3600) / 60}%02d:${diffSec % 60}%02d")
-    
+
 
   def testRun2x2UpperLayer(filePathWhiteLayer: String, filePathYellowLayer: String, filePathUpperLayer: String): Unit =
     val (whiteLayerAgent, yellowLayerAgent, upperLayerAgent) = Train.loadAgents(Some(filePathWhiteLayer), Some(filePathYellowLayer), Some(filePathUpperLayer))
@@ -130,13 +130,14 @@ object Train2x2:
   private def whiteLayerStage(initWhiteLayerEnv: Environment, whiteLayerAgent: Agent, yellowLayerAgent: Option[Agent], upperLayerAgent: Option[Agent],
                               res: Option[mutable.Map[Int, Int]],
                               resUnsolved: Option[mutable.Map[String, Int]],
-                              resSolved: Option[mutable.Map[String, Int]]): Environment =
+                              resSolved: Option[mutable.Map[String, Int]],
+                              printState: Boolean = false): Environment =
     val initWhiteState = initWhiteLayerEnv.cube.state
     // NOTE: we add some randomness to overcome unsolvable states (loops)
-    val envWhiteLayer = Train.testRunStage(whiteLayerAgent, initWhiteLayerEnv, 300, 0.005, 0.02)
+    val envWhiteLayer = Train.testRunStage(whiteLayerAgent, initWhiteLayerEnv, 300, 0.001, 0.01, printState)
     if (envWhiteLayer.isSolved)
       if(yellowLayerAgent.isDefined) yellowLayerStage(envWhiteLayer.cube.state, yellowLayerAgent.get, upperLayerAgent,
-        res, resUnsolved, resSolved, envWhiteLayer.history.length)
+        res, resUnsolved, resSolved, envWhiteLayer.history.length, printState)
       else
         if(resSolved.isDefined) resSolved.get.update(initWhiteState, resSolved.get.getOrElse(initWhiteState, 0) + 1)
         envWhiteLayer
@@ -149,13 +150,13 @@ object Train2x2:
                                res: Option[mutable.Map[Int, Int]],
                                resUnsolved: Option[mutable.Map[String, Int]],
                                resSolved: Option[mutable.Map[String, Int]],
-                               prevLength: Int): Environment =
+                               prevLength: Int, printState: Boolean = false): Environment =
     val initYellowLayerEnv = Environment.init2x2(() => Cube2x2.maskUpperLayer(Cube2x2(initialState)), Environment.yellowLayer2x2ExpectedState)
-    val envYellowLayer = Train.testRunStage(yellowLayerAgent, initYellowLayerEnv, 200, 0.001)
+    val envYellowLayer = Train.testRunStage(yellowLayerAgent, initYellowLayerEnv, 200, 0.001, 0.0, printState)
     if (envYellowLayer.isSolved)
       if(upperLayerAgent.isDefined)
         upperLayerStage(envYellowLayer.cube.state, upperLayerAgent.get, res, resUnsolved, resSolved,
-        prevLength + envYellowLayer.history.length)
+        prevLength + envYellowLayer.history.length, printState)
       else
         if(resSolved.isDefined) resSolved.get.update(initialState, resSolved.get.getOrElse(initialState, 0) + 1)
         envYellowLayer
@@ -166,9 +167,9 @@ object Train2x2:
 
   private def upperLayerStage(initialState: String, agent: Agent, res: Option[mutable.Map[Int, Int]],
                               resUnsolved: Option[mutable.Map[String, Int]], resSolved: Option[mutable.Map[String, Int]],
-                              prevLength: Int): Environment =
+                              prevLength: Int, printState: Boolean = false): Environment =
     val initUpperLayerEnv = Environment.init2x2(() => Cube2x2(initialState), Environment.final2x2ExpectedState)
-    val envUpperLayer = Train.testRunStage(agent, initUpperLayerEnv, 200, 0.001)
+    val envUpperLayer = Train.testRunStage(agent, initUpperLayerEnv, 200, 0.001, 0.0, printState)
     if (envUpperLayer.isSolved)
       val length = prevLength + envUpperLayer.history.length
       if(resSolved.isDefined) resSolved.get.update(initialState, resSolved.get.getOrElse(initialState, 0) + 1)
@@ -177,8 +178,8 @@ object Train2x2:
       if(resUnsolved.isDefined) resUnsolved.get.update(initialState, resUnsolved.get.getOrElse(initialState, 0) + 1)
       if(res.isDefined) res.get.update(-3, res.get.getOrElse(-3, 0) + 1)
     envUpperLayer
-  
-  
+
+
   def debugUpperLayer(filePathUpperLayer: String): Unit =
     val agent = Agent.load(filePathUpperLayer)
     println(f"Loaded: ${agent.qState.keys.size} records (upper layer)")
@@ -204,7 +205,15 @@ object Train2x2:
     )
     println(f"initial scramble: $initialScramble initial state: ${initialCube.state}")
     println(f"initial:\n${initialCube.printableState}\n")
-    solveOne(filePathWhiteLayer, filePathYellowLayer, filePathUpperLayer, initialCube)
+    //solveOne(filePathWhiteLayer, filePathYellowLayer, filePathUpperLayer, initialCube)
+
+    val (whiteLayerAgent, yellowLayerAgent, upperLayerAgent) = Train.loadAgents(Some(filePathWhiteLayer), Some(filePathYellowLayer), Some(filePathUpperLayer))
+    val (res, resUnsolved, resSolved) = Train.createTestRunResults()
+    val initWhiteLayerEnv = Environment.init2x2(() => Cube2x2.maskUpperCorners(Cube2x2(initialCube.state)), Environment.whiteLayer2x2ExpectedState)
+    whiteLayerStage(initWhiteLayerEnv, whiteLayerAgent.get, yellowLayerAgent, upperLayerAgent,
+        Some(res), Some(resUnsolved), Some(resSolved), true)
+    println(res.toVector.sortBy(_._1).mkString("\n"))
+
 
   def solveOneFromState(filePathWhiteLayer: String, filePathYellowLayer: String, filePathUpperLayer: String,
                         initialState: String): Unit =
@@ -226,7 +235,7 @@ object Train2x2:
     val initWhiteState = initWhiteLayerEnv.cube.state
     // NOTE: we add some randomness to overcome unsolvable states (loops)
     println("white layer")
-    val envWhiteLayer = solveStage(whiteLayerAgent, initWhiteLayerEnv, 300, 0.005, 0.02)
+    val envWhiteLayer = solveStage(whiteLayerAgent, initWhiteLayerEnv, 300, 0.001, 0.001)
     if (envWhiteLayer.isSolved)
       val initYellowState = envWhiteLayer.cube.state
       val initYellowLayerEnv = Environment.init2x2(() => Cube2x2.maskUpperLayer(Cube2x2(initYellowState)), Environment.yellowLayer2x2ExpectedState)

@@ -10,12 +10,12 @@ object Train3x3:
   def trainRL3x3WhiteCross(): Unit =
     val start = LocalDateTime.now()
     println(start)
-    val max = 3000000
+    val max = 4000000
     val epochEpisodes = 50000
     val episodeMoves = 50
-    val agent = Agent(0.25, 0.02, 10000L) // The most random and exploratory
+    val agent = Agent(0.25, 0.09, 15000L) // The most random and exploratory
     val afterAgent = Train.iteration(agent, () => Environment.init3x3WhiteCrossTraining(1 + scala.util.Random.nextInt(50)), max, max, episodeMoves, epochEpisodes, 0)
-    Train.printAgentStats(afterAgent, max)
+    agent.printStats(max)
     val timestampTxt = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss").format(LocalDateTime.now())
     println("Saving q-values to file")
     afterAgent.saveQState(f"q-values-3x3-white-cross-$max-$timestampTxt.txt")

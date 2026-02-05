@@ -3,21 +3,48 @@ package org.kr.cube.rl
 import org.kr.cube.*
 
 import java.io.PrintWriter
+import java.time.LocalDateTime
+import scala.annotation.tailrec
 import scala.collection.{immutable, mutable}
 
 case class Environment(var cube: Cube, history: mutable.ArrayBuffer[EnvironmentLogEntry],
                        expectedState: String, var state: String, initScramble: Vector[String],
                        moveDecoder: MoveDecoder):
 
-  def step(action: String): Environment =
+  def step(action: String, printState: Boolean = false): Environment =
     val nextMove = moveDecoder.decodeMove(action)
     val stateBefore = state
     cube = nextMove.applyToCube(cube)
     state = cube.maskedState
     history.append(EnvironmentLogEntry(stateBefore, action))
+    hasLoop = detectLoop(state)
+    if(printState) println(f"\naction: $action -> \n\n${cube.printableState}")
     this
 
+  @tailrec
+  final def trainingStep(agent: Agent, attempts: Int = 10): Environment =
+    if(attempts == 0) this
+    else
+      val action = agent.nextBestTrainingAction(this, 0.001)
+      val nextMove = moveDecoder.decodeMove(action)
+      val stateBefore = state
+      cube = nextMove.applyToCube(cube)
+      state = cube.maskedState
+      if(stateBefore != state || detectLoop(state))
+        history.append(EnvironmentLogEntry(stateBefore, action))
+        hasLoop = detectLoop(state)
+        this
+      else
+        cube = Moves2x2.reverse(nextMove).applyToCube(cube)
+        trainingStep(agent, attempts - 1)
+
+
   def isSolved: Boolean = state == expectedState
+  def success: Boolean = isSolved && !hasLoop
+
+  private var hasLoop: Boolean = false
+  private def detectLoop(state: String): Boolean = history.exists(_.stateBefore == state)
+
 
 object Environment:
   def init2x2(cubeGenerator: () => Cube, expectedState: String): Environment =
@@ -52,22 +79,34 @@ case class Agent(qState: Map[String, (Int, Map[String, Double])], solvedStates: 
   private val epsilonDecay: Double = 0.99
 
   def updateEpisode(environment: Environment): Agent =
-    if(!environment.isSolved || environment.history.isEmpty) this
+    if(environment.history.isEmpty) this
     else doUpdateEpisode(environment)
 
   private def doUpdateEpisode(environment: Environment): Agent =
-    val reward = 1.0
+    val (reward, counterIncrease) = if(environment.success) (1.0, 1) else (0.0, 0)
     val res = environment.history.reverse.foldLeft((qState, reward))({ case ((qs, g), h) =>
       val (oldActionCounter, oldQStates) = qs.getOrElse(h.stateBefore, (0, Map()))
       val oldActionWeight = oldQStates.getOrElse(h.action, 0.0)
       val newActionWeight = oldActionWeight + alpha * (g - oldActionWeight)
-      val updatedQState = oldQStates.updated(h.action, newActionWeight)
-      (qs.updated(h.stateBefore, (oldActionCounter + 1, updatedQState)), g * gamma)
+      val updatedQState =
+        // Do not store zeros as it bloats the q-states
+        if(newActionWeight != 0.0) oldQStates.updated(h.action, newActionWeight)
+        else
+          if(oldQStates.get(h.action).contains(0.0))
+            oldQStates.removed(h.action)
+          else oldQStates
+      val newQs =
+        if(updatedQState.isEmpty) qs.removed(h.stateBefore)
+        else qs.updated(h.stateBefore, (oldActionCounter + 1, updatedQState))
+      (newQs, g * gamma)
     })
-    val newEpsilon =
+    val newEpsilon = {
+      // Do not store empty keys
       if(episodeCount > 0 && episodeCount % epsilonDecayEpisodes == 0) Math.max(epsilon * epsilonDecay, epsilonMin)
       else epsilon
-    copy(qState = res._1, epsilon = newEpsilon, episodeCount = episodeCount + 1, solvedStates = solvedStates + environment.cube.state)
+    }
+    val newSolvedStates = if(environment.isSolved) solvedStates + environment.cube.state else solvedStates
+    copy(qState = res._1, epsilon = newEpsilon, episodeCount = episodeCount + counterIncrease, solvedStates = newSolvedStates)
 
   def nextBestTrainingAction(environment: Environment, scale: Double = 0.0): String =
     if(Math.random() < epsilon) nextRandomAction(environment)
@@ -94,6 +133,15 @@ case class Agent(qState: Map[String, (Int, Map[String, Double])], solvedStates: 
     val pw = new PrintWriter(filePath)
     pw.println(solvedStates.toVector.mkString("\n"))
     pw.close()
+
+  def printStats(max: Long): Unit =
+    println(LocalDateTime.now())
+    val agg = qState.groupBy({ case (_, (c, _)) => c }).map((c, entries) => c -> entries.size).toVector.sortBy(_._1).reverse
+    val singleVisited = agg.filter(_._1 == 1).map(_._2).sum
+    val allOther = agg.filter(_._1 > 1).map(_._2).sum
+    //println(f"q-values stats (number of visits - number of states): \n${agg.mkString("\n")}")
+    println(f"q-values: ${qState.keys.size} keys, single visits: $singleVisited, other: $allOther, ratio ${singleVisited.toDouble / (singleVisited + allOther).toDouble * 100.0}%.3f%%")
+    println(f"episodes: ${episodeCount}, episodes ratio of $max: ${episodeCount.toDouble / max * 100.0}%.3f%%, epsilon: ${epsilon}%.4f")
 
 
 object Agent:
