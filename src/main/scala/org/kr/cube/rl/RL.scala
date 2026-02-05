@@ -77,18 +77,6 @@ object Environment:
     val randomCube = scramble.foldLeft(initCube)((c, m) => m.applyToCube(c))
     Environment(randomCube, mutable.ArrayBuffer(), whiteCross3x3ExpectedState, randomCube.maskedState, scramble.map(_.symbol), MoveDecoder3x3())
 
-  def init3x3WhiteLayerTrainingFL(scrambleMoves: Int): Environment =
-    val scramble = Moves3x3.randomList(scrambleMoves)
-    val initCube = Cube3x3.maskUpperLayersFL(Cube3x3.solved3x3)
-    val randomCube = scramble.foldLeft(initCube)((c, m) => m.applyToCube(c))
-    Environment(randomCube, mutable.ArrayBuffer(), whiteLayer3x3FLExpectedState, randomCube.maskedState, scramble.map(_.symbol), MoveDecoder3x3())
-
-  def init3x3WhiteLayerTrainingLB(scrambleMoves: Int): Environment =
-    val scramble = Moves3x3.randomList(scrambleMoves)
-    val initCube = Cube3x3.maskUpperLayersLB(Cube3x3.solved3x3)
-    val randomCube = scramble.foldLeft(initCube)((c, m) => m.applyToCube(c))
-    Environment(randomCube, mutable.ArrayBuffer(), whiteLayer3x3LBExpectedState, randomCube.maskedState, scramble.map(_.symbol), MoveDecoder3x3())
-
 
 case class EnvironmentLogEntry(stateBefore: String, action: String)
 
