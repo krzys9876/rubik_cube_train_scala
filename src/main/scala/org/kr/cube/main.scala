@@ -18,14 +18,14 @@ def main(): Unit =
     "q-values-2x2-upper-layer-10000000-20260205_112548.txt"
   )*/
   //debugUpperLayer("q-values-2x2-upper-layer-10000000-20260203_094831.txt")
-  Train2x2.solveOneFromScramble(
+  /*Train2x2.solveOneFromScramble(
     "q-values-2x2-white-layer-2000000-20260205_110931.txt",
     "q-values-2x2-yellow-layer-2000000-20260205_111250.txt",
     "q-values-2x2-upper-layer-10000000-20260205_112548.txt",
     "B B L' R B R B' U F' R U D R' B' D"
-  )
+  )*/
 
-  /*Train2x2.solveOneFromState(
+  Train2x2.solveOneFromState(
     "q-values-2x2-white-layer-2000000-20260205_110931.txt",
     "q-values-2x2-yellow-layer-2000000-20260205_111250.txt",
     "q-values-2x2-upper-layer-10000000-20260205_112548.txt",
@@ -33,7 +33,7 @@ def main(): Unit =
     //"UDFLULDUDBRBLFFURRBBLDRF"
     //"UFRBLRRFDDBDULRLBFFLDUBU"
     "LDRFFBBUDLLUBBRDULURFDRF"
-  )*/
+  )
 
   /*(0 until 100).foreach(_ =>
   Train2x2.solveRandomOne(
