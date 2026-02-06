@@ -109,6 +109,18 @@ object FaceType:
     Vector(FaceType.B, FaceType.D),
     Vector(FaceType.R, FaceType.D))
 
+  val upperEdges: Vector[Vector[FaceType]] = Vector(
+    Vector(FaceType.F, FaceType.U),
+    Vector(FaceType.L, FaceType.U),
+    Vector(FaceType.B, FaceType.U),
+    Vector(FaceType.R, FaceType.U))
+
+  val middleEdges: Vector[Vector[FaceType]] = Vector(
+    Vector(FaceType.F, FaceType.L),
+    Vector(FaceType.L, FaceType.B),
+    Vector(FaceType.B, FaceType.R),
+    Vector(FaceType.R, FaceType.F))
+
 
 abstract class Axis(val symbol: String, val reversed: Boolean)
 

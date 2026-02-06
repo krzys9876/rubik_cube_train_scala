@@ -63,6 +63,39 @@ case class Cube3x3(override val faces: mutable.Map[FaceType, Face]) extends Cube
       val cf = c.map(t => t._2.face)
       FaceType.lowerEdges.exists(uc => uc.sortBy(_.symbol).equals(cf.sortBy(_.symbol))))
 
+  def upperEdges(): Vector[Vector[(FaceType, Tile)]] =
+    edges().filter(c =>
+      val cf = c.map(t => t._2.face)
+      FaceType.upperEdges.exists(uc => uc.sortBy(_.symbol).equals(cf.sortBy(_.symbol))))
+
+  def middleEdges(): Vector[Vector[(FaceType, Tile)]] =
+    edges().filter(c =>
+      val cf = c.map(t => t._2.face)
+      FaceType.middleEdges.exists(uc => uc.sortBy(_.symbol).equals(cf.sortBy(_.symbol))))
+
+  def middleEdgesFL(): Vector[Vector[(FaceType, Tile)]] =
+    val middleEdges = Vector(FaceType.middleEdges(0))
+    edges().filter(c =>
+      val cf = c.map(t => t._2.face)
+      middleEdges.exists(uc => uc.sortBy(_.symbol).equals(cf.sortBy(_.symbol))))
+
+  def middleEdgesLB(): Vector[Vector[(FaceType, Tile)]] =
+    val middleEdges = Vector(FaceType.middleEdges(0), FaceType.middleEdges(1))
+    edges().filter(c =>
+      val cf = c.map(t => t._2.face)
+      middleEdges.exists(uc => uc.sortBy(_.symbol).equals(cf.sortBy(_.symbol))))
+
+  def middleEdgesBR(): Vector[Vector[(FaceType, Tile)]] =
+    val middleEdges = Vector(FaceType.middleEdges(0), FaceType.middleEdges(1), FaceType.middleEdges(2))
+    edges().filter(c =>
+      val cf = c.map(t => t._2.face)
+      middleEdges.exists(uc => uc.sortBy(_.symbol).equals(cf.sortBy(_.symbol))))
+
+  def upperCorners(): Vector[Vector[(FaceType, Tile)]] =
+    edges().filter(c =>
+      val cf = c.map(t => t._2.face)
+      FaceType.upperCorners.exists(uc => uc.sortBy(_.symbol).equals(cf.sortBy(_.symbol))))
+
   def lowerCornerFL(): Vector[Vector[(FaceType, Tile)]] =
     val lowerCorners = Vector(FaceType.lowerCorners(0))
     corners().filter(c =>
@@ -123,7 +156,6 @@ object Cube3x3:
     val whiteLayerTiles = cube.lowerEdges().flatten ++ cube.centers() ++ cube.lowerCornersFL().flatten
     cube.maskTilesInverted(whiteLayerTiles)
 
-
   def maskUpperLayersLB(cube: Cube3x3): Cube =
     val whiteLayerTiles = cube.lowerEdges().flatten ++ cube.centers() ++ cube.lowerCornersLB().flatten
     cube.maskTilesInverted(whiteLayerTiles)
@@ -135,6 +167,22 @@ object Cube3x3:
   def maskUpperLayersAll(cube: Cube3x3): Cube =
     val whiteLayerTiles = cube.lowerEdges().flatten ++ cube.centers() ++ cube.lowerCornersAll().flatten
     cube.maskTilesInverted(whiteLayerTiles)
+
+  def maskUpperLayerFL(cube: Cube3x3): Cube =
+    val upperLayerTiles = cube.lowerEdges().flatten ++ cube.centers() ++ cube.lowerCornersAll().flatten ++ cube.middleEdgesFL().flatten
+    cube.maskTilesInverted(upperLayerTiles)
+
+  def maskUpperLayerLB(cube: Cube3x3): Cube =
+    val upperLayerTiles = cube.lowerEdges().flatten ++ cube.centers() ++ cube.lowerCornersAll().flatten ++ cube.middleEdgesLB().flatten
+    cube.maskTilesInverted(upperLayerTiles)
+  
+  def maskUpperLayerBR(cube: Cube3x3): Cube =
+    val upperLayerTiles = cube.lowerEdges().flatten ++ cube.centers() ++ cube.lowerCornersAll().flatten ++ cube.middleEdgesBR().flatten
+    cube.maskTilesInverted(upperLayerTiles)
+  
+  def maskUpperLayerAll(cube: Cube3x3): Cube =
+    val upperLayerTiles = cube.lowerEdges().flatten ++ cube.centers() ++ cube.lowerCornersAll().flatten ++ cube.middleEdges().flatten
+    cube.maskTilesInverted(upperLayerTiles)
 
 
 object Moves3x3:

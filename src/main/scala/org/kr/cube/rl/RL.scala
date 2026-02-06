@@ -70,6 +70,10 @@ object Environment:
   val whiteLayer3x3LBExpectedState: String =  "....F.FF.....L.LLL....B..BB....R..R.....U....DD.DDDDD."
   val whiteLayer3x3BRExpectedState: String =  "....F.FF.....L.LLL....B.BBB....R..RR....U....DD.DDDDDD"
   val whiteLayer3x3AllExpectedState: String = "....F.FFF....L.LLL....B.BBB....R.RRR....U....DDDDDDDDD"
+  val middleLayer3x3FLExpectedState: String = "...FF.FFF....LLLLL....B.BBB....R.RRR....U....DDDDDDDDD"
+  val middleLayer3x3LBExpectedState: String = "...FF.FFF...LLLLLL....BBBBB....R.RRR....U....DDDDDDDDD"
+  val middleLayer3x3BRExpectedState: String = "...FF.FFF...LLLLLL...BBBBBB....RRRRR....U....DDDDDDDDD"
+  val middleLayer3x3AllExpectedState: String ="...FFFFFF...LLLLLL...BBBBBB...RRRRRR....U....DDDDDDDDD"
 
   def init3x3WhiteCrossTraining(scrambleMoves: Int): Environment =
     val scramble = Moves3x3.randomList(scrambleMoves)
@@ -168,7 +172,7 @@ object Agent:
           (k, (c.toInt, v.split('#') // key, counter, actions (to be extracted from hash-separated string)
             .map(_.split(':')) // separate action and q-value
             .map({case Array(m, q) => (m, q.toDouble)}).toMap))}).toMap
-      Agent(qState, immutable.Set())
+      Agent(qState, immutable.Set(), epsilonInit, epsilonMin, epsilonDecayEpisodes)
     finally source.close()
 
 
