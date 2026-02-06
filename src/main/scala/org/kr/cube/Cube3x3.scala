@@ -1,6 +1,6 @@
 package org.kr.cube
 
-import org.kr.cube.FaceType.F
+import org.kr.cube.FaceType.{F, U}
 
 import scala.collection.mutable
 
@@ -175,14 +175,30 @@ object Cube3x3:
   def maskUpperLayerLB(cube: Cube3x3): Cube =
     val upperLayerTiles = cube.lowerEdges().flatten ++ cube.centers() ++ cube.lowerCornersAll().flatten ++ cube.middleEdgesLB().flatten
     cube.maskTilesInverted(upperLayerTiles)
-  
+
   def maskUpperLayerBR(cube: Cube3x3): Cube =
     val upperLayerTiles = cube.lowerEdges().flatten ++ cube.centers() ++ cube.lowerCornersAll().flatten ++ cube.middleEdgesBR().flatten
     cube.maskTilesInverted(upperLayerTiles)
-  
+
   def maskUpperLayerAll(cube: Cube3x3): Cube =
     val upperLayerTiles = cube.lowerEdges().flatten ++ cube.centers() ++ cube.lowerCornersAll().flatten ++ cube.middleEdges().flatten
     cube.maskTilesInverted(upperLayerTiles)
+
+  /*def maskYellowCross(cube: Cube3x3): Cube =
+    val yellowCrossTiles = cube.lowerEdges().flatten ++ cube.centers() ++ cube.lowerCornersAll().flatten ++
+      cube.middleEdges().flatten ++ cube.upperEdges().flatten
+    cube.maskTilesInverted(yellowCrossTiles)*/
+
+
+  def maskYellowCross(cube: Cube3x3): Cube =
+    val upperLayerMAsked = maskUpperLayerAll(cube)
+    val yellowCrossTiles = cube.upperEdges().flatten.filter(ft => ft._2.face == FaceType.U)
+    //val yellowCrossTiles12 = yellowCrossTiles.slice(0,2)
+    cube.faces.values.foreach(f => cube.withFace(f.copy(tiles = f.tiles.map(t =>
+      t.copy(masked = t.masked && !yellowCrossTiles.contains((f.nominalFace, t)))))))
+    cube
+
+
 
 
 object Moves3x3:

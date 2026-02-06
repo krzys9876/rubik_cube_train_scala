@@ -278,16 +278,19 @@ object Train3x3:
   def trainRL3x3MiddleLayerAll(midLayerBRSolvedFilePath: String, prevQValuesFilePath: Option[String]): Unit =
     val start = LocalDateTime.now()
     println(start)
-    val max = 1500000 //5000000
     val epochEpisodes = 50000
-    val episodeMoves = 30
     val solvedStates = Train.loadSimple(midLayerBRSolvedFilePath)
+
+    val (agent, max, episodeMoves) = if(prevQValuesFilePath.isDefined)
+      (Agent.load(prevQValuesFilePath.get, 0.10, 0.001, 2000L), 15000000, 30)
+    else
+      (Agent(0.20, 0.01, 7000L), 5000000, 30)
 
     def prepareCube(): Cube =
       val solvedState = solvedStates(scala.util.Random.nextInt(solvedStates.length))
       Cube3x3.maskUpperLayerAll(Cube3x3(solvedState))
 
-    val agent = if(prevQValuesFilePath.isDefined) Agent.load(prevQValuesFilePath.get, 0.10, 0.001, 2000L) else Agent(0.20, 0.01, 7000L)
+
     val afterAgent = Train.iteration(agent, () => Environment.init3x3(() => prepareCube(), Environment.middleLayer3x3AllExpectedState), max, max, episodeMoves, epochEpisodes, 0)
     agent.printStats(max)
     val timestampTxt = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss").format(LocalDateTime.now())
@@ -301,8 +304,8 @@ object Train3x3:
 
 
   def testRun3x3MiddleLayerAll(filePathWhiteCross: String, filePathWhiteLayerFL: String, filePathWhiteLayerLB: String,
-                              filePathWhiteLayerBR: String, filePathWhiteLayerAll: String,
-                              filePathMidLayerFL: String, filePathMidLayerLB: String, filePathMidLayerBR: String,
+                               filePathWhiteLayerBR: String, filePathWhiteLayerAll: String,
+                               filePathMidLayerFL: String, filePathMidLayerLB: String, filePathMidLayerBR: String,
                                filePathMidLayerAll: String): Unit =
     val stages = Train.loadAgents(Vector(AgentFile(filePathWhiteCross, "white cross"), AgentFile(filePathWhiteLayerFL, "white layer (FL)"),
       AgentFile(filePathWhiteLayerLB, "white layer (LB)"), AgentFile(filePathWhiteLayerBR, "white layer (BR)"),
@@ -313,17 +316,84 @@ object Train3x3:
     println(results.res.toVector.sortBy(_._1).mkString("\n"))
 
 
-  /*def solveOneFromState(filePathWhiteLayer: String, filePathYellowLayer: String, filePathUpperLayer: String,
-                        initialState: String): Unit =
-    val initialCube = Cube2x2.maskUpperCorners(Cube2x2(initialState))
-    println(f"initial state: ${initialCube.state}")
-    solveOne(filePathWhiteLayer, filePathYellowLayer, filePathUpperLayer, initialCube)
-*/
+  def trainRL3x3YellowCross(midLayerAllSolvedFilePath: String, prevQValuesFilePath: Option[String] = None): Unit =
+    val start = LocalDateTime.now()
+    println(start)
+    val epochEpisodes = 50000
+    val solvedStates = Train.loadSimple(midLayerAllSolvedFilePath)
+
+    val (agent, max, episodeMoves) = if (prevQValuesFilePath.isDefined)
+      (Agent.load(prevQValuesFilePath.get, 0.10, 0.001, 2000L), 1500000, 30)
+    else
+      (Agent(0.20, 0.01, 7000L), 5000000, 50)
+
+    def prepareCube(): Cube =
+      val solvedState = solvedStates(scala.util.Random.nextInt(solvedStates.length))
+      val c = Cube3x3.maskYellowCross(Cube3x3(solvedState))
+      //if(c.maskedState == "...FFFFFF...LLLLLL...BBBBBB...RRRRRR...UU..U.DDDDDDDDD") println("!!!!!!!!!!!")
+      //println(c.maskedState)
+      c
+
+      //...FFFFFF...LLLLLL...BBBBBB...RRRRRR...UUU...DDDDDDDDD
+      //...FFFFFF...LLLLLL...BBBBBB...RRRRRR...UU..U.DDDDDDDDD
+
+
+    val afterAgent = Train.iteration(agent, () => Environment.init3x3(() => prepareCube(), Environment.yellowCross3x3ExpectedState), max, max, episodeMoves, epochEpisodes, 0)
+    agent.printStats(max)
+    val timestampTxt = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss").format(LocalDateTime.now())
+    println("Saving q-values to file")
+    afterAgent.saveQState(f"q-values-3x3-yellow-cross-$max-$timestampTxt.txt")
+    afterAgent.saveSolvedStates(f"solved-3x3-yellow-cross-$max-$timestampTxt.txt")
+    val end = LocalDateTime.now()
+    println(end)
+    val diffSec = start.until(end, ChronoUnit.SECONDS)
+    println(f"Time: $diffSec seconds / ${diffSec / 3600}:${(diffSec % 3600) / 60}%02d:${diffSec % 60}%02d")
+
+
+  def pretrainRL3x3YellowCross(solutionsFilePath: String): Unit =
+    val solvedStates = Train.loadSimple(solutionsFilePath)
+    val decoded = solvedStates.map(_.split('|')).map({case Array(state, solve, solvedState) => (state, solve, solvedState)})
+    //println(decoded.mkString("\n"))
+
+    val agent = Agent(0.20, 0.01, 7000L)
+    val afterAgent = decoded.foldLeft(agent)((a, d) =>
+
+      val environment = Environment.init3x3(() => Cube3x3.maskYellowCross(Cube3x3(d._1)), Environment.yellowCross3x3ExpectedState)
+      d._2.split(" ").foreach(a => environment.step(a))
+      //println(environment.history.mkString("\n"))
+      //println(environment.cube.state)
+      //println(environment.cube.maskedState)
+      //println(Environment.yellowCross3x3ExpectedState)
+      //println(environment.isSolved)
+      //println(d._3)
+      //println(environment.cube.maskedState == Environment.yellowCross3x3ExpectedState)
+      a.updateEpisode(environment)
+      //println(afterAgent.qState.mkString("\n"))
+    )
+
+    val timestampTxt = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss").format(LocalDateTime.now())
+    println("Saving q-values to file")
+    afterAgent.saveQState(f"q-values-3x3-yellow-cross-pre-$timestampTxt.txt")
+    afterAgent.saveSolvedStates(f"solved-3x3-yellow-cross-pre-$timestampTxt.txt")
+
+
+  def testRun3x3YellowCross(filePathWhiteCross: String, filePathWhiteLayerFL: String, filePathWhiteLayerLB: String,
+                               filePathWhiteLayerBR: String, filePathWhiteLayerAll: String,
+                               filePathMidLayerFL: String, filePathMidLayerLB: String, filePathMidLayerBR: String,
+                               filePathMidLayerAll: String, filePathYellowCross: String): Unit =
+    val stages = Train.loadAgents(Vector(AgentFile(filePathWhiteCross, "white cross"), AgentFile(filePathWhiteLayerFL, "white layer (FL)"),
+      AgentFile(filePathWhiteLayerLB, "white layer (LB)"), AgentFile(filePathWhiteLayerBR, "white layer (BR)"),
+      AgentFile(filePathWhiteLayerAll, "white layer (all)"), AgentFile(filePathMidLayerFL, "middle layer (FL)"),
+      AgentFile(filePathMidLayerLB, "middle layer (LB)"), AgentFile(filePathMidLayerBR, "middle layer (BR)"),
+      AgentFile(filePathMidLayerAll, "middle layer (all)"), AgentFile(filePathYellowCross, "yellow cross")))
+    val results = Train.startSolving(stages, envGenerator, stageConfig, 100000, 10000, false)
+    println(results.res.toVector.sortBy(_._1).mkString("\n"))
+
 
   def solveOneFromScramble(filePathWhiteCross: String, filePathWhiteLayerFL: String, filePathWhiteLayerLB: String,
                            filePathWhiteLayerBR: String, filePathWhiteLayerAll: String,
                            filePathMidLayerFL: String, filePathMidLayerLB: String, filePathMidLayerBR: String,
-                           filePathMidLayerAll: String,
+                           filePathMidLayerAll: String, filePathYellowCross: String,
                            initialScramble: String): Unit =
     val startSolved = Cube3x3.solved
     println(startSolved.printableState)
@@ -336,26 +406,26 @@ object Train3x3:
     println(f"initial scramble: $initialScramble initial state: ${initialCube.state}")
     solveOne(filePathWhiteCross, filePathWhiteLayerFL, filePathWhiteLayerLB,
       filePathWhiteLayerBR, filePathWhiteLayerAll, filePathMidLayerFL, filePathMidLayerLB, filePathMidLayerBR,
-      filePathMidLayerAll, initialCube)
+      filePathMidLayerAll, filePathYellowCross, initialCube)
 
   def solveRandomOne(filePathWhiteCross: String, filePathWhiteLayerFL: String, filePathWhiteLayerLB: String,
                      filePathWhiteLayerBR: String, filePathWhiteLayerAll: String,
                      filePathMidLayerFL: String, filePathMidLayerLB: String, filePathMidLayerBR: String,
-                     filePathMidLayerAll: String): Unit =
+                     filePathMidLayerAll: String, filePathYellowCross: String): Unit =
     val moves = Moves3x3.randomList(scala.util.Random.nextInt(5) + 10).map(_.symbol).mkString(" ")
     solveOneFromScramble(filePathWhiteCross, filePathWhiteLayerFL, filePathWhiteLayerLB,
       filePathWhiteLayerBR, filePathWhiteLayerAll, filePathMidLayerFL, filePathMidLayerLB,
-      filePathMidLayerBR, filePathMidLayerAll, moves)
+      filePathMidLayerBR, filePathMidLayerAll, filePathYellowCross, moves)
 
   def solveOne(filePathWhiteCross: String, filePathWhiteLayerFL: String, filePathWhiteLayerLB: String,
                filePathWhiteLayerBR: String, filePathWhiteLayerAll: String,
                filePathMidLayerFL: String, filePathMidLayerLB: String, filePathMidLayerBR: String,
-               filePathMidLayerAll: String, initialCube: Cube): Unit =
+               filePathMidLayerAll: String, filePathYellowCross: String, initialCube: Cube): Unit =
     val stages = Train.loadAgents(Vector(AgentFile(filePathWhiteCross, "white cross"), AgentFile(filePathWhiteLayerFL, "white layer (FL)"),
       AgentFile(filePathWhiteLayerLB, "white layer (LB)"), AgentFile(filePathWhiteLayerBR, "white layer (BR)"),
       AgentFile(filePathWhiteLayerAll, "white layer (all)"), AgentFile(filePathMidLayerFL, "middle layer (FL)"),
       AgentFile(filePathMidLayerLB, "middle layer (LB)"), AgentFile(filePathMidLayerBR, "middle layer (BR)"),
-      AgentFile(filePathMidLayerAll, "middle layer (all)")))
+      AgentFile(filePathMidLayerAll, "middle layer (all)"), AgentFile(filePathYellowCross, "yellow cross")))
     println(f"initial:\n${initialCube.printableState}\n")
     val results = Train.startSolvingSingle(initialCube.state, stages, envGeneratorSingle, stageConfig, true)
     val moves = results.res.toVector.map(_._1).head
@@ -372,7 +442,8 @@ object Train3x3:
     "middle layer (FL)" -> (state => Environment.init3x3(() => Cube3x3.maskUpperLayerFL(Cube3x3(state)), Environment.middleLayer3x3FLExpectedState)),
     "middle layer (LB)" -> (state => Environment.init3x3(() => Cube3x3.maskUpperLayerLB(Cube3x3(state)), Environment.middleLayer3x3LBExpectedState)),
     "middle layer (BR)" -> (state => Environment.init3x3(() => Cube3x3.maskUpperLayerBR(Cube3x3(state)), Environment.middleLayer3x3BRExpectedState)),
-    "middle layer (all)" -> (state => Environment.init3x3(() => Cube3x3.maskUpperLayerAll(Cube3x3(state)), Environment.middleLayer3x3AllExpectedState))
+    "middle layer (all)" -> (state => Environment.init3x3(() => Cube3x3.maskUpperLayerAll(Cube3x3(state)), Environment.middleLayer3x3AllExpectedState)),
+    "yellow cross" -> (state => Environment.init3x3(() => Cube3x3.maskYellowCross(Cube3x3(state)), Environment.yellowCross3x3ExpectedState))
   )
 
   // Given initial state
@@ -395,4 +466,5 @@ object Train3x3:
     "middle layer (LB)" -> StageConfig(100, 0.001, 0.0),
     "middle layer (BR)" -> StageConfig(100, 0.001, 0.0),
     "middle layer (all)" -> StageConfig(100, 0.001, 0.0),
+    "yellow cross" -> StageConfig(100, 0.001, 0.0),
   )

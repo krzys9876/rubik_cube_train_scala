@@ -74,6 +74,7 @@ object Environment:
   val middleLayer3x3LBExpectedState: String = "...FF.FFF...LLLLLL....BBBBB....R.RRR....U....DDDDDDDDD"
   val middleLayer3x3BRExpectedState: String = "...FF.FFF...LLLLLL...BBBBBB....RRRRR....U....DDDDDDDDD"
   val middleLayer3x3AllExpectedState: String ="...FFFFFF...LLLLLL...BBBBBB...RRRRRR....U....DDDDDDDDD"
+  val yellowCross3x3ExpectedState: String =   "...FFFFFF...LLLLLL...BBBBBB...RRRRRR.U.UUU.U.DDDDDDDDD"
 
   def init3x3WhiteCrossTraining(scrambleMoves: Int): Environment =
     val scramble = Moves3x3.randomList(scrambleMoves)
