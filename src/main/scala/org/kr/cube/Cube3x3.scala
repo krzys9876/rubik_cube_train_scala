@@ -92,7 +92,7 @@ case class Cube3x3(override val faces: mutable.Map[FaceType, Face]) extends Cube
       middleEdges.exists(uc => uc.sortBy(_.symbol).equals(cf.sortBy(_.symbol))))
 
   def upperCorners(): Vector[Vector[(FaceType, Tile)]] =
-    edges().filter(c =>
+    corners().filter(c =>
       val cf = c.map(t => t._2.face)
       FaceType.upperCorners.exists(uc => uc.sortBy(_.symbol).equals(cf.sortBy(_.symbol))))
 
@@ -129,19 +129,20 @@ case class Cube3x3(override val faces: mutable.Map[FaceType, Face]) extends Cube
 
 
 object Cube3x3:
-  private val SOLVED_STATE: String = "FFFFFFFFFLLLLLLLLLBBBBBBBBBRRRRRRRRRUUUUUUUUUDDDDDDDDD"
+  val SOLVED_STATE: String = "FFFFFFFFFLLLLLLLLLBBBBBBBBBRRRRRRRRRUUUUUUUUUDDDDDDDDD"
 
   def solved: Cube = Cube3x3(SOLVED_STATE)
   def solved3x3: Cube3x3 = Cube3x3(SOLVED_STATE)
 
   def apply(state: String): Cube3x3 =
+    val s = state.replaceAll(" ", "")
     val faces: mutable.Map[FaceType, Face] = mutable.Map(
-      FaceType.F -> Face(3, Axis.X, Axis.Y, FaceType.F, state.substring(faceStateIndex(FaceType.F), faceStateIndex(FaceType.F) + 3 * 3)),
-      FaceType.L -> Face(3, Axis.Zr, Axis.Y, FaceType.L, state.substring(faceStateIndex(FaceType.L), faceStateIndex(FaceType.L) + 3 * 3)),
-      FaceType.B -> Face(3, Axis.Xr, Axis.Y, FaceType.B, state.substring(faceStateIndex(FaceType.B), faceStateIndex(FaceType.B) + 3 * 3)),
-      FaceType.R -> Face(3, Axis.Z, Axis.Y, FaceType.R, state.substring(faceStateIndex(FaceType.R), faceStateIndex(FaceType.R) + 3 * 3)),
-      FaceType.U -> Face(3, Axis.X, Axis.Zr, FaceType.U, state.substring(faceStateIndex(FaceType.U), faceStateIndex(FaceType.U) + 3 * 3)),
-      FaceType.D -> Face(3, Axis.X, Axis.Z, FaceType.D, state.substring(faceStateIndex(FaceType.D), faceStateIndex(FaceType.D) + 3 * 3)))
+      FaceType.F -> Face(3, Axis.X, Axis.Y, FaceType.F, s.substring(faceStateIndex(FaceType.F), faceStateIndex(FaceType.F) + 3 * 3)),
+      FaceType.L -> Face(3, Axis.Zr, Axis.Y, FaceType.L, s.substring(faceStateIndex(FaceType.L), faceStateIndex(FaceType.L) + 3 * 3)),
+      FaceType.B -> Face(3, Axis.Xr, Axis.Y, FaceType.B, s.substring(faceStateIndex(FaceType.B), faceStateIndex(FaceType.B) + 3 * 3)),
+      FaceType.R -> Face(3, Axis.Z, Axis.Y, FaceType.R, s.substring(faceStateIndex(FaceType.R), faceStateIndex(FaceType.R) + 3 * 3)),
+      FaceType.U -> Face(3, Axis.X, Axis.Zr, FaceType.U, s.substring(faceStateIndex(FaceType.U), faceStateIndex(FaceType.U) + 3 * 3)),
+      FaceType.D -> Face(3, Axis.X, Axis.Z, FaceType.D, s.substring(faceStateIndex(FaceType.D), faceStateIndex(FaceType.D) + 3 * 3)))
     Cube3x3(faces)
 
   val faceStateIndex: Map[FaceType, Int] = Map(FaceType.F -> 0, FaceType.L -> 9, FaceType.B -> 18, FaceType.R -> 27,
@@ -191,14 +192,26 @@ object Cube3x3:
 
 
   def maskYellowCross(cube: Cube3x3): Cube =
-    val upperLayerMAsked = maskUpperLayerAll(cube)
+    val upperLayerMasked = maskUpperLayerAll(cube)
     val yellowCrossTiles = cube.upperEdges().flatten.filter(ft => ft._2.face == FaceType.U)
     //val yellowCrossTiles12 = yellowCrossTiles.slice(0,2)
     cube.faces.values.foreach(f => cube.withFace(f.copy(tiles = f.tiles.map(t =>
       t.copy(masked = t.masked && !yellowCrossTiles.contains((f.nominalFace, t)))))))
     cube
 
+  def maskYellowLayer(cube: Cube3x3): Cube =
+    val upperLayerMasked = maskUpperLayerAll(cube)
+    val yellowTiles = (cube.upperEdges() ++ cube.upperCorners()).flatten.filter(ft => ft._2.face == FaceType.U)
+    cube.faces.values.foreach(f => cube.withFace(f.copy(tiles = f.tiles.map(t =>
+      t.copy(masked = t.masked && !yellowTiles.contains((f.nominalFace, t)))))))
+    cube
 
+  def maskUpperEdges(cube: Cube3x3): Cube =
+    val upperLayerMasked = maskYellowCross(cube)
+    val upperEdgeTiles = cube.upperEdges().flatten.filter(ft => ft._2.face != FaceType.U)
+    cube.faces.values.foreach(f => cube.withFace(f.copy(tiles = f.tiles.map(t =>
+      t.copy(masked = upperEdgeTiles.contains((f.nominalFace, t)))))))
+    cube
 
 
 object Moves3x3:

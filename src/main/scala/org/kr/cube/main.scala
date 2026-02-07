@@ -5,6 +5,11 @@ import org.kr.cube.rl.{Agent, Environment, EpochLog, Train2x2, Train3x3}
 @main
 def main(): Unit =
   //Train3x3.trainRL3x3WhiteCross()
+  //Train3x3.pretrainRL3x3WhiteLayer2("whiteCornersInput.txt")
+  // white layer 2 - unsuccessful
+  //Train3x3.trainRL3x3WhiteLayer2("solved-3x3-white-cross-1000000-20260205_142414.txt", Some("q-values-3x3-white-layer2-pre-20260206_172258.txt"))
+  //Train3x3.trainRL3x3WhiteLayer2("solved-3x3-white-cross-1000000-20260205_142414.txt", Some("q-values-3x3-white-layer2-1500000-20260206_173817.txt"))
+  //Train3x3.testRun3x3WhiteLayer2("q-values-3x3-white-cross-1000000-20260205_142414.txt", "q-values-3x3-white-layer2-1000000-20260206_181154.txt")
   //Train3x3.testRun3x3WhiteCross("q-values-3x3-white-cross-1000000-20260205_142414.txt")
   //Train3x3.trainRL3x3WhiteLayerFL("solved-3x3-white-cross-1000000-20260205_142414.txt")
   //Train3x3.testRun3x3WhiteLayerFL("q-values-3x3-white-cross-1000000-20260205_142414.txt", "q-values-3x3-white-layer-fl-1500000-20260205_225856.txt")
@@ -30,7 +35,7 @@ def main(): Unit =
     "q-values-3x3-white-layer-1500000-20260205_232052.txt"
   )*/
 
-  Train3x3.solveRandomOne(
+  /*Train3x3.solveRandomOne(
     "q-values-3x3-white-cross-1000000-20260205_142414.txt",
     "q-values-3x3-white-layer-fl-1500000-20260205_225856.txt",
     "q-values-3x3-white-layer-lb-1500000-20260205_230535.txt",
@@ -40,9 +45,24 @@ def main(): Unit =
     "q-values-3x3-middle-layer-lb-5000000-20260206_012056.txt",
     "q-values-3x3-middle-layer-br-5000000-20260206_081021.txt",
     "q-values-3x3-middle-layer-1500000-20260206_092530.txt",
-    "q-values-3x3-yellow-cross-1500000-20260206_145427.txt"
-  )
-  //Train3x3.trainRL3x3MiddleLayerFL("solved-3x3-white-layer-1500000-20260205_232052.txt")
+    "q-values-3x3-yellow-layer-1500000-20260206_162024.txt",
+    "q-values-3x3-upper-layer-1000000-20260207_181739.txt"
+  )*/
+Train3x3.solveOneFromState(
+  "q-values-3x3-white-cross-1000000-20260205_142414.txt",
+  "q-values-3x3-white-layer-fl-1500000-20260205_225856.txt",
+  "q-values-3x3-white-layer-lb-1500000-20260205_230535.txt",
+  "q-values-3x3-white-layer-br-1500000-20260205_231443.txt",
+  "q-values-3x3-white-layer-1500000-20260205_232052.txt",
+  "q-values-3x3-middle-layer-fl-5000000-20260206_010357.txt",
+  "q-values-3x3-middle-layer-lb-5000000-20260206_012056.txt",
+  "q-values-3x3-middle-layer-br-5000000-20260206_081021.txt",
+  "q-values-3x3-middle-layer-1500000-20260206_092530.txt",
+  "q-values-3x3-yellow-layer-1500000-20260206_162024.txt",
+  "q-values-3x3-upper-layer-1000000-20260207_181739.txt",
+  "UUUUFFRRLFFFLLBRRDBDULBDBLFRRLURFFRLRBDDUULLBBFDBDDDBU"
+)
+//Train3x3.trainRL3x3MiddleLayerFL("solved-3x3-white-layer-1500000-20260205_232052.txt")
 
   /*Train3x3.testRun3x3MiddleLayerFL(
     "q-values-3x3-white-cross-1000000-20260205_142414.txt",
@@ -105,6 +125,38 @@ def main(): Unit =
     "q-values-3x3-middle-layer-br-5000000-20260206_081021.txt",
     "q-values-3x3-middle-layer-1500000-20260206_092530.txt",
     "q-values-3x3-yellow-cross-1500000-20260206_145427.txt"
+  )*/
+  //Train3x3.pretrainRL3x3YellowLayer("yellowLayerInput.txt")
+  //Train3x3.trainRL3x3YellowLayer("solved-3x3-middle-layer-1500000-20260206_092530.txt", Some("q-values-3x3-yellow-layer-pre-20260206_160946.txt"))
+
+  /*Train3x3.testRun3x3YellowLayer(
+    "q-values-3x3-white-cross-1000000-20260205_142414.txt",
+    "q-values-3x3-white-layer-fl-1500000-20260205_225856.txt",
+    "q-values-3x3-white-layer-lb-1500000-20260205_230535.txt",
+    "q-values-3x3-white-layer-br-1500000-20260205_231443.txt",
+    "q-values-3x3-white-layer-1500000-20260205_232052.txt",
+    "q-values-3x3-middle-layer-fl-5000000-20260206_010357.txt",
+    "q-values-3x3-middle-layer-lb-5000000-20260206_012056.txt",
+    "q-values-3x3-middle-layer-br-5000000-20260206_081021.txt",
+    "q-values-3x3-middle-layer-1500000-20260206_092530.txt",
+    "q-values-3x3-yellow-layer-1500000-20260206_162024.txt"
+  )*/
+  //Train3x3.pretrainRL3x3UpperCorners("yellowCornersInput.txt")
+  //Train3x3.trainRL3x3UpperCorners("solved-3x3-yellow-layer-1500000-20260206_162024.txt", Some("q-values-3x3-upper-corners-pre-20260207_175010.txt"))
+  //Train3x3.pretrainRL3x3UpperLayer("upperLayerInput.txt")
+  //Train3x3.trainRL3x3UpperLayer("solved-3x3-yellow-layer-1500000-20260206_162024.txt", Some("q-values-3x3-upper-layer-pre-20260207_125542.txt"))
+  /*Train3x3.testRun3x3UpperLayer(
+    "q-values-3x3-white-cross-1000000-20260205_142414.txt",
+    "q-values-3x3-white-layer-fl-1500000-20260205_225856.txt",
+    "q-values-3x3-white-layer-lb-1500000-20260205_230535.txt",
+    "q-values-3x3-white-layer-br-1500000-20260205_231443.txt",
+    "q-values-3x3-white-layer-1500000-20260205_232052.txt",
+    "q-values-3x3-middle-layer-fl-5000000-20260206_010357.txt",
+    "q-values-3x3-middle-layer-lb-5000000-20260206_012056.txt",
+    "q-values-3x3-middle-layer-br-5000000-20260206_081021.txt",
+    "q-values-3x3-middle-layer-1500000-20260206_092530.txt",
+    "q-values-3x3-yellow-layer-1500000-20260206_162024.txt",
+    "q-values-3x3-upper-layer-1000000-20260207_181739.txt"
   )*/
 
 
