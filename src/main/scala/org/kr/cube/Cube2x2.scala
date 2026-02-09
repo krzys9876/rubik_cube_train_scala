@@ -46,13 +46,14 @@ object Cube2x2:
   def s(state: String, face: FaceType, index: Int): String = state.substring(faceStateIndex(face) + index, faceStateIndex(face) + index + 1)
 
   def apply(state: String): Cube2x2 =
+    val s = state.toUpperCase.replaceAll(" ", "").replaceAll("_", "").replaceAll("-", "")
     val faces: mutable.Map[FaceType, Face] = mutable.Map(
-      FaceType.F -> Face(2, Axis.X, Axis.Y, FaceType.F, state.substring(faceStateIndex(FaceType.F), faceStateIndex(FaceType.F) + 2 * 2)),
-      FaceType.L -> Face(2, Axis.Zr, Axis.Y, FaceType.L, state.substring(faceStateIndex(FaceType.L), faceStateIndex(FaceType.L) + 2 * 2)),
-      FaceType.B -> Face(2, Axis.Xr, Axis.Y, FaceType.B, state.substring(faceStateIndex(FaceType.B), faceStateIndex(FaceType.B) + 2 * 2)),
-      FaceType.R -> Face(2, Axis.Z, Axis.Y, FaceType.R, state.substring(faceStateIndex(FaceType.R), faceStateIndex(FaceType.R) + 2 * 2)),
-      FaceType.U -> Face(2, Axis.X, Axis.Zr, FaceType.U, state.substring(faceStateIndex(FaceType.U), faceStateIndex(FaceType.U) + 2 * 2)),
-      FaceType.D -> Face(2, Axis.X, Axis.Z, FaceType.D, state.substring(faceStateIndex(FaceType.D), faceStateIndex(FaceType.D) + 2 * 2)))
+      FaceType.F -> Face(2, Axis.X, Axis.Y, FaceType.F, s.substring(faceStateIndex(FaceType.F), faceStateIndex(FaceType.F) + 2 * 2)),
+      FaceType.L -> Face(2, Axis.Zr, Axis.Y, FaceType.L, s.substring(faceStateIndex(FaceType.L), faceStateIndex(FaceType.L) + 2 * 2)),
+      FaceType.B -> Face(2, Axis.Xr, Axis.Y, FaceType.B, s.substring(faceStateIndex(FaceType.B), faceStateIndex(FaceType.B) + 2 * 2)),
+      FaceType.R -> Face(2, Axis.Z, Axis.Y, FaceType.R, s.substring(faceStateIndex(FaceType.R), faceStateIndex(FaceType.R) + 2 * 2)),
+      FaceType.U -> Face(2, Axis.X, Axis.Zr, FaceType.U, s.substring(faceStateIndex(FaceType.U), faceStateIndex(FaceType.U) + 2 * 2)),
+      FaceType.D -> Face(2, Axis.X, Axis.Z, FaceType.D, s.substring(faceStateIndex(FaceType.D), faceStateIndex(FaceType.D) + 2 * 2)))
     Cube2x2(faces)
 
   def maskedEquals(state1: String, state2: String, mask: String): Boolean =

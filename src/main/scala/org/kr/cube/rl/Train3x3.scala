@@ -669,9 +669,7 @@ object Train3x3:
     "middle layer (LB)" -> (state => Environment.init3x3(() => Cube3x3.maskUpperLayerLB(Cube3x3(state)), Environment.middleLayer3x3LBExpectedState)),
     "middle layer (BR)" -> (state => Environment.init3x3(() => Cube3x3.maskUpperLayerBR(Cube3x3(state)), Environment.middleLayer3x3BRExpectedState)),
     "middle layer (all)" -> (state => Environment.init3x3(() => Cube3x3.maskUpperLayerAll(Cube3x3(state)), Environment.middleLayer3x3AllExpectedState)),
-    //"yellow cross" -> (state => Environment.init3x3(() => Cube3x3.maskYellowCross(Cube3x3(state)), Environment.yellowCross3x3ExpectedState)),
     "yellow layer" -> (state => Environment.init3x3(() => Cube3x3.maskYellowLayer(Cube3x3(state)), Environment.yellowLayer3x3ExpectedState)),
-    "yellow corners" -> (state => Environment.init3x3(() => Cube3x3.maskUpperEdges(Cube3x3(state)), Environment.yellowCorners3x3ExpectedState)),
     "upper layer" -> (state => Environment.init3x3(() => Cube3x3(state), Cube3x3.SOLVED_STATE))
   )
 
@@ -695,8 +693,6 @@ object Train3x3:
     "middle layer (LB)" -> StageConfig(100, 0.001, 0.0),
     "middle layer (BR)" -> StageConfig(100, 0.001, 0.0),
     "middle layer (all)" -> StageConfig(100, 0.001, 0.0),
-    //"yellow cross" -> StageConfig(100, 0.001, 0.0),
     "yellow layer" -> StageConfig(100, 0.001, 0.0),
-    "yellow corners" -> StageConfig(100, 0.001, 0.0),
     "upper layer" -> StageConfig(100, 0.001, 0.0),
   )

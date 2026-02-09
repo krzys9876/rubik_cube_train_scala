@@ -135,7 +135,7 @@ object Cube3x3:
   def solved3x3: Cube3x3 = Cube3x3(SOLVED_STATE)
 
   def apply(state: String): Cube3x3 =
-    val s = state.replaceAll(" ", "")
+    val s = state.toUpperCase.replaceAll(" ", "").replaceAll("_", "").replaceAll("-", "")
     val faces: mutable.Map[FaceType, Face] = mutable.Map(
       FaceType.F -> Face(3, Axis.X, Axis.Y, FaceType.F, s.substring(faceStateIndex(FaceType.F), faceStateIndex(FaceType.F) + 3 * 3)),
       FaceType.L -> Face(3, Axis.Zr, Axis.Y, FaceType.L, s.substring(faceStateIndex(FaceType.L), faceStateIndex(FaceType.L) + 3 * 3)),
